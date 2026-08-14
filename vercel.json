@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-learnworlds",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/recalculate",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}
