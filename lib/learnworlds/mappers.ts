@@ -25,6 +25,7 @@ export function parseTargetExamDateFromCustomFields(
   if (raw == null || raw === "") return null;
 
   const value = String(raw).trim();
+  if (!value) return null;
 
   const iso = parseISO(value);
   if (isValid(iso) && /^\d{4}-\d{2}-\d{2}/.test(value)) {
@@ -39,6 +40,18 @@ export function parseTargetExamDateFromCustomFields(
   }
 
   return null;
+}
+
+/**
+ * LearnWorlds = source de vérité pour `students.target_exam_date`.
+ * Écrit toujours la valeur mappée (date ou null) — ne conserve jamais
+ * une ancienne date Supabase si LW a vidé / omis le champ.
+ */
+export function resolvePersistedTargetExamDate(
+  mappedTargetExamDate: string | null,
+  _previousSupabaseDate?: string | null,
+): string | null {
+  return mappedTargetExamDate;
 }
 
 export function mapLearnWorldsUserToStudentFields(user: LearnWorldsUser): {

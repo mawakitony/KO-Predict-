@@ -109,7 +109,7 @@ export function StudentsTable({
               const access = row.accountStatus ?? "ACTIVE";
               const targetLabel = row.student.targetExamDate
                 ? formatDateShortFr(row.student.targetExamDate)
-                : "—";
+                : "Date d'examen non renseignée";
               return (
                 <tr
                   key={row.student.studentId}

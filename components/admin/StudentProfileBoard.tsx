@@ -83,7 +83,7 @@ export function StudentProfileBoard({
   const tone = riskToneClasses(prediction.riskLevel);
   const targetExamLabel = student.targetExamDate
     ? formatDateFr(student.targetExamDate)
-    : "Non renseignée";
+    : "Date d'examen non renseignée";
 
   const readiness = prediction.readinessScore;
   const probability = prediction.readinessProbability;

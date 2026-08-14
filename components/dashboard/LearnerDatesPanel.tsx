@@ -81,7 +81,7 @@ export function LearnerDatesPanel({
     {
       label: "Date cible d'examen",
       date: targetExamDate,
-      empty: "Non renseignée",
+      empty: "Date d'examen non renseignée",
       color: "#1d4ed8",
       soft: "#dbeafe",
       accent: "#2563eb",

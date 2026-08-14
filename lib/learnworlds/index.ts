@@ -34,6 +34,7 @@ export {
 } from "@/lib/learnworlds/aggregations";
 export {
   parseTargetExamDateFromCustomFields,
+  resolvePersistedTargetExamDate,
   mapLearnWorldsUserToStudentFields,
   emptyNormalizedSnapshot,
 } from "@/lib/learnworlds/mappers";

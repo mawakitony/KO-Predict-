@@ -43,6 +43,20 @@ describe("LearnWorlds mappers", () => {
     ).toBe("2026-09-25");
   });
 
+  it("champ LW vide / null → null (pas de date inventée)", () => {
+    expect(
+      parseTargetExamDateFromCustomFields({
+        [LEARNWORLDS_TARGET_EXAM_FIELD_KEY]: null,
+      }),
+    ).toBeNull();
+    expect(
+      parseTargetExamDateFromCustomFields({
+        [LEARNWORLDS_TARGET_EXAM_FIELD_KEY]: "",
+      }),
+    ).toBeNull();
+    expect(parseTargetExamDateFromCustomFields({})).toBeNull();
+  });
+
   it("mappe user → champs student", () => {
     const mapped = mapLearnWorldsUserToStudentFields({
       id: "lw_123",

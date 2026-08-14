@@ -9,7 +9,10 @@ import {
   summarizeAssessmentScores,
 } from "@/lib/learnworlds/aggregations";
 import { createLearnWorldsClient } from "@/lib/learnworlds/client";
-import { mapLearnWorldsUserToStudentFields } from "@/lib/learnworlds/mappers";
+import {
+  mapLearnWorldsUserToStudentFields,
+  resolvePersistedTargetExamDate,
+} from "@/lib/learnworlds/mappers";
 import {
   getUserCourseProgressList,
   listUserEnrollments,
@@ -133,12 +136,9 @@ export async function syncLearnWorldsLearner(
     .eq("learnworlds_user_id", user.id)
     .maybeSingle();
 
-  let existingTargetExamDate: string | null = null;
-
   if (byLw) {
     studentId = byLw.id;
     profileId = byLw.profile_id;
-    existingTargetExamDate = byLw.target_exam_date ?? null;
   } else if (mapped.email) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -154,7 +154,6 @@ export async function syncLearnWorldsLearner(
         .eq("profile_id", profile.id)
         .maybeSingle();
       studentId = byProfile?.id ?? null;
-      existingTargetExamDate = byProfile?.target_exam_date ?? null;
     }
   }
 
@@ -229,19 +228,20 @@ export async function syncLearnWorldsLearner(
     }
   }
 
+  // LearnWorlds = source de vérité : écrire la date mappée y compris null.
+  const persistedTargetExamDate = resolvePersistedTargetExamDate(
+    mapped.targetExamDate,
+  );
+
   const studentPayload = {
     profile_id: profileId,
     learnworlds_user_id: user.id,
     certification,
     enrollment_date: enrollmentDate ? enrollmentDate.slice(0, 10) : null,
     timezone: "Europe/Paris",
+    target_exam_date: persistedTargetExamDate,
     updated_at: new Date().toISOString(),
   };
-
-  // Ne pas écraser une date cible déjà connue si LearnWorlds ne la renvoie pas.
-  if (mapped.targetExamDate) {
-    Object.assign(studentPayload, { target_exam_date: mapped.targetExamDate });
-  }
 
   if (studentId) {
     const { error } = await supabase
@@ -252,10 +252,7 @@ export async function syncLearnWorldsLearner(
   } else {
     const { data: created, error } = await supabase
       .from("students")
-      .insert({
-        ...studentPayload,
-        target_exam_date: mapped.targetExamDate,
-      })
+      .insert(studentPayload)
       .select("id")
       .single();
     if (error || !created) {
@@ -309,8 +306,7 @@ export async function syncLearnWorldsLearner(
     throw new Error(`Insertion metrics: ${metricsError.message}`);
   }
 
-  const resolvedTargetExamDate =
-    mapped.targetExamDate ?? existingTargetExamDate;
+  const resolvedTargetExamDate = persistedTargetExamDate;
 
   const currentPace =
     input.currentPace ?? previousPace ?? (completedActivities > 0 ? 4 : 0);
