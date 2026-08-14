@@ -128,13 +128,17 @@ export function calculatePrediction(input: PredictionInput): PredictionResult {
     asOf,
   });
 
-  const riskLevel = calculateRiskLevel({
-    readinessProbability,
-    inactiveDays: input.inactiveDays,
-    qcmAverage: input.qcmAverage,
-    recentQcmAverage: input.recentQcmAverage,
-    progressPercent,
-  });
+  // Sans date cible, la trajectoire calendaire n'est pas évaluable :
+  // readiness/probability restent calculables, mais risk_level n'est pas assigné.
+  const riskLevel = input.targetExamDate
+    ? calculateRiskLevel({
+        readinessProbability,
+        inactiveDays: input.inactiveDays,
+        qcmAverage: input.qcmAverage,
+        recentQcmAverage: input.recentQcmAverage,
+        progressPercent,
+      })
+    : null;
 
   const paceStatus = calculatePaceStatus(currentPace, requiredPace);
 

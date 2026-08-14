@@ -22,7 +22,7 @@ export function generateRecommendedAction(options: {
   } = options;
 
   if (issues.includes("MISSING_TARGET_DATE")) {
-    return "Définissez votre date cible d'examen pour obtenir une prédiction.";
+    return "Renseigner votre date cible d'examen pour permettre l'évaluation de la trajectoire.";
   }
 
   if (issues.includes("INSUFFICIENT_QCM")) {

@@ -65,16 +65,31 @@ export type EnsureDecision =
       action: "update";
       reasons: InterventionReasonCode[];
       priority: number;
-      riskLevel: RiskLevel;
+      riskLevel: RiskLevel | null;
     }
+  | { action: "auto_resolve" }
   | { action: "noop" };
+
+/** Raisons hors bande de risque (restent valides même sans date cible). */
+export function hasNonRiskInterventionReasons(
+  reasons: InterventionReasonCode[],
+): boolean {
+  return reasons.some(
+    (r) =>
+      r === "INACTIVE_7_DAYS" ||
+      r === "PACE_BEHIND" ||
+      r === "EXAM_SOON" ||
+      r === "ZERO_CURRENT_PACE",
+  );
+}
 
 /**
  * Idempotence V1 :
- * - risque AMBER+ + pas de cycle actif → insert
- * - risque AMBER+ + cycle actif → update motifs/priorité (pas de 2e cycle)
- * - risque hors seuil → noop (ne ferme pas auto)
- * - cycle RESOLVED + nouveau risque → insert (nouveau cycle)
+ * - raisons présentes + pas de cycle actif → insert
+ * - raisons présentes + cycle actif → update motifs/priorité (pas de 2e cycle)
+ * - plus aucune raison + cycle actif → auto_resolve (historique conservé)
+ * - plus aucune raison + pas d'actif → noop
+ * - cycle RESOLVED + nouvelles raisons → insert (nouveau cycle)
  */
 export function decideEnsureAction(options: {
   riskLevel: RiskLevel | null;
@@ -82,7 +97,12 @@ export function decideEnsureAction(options: {
   active: CoachInterventionRecord | null;
 }): EnsureDecision {
   const { riskLevel, reasons, active } = options;
-  if (!riskNeedsIntervention(riskLevel)) {
+  const needsCycle =
+    reasons.length > 0 &&
+    (riskNeedsIntervention(riskLevel) || hasNonRiskInterventionReasons(reasons));
+
+  if (!needsCycle) {
+    if (active) return { action: "auto_resolve" };
     return { action: "noop" };
   }
 
@@ -105,7 +125,7 @@ export function decideEnsureAction(options: {
     action: "update",
     reasons,
     priority,
-    riskLevel: riskLevel!,
+    riskLevel,
   };
 }
 

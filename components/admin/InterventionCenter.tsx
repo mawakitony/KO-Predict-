@@ -63,9 +63,11 @@ export function InterventionCenter({
     for (const card of cards) {
       if (card.intervention.status === "RESOLVED") continue;
       c.active += 1;
-      if (card.intervention.riskLevel === "CRITICAL") c.critical += 1;
-      else if (card.intervention.riskLevel === "RED") c.red += 1;
-      else if (card.intervention.riskLevel === "AMBER") c.amber += 1;
+      // Compteurs = prédiction actuelle, pas un risque figé d'intervention.
+      const risk = card.row.prediction.riskLevel;
+      if (risk === "CRITICAL") c.critical += 1;
+      else if (risk === "RED") c.red += 1;
+      else if (risk === "AMBER") c.amber += 1;
     }
     return c;
   }, [cards]);
@@ -174,7 +176,8 @@ export function InterventionCenter({
         <ul className="mt-5 grid gap-3">
           {filtered.map((card) => {
             const { row, intervention } = card;
-            const tone = riskToneClasses(intervention.riskLevel);
+            const currentRisk = row.prediction.riskLevel;
+            const tone = riskToneClasses(currentRisk);
             const exam = daysLabel(row.student.targetExamDate);
             const busy = isPending && pendingId === intervention.id;
             return (
@@ -191,15 +194,17 @@ export function InterventionCenter({
                       </p>
                       <p className="text-sm text-slate-500">
                         {row.student.certification}
-                        {exam ? ` · ${exam}` : null}
+                        {exam
+                          ? ` · ${exam}`
+                          : " · Date d’examen non renseignée"}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         <span
                           className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${tone.badge}`}
                         >
-                          {intervention.riskLevel
-                            ? `${intervention.riskLevel} — ${riskLabel(intervention.riskLevel)}`
-                            : "Risque"}
+                          {currentRisk
+                            ? `${currentRisk} — ${riskLabel(currentRisk)}`
+                            : `Risque : ${riskLabel(null)}`}
                         </span>
                         <span className="inline-flex rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200">
                           {interventionStatusLabelFr(intervention.status)}

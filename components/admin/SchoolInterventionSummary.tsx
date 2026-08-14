@@ -74,7 +74,7 @@ export function SchoolInterventionSummary({
                 {card.row.student.fullName}
               </span>
               <span className="shrink-0 text-xs font-semibold text-slate-500">
-                {card.intervention.riskLevel ?? "—"}
+                {card.row.prediction.riskLevel ?? "Non évalué"}
               </span>
             </li>
           ))}

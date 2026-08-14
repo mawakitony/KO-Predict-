@@ -262,6 +262,9 @@ describe("calculatePrediction — scénarios", () => {
     });
     expect(result.issues).toContain("MISSING_TARGET_DATE");
     expect(result.requiredPace).toBeNull();
+    expect(result.riskLevel).toBeNull();
+    expect(result.readinessScore).not.toBeNull();
+    expect(result.readinessProbability).not.toBeNull();
   });
 
   it("current pace manquant", () => {

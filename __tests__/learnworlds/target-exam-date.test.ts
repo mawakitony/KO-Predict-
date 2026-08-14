@@ -73,7 +73,7 @@ describe("target_exam_date — LearnWorlds source de vérité", () => {
     expect(persisted).not.toBe(stale);
   });
 
-  it("moteur → MISSING_TARGET_DATE et requiredPace null", () => {
+  it("moteur → MISSING_TARGET_DATE, requiredPace null, risk non évalué", () => {
     const result = calculatePrediction({
       completedActivities: 10,
       totalActivities: 100,
@@ -85,6 +85,10 @@ describe("target_exam_date — LearnWorlds source de vérité", () => {
     });
     expect(result.issues).toContain("MISSING_TARGET_DATE");
     expect(result.requiredPace).toBeNull();
+    expect(result.riskLevel).toBeNull();
+    expect(result.readinessScore).not.toBeNull();
+    expect(result.readinessProbability).not.toBeNull();
+    expect(result.readinessScore).not.toBe(0);
   });
 
   it("UI → pas de J-n inventé si date absente", () => {

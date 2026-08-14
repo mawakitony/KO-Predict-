@@ -4,6 +4,7 @@ import {
   compareInterventionRows,
   decideEnsureAction,
   deriveInterventionReasons,
+  hasNonRiskInterventionReasons,
   riskNeedsIntervention,
 } from "@/lib/admin/interventions/logic";
 import {
@@ -53,8 +54,12 @@ export function buildDemoInterventionCards(
   const cards: CoachInterventionCard[] = [];
   const now = new Date().toISOString();
   for (const row of rows) {
-    if (!riskNeedsIntervention(row.prediction.riskLevel)) continue;
     const reasons = deriveInterventionReasons(row);
+    const needsCard =
+      reasons.length > 0 &&
+      (riskNeedsIntervention(row.prediction.riskLevel) ||
+        hasNonRiskInterventionReasons(reasons));
+    if (!needsCard) continue;
     const priority = riskToPriority(row.prediction.riskLevel);
     cards.push({
       row,
@@ -189,6 +194,31 @@ export async function ensureAndLoadInterventionCards(
           studentId,
           mapRow(updated as Record<string, unknown>),
         );
+      }
+    } else if (decision.action === "auto_resolve") {
+      const active = activeByStudent.get(studentId);
+      if (!active) continue;
+      const nowIso = new Date().toISOString();
+      const { data: resolved, error: resolveError } = await admin
+        .from("coach_interventions")
+        .update({
+          status: "RESOLVED",
+          resolved_at: nowIso,
+          updated_at: nowIso,
+        })
+        .eq("id", active.id)
+        .in("status", [...ACTIVE_INTERVENTION_STATUSES])
+        .select("*")
+        .maybeSingle();
+      if (resolveError) {
+        console.error("[interventions] auto_resolve", resolveError.message);
+      } else if (resolved) {
+        activeByStudent.set(
+          studentId,
+          mapRow(resolved as Record<string, unknown>),
+        );
+      } else {
+        activeByStudent.delete(studentId);
       }
     }
   }
