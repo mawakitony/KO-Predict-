@@ -13,7 +13,7 @@ import { PredictionHistoryNote } from "@/components/dashboard/PredictionHistoryN
 import { RecommendationCard } from "@/components/dashboard/RecommendationCard";
 import { StatusBanner } from "@/components/dashboard/StatusBanner";
 import { TrajectoryAlert } from "@/components/dashboard/TrajectoryAlert";
-import { WeeklyPlanCard } from "@/components/dashboard/WeeklyPlanCard";
+import { WorkPlanSummaryCard } from "@/components/dashboard/WorkPlanSummaryCard";
 import { WhyReadinessPanel } from "@/components/dashboard/WhyReadinessPanel";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { canAccessAdmin } from "@/lib/auth/permissions";
@@ -28,7 +28,7 @@ import {
   DashboardDataError,
   getStudentDashboardData,
 } from "@/lib/dashboard/get-student-dashboard";
-import { buildWeeklyPlan } from "@/lib/planning/weekly-plan";
+import { loadOwnWorkPlans } from "@/lib/planning/work-plan/load-own";
 import { buildReadinessExplanation } from "@/lib/prediction/explanation";
 
 export const dynamic = "force-dynamic";
@@ -88,17 +88,8 @@ export default async function DashboardPage() {
   const issueExplanations = getLearnerIssueExplanations(prediction.issues);
   const recommendedAction = resolveLearnerRecommendedAction(prediction);
   const todayLabel = formatDateFr(new Date().toISOString().slice(0, 10));
-  const weeklyPlan = buildWeeklyPlan({
-    readinessScore: prediction.readinessScore,
-    currentPace: prediction.currentPace,
-    requiredPace: prediction.requiredPace,
-    paceStatus: prediction.paceStatus,
-    remainingActivities: prediction.remainingActivities,
-    inactiveDays: metrics.inactiveDays,
-    qcmAverage:
-      metrics.qcmAverage == null ? null : Number(metrics.qcmAverage),
-    riskLevel: prediction.riskLevel,
-    issues: prediction.issues,
+  const { active: activeWorkPlan } = await loadOwnWorkPlans({
+    previousLimit: 0,
   });
   const readinessExplanation = buildReadinessExplanation({
     readinessScore: prediction.readinessScore,
@@ -136,7 +127,7 @@ export default async function DashboardPage() {
 
           <WhyReadinessPanel explanation={readinessExplanation} />
 
-          <WeeklyPlanCard plan={weeklyPlan} compact />
+          <WorkPlanSummaryCard plan={activeWorkPlan} compact />
 
           <CollectionExamCard
             targetExamDate={student.targetExamDate}
@@ -202,7 +193,7 @@ export default async function DashboardPage() {
 
           <WhyReadinessPanel explanation={readinessExplanation} />
 
-          <WeeklyPlanCard plan={weeklyPlan} />
+          <WorkPlanSummaryCard plan={activeWorkPlan} />
 
           {trajectory ? (
             <TrajectoryAlert

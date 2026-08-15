@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { BrandMark } from "@/components/ui/BrandMark";
 import {
   IconBook,
+  IconCalendar,
   IconDashboard,
   IconUser,
   IconUsers,
@@ -111,6 +112,7 @@ export function LearnerHubLayout({
   const pathname = usePathname();
   const onDash = pathname.startsWith("/dashboard");
   const onLearning = pathname.startsWith("/learning");
+  const onPlan = pathname.startsWith("/plan");
   const onAdmin = pathname.startsWith("/admin");
   const onProfile = pathname.startsWith("/profile");
   const shownName = resolveDisplayName({
@@ -150,6 +152,12 @@ export function LearnerHubLayout({
               label="Ma progression"
               active={onLearning}
               icon={<IconBook className="ko-icon" />}
+            />
+            <NavItem
+              href="/plan"
+              label="Mon plan"
+              active={onPlan}
+              icon={<IconCalendar className="ko-icon" />}
             />
             <NavItem
               href="/profile"
@@ -331,6 +339,12 @@ export function LearnerHubLayout({
           label="Progression"
           active={onLearning}
           icon={<IconBook className="ko-icon" />}
+        />
+        <MobileNavLink
+          href="/plan"
+          label="Plan"
+          active={onPlan}
+          icon={<IconCalendar className="ko-icon" />}
         />
         <MobileNavLink
           href="/profile"
