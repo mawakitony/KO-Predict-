@@ -1,8 +1,34 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 /**
- * Vérifie Learnworlds-Webhook-Signature: v1=<hex>
- * HMAC-SHA256(rawBody, webhookSecret) — doc LearnWorlds.
+ * LearnWorlds envoie `Learnworlds-Webhook-Signature: v1=<WEBHOOK SIGNATURE>`
+ * où la valeur est le jeton pré-partagé (Settings → Developers → Webhooks),
+ * pas un HMAC du body (confirmé en production : secret === digest reçu).
+ *
+ * Compatibilité : on accepte aussi un HMAC-SHA256 hex complet (64) du raw body
+ * si un jour / un autre canal signe réellement ainsi. Jamais de HMAC tronqué.
+ */
+
+function timingSafeStringEqual(a: string, b: string): boolean {
+  try {
+    const left = Buffer.from(a, "utf8");
+    const right = Buffer.from(b, "utf8");
+    if (left.length !== right.length) return false;
+    return timingSafeEqual(left, right);
+  } catch {
+    return false;
+  }
+}
+
+/** Normalise le secret stocké (trim, retire un éventuel préfixe v1=, lower). */
+export function normalizeLearnWorldsWebhookSecret(secret: string): string {
+  const trimmed = secret.trim();
+  const withoutPrefix = /^v1=/i.test(trimmed) ? trimmed.slice(3) : trimmed;
+  return withoutPrefix.toLowerCase();
+}
+
+/**
+ * HMAC-SHA256 hex complet du raw body (chemin secondaire / docs historiques).
  */
 export function computeLearnWorldsWebhookSignature(
   rawBody: string | Buffer,
@@ -16,7 +42,7 @@ export function extractLearnWorldsSignature(headerValue: string | null): string 
   const trimmed = headerValue.trim();
   if (!trimmed) return null;
 
-  // Formats observés / documentés : "v1=<hex>" ou éventuellement hex seul.
+  // Formats : "v1=<token-ou-hex>" ou hex / jeton seul.
   const v1 = trimmed.match(/(?:^|[,;\s])v1=([a-fA-F0-9]+)/);
   if (v1?.[1]) return v1[1].toLowerCase();
 
@@ -32,17 +58,18 @@ export function verifyLearnWorldsWebhookSignature(options: {
   const provided = extractLearnWorldsSignature(options.signatureHeader);
   if (!provided) return false;
 
-  const expected = computeLearnWorldsWebhookSignature(
+  const expectedToken = normalizeLearnWorldsWebhookSecret(options.secret);
+  if (!expectedToken) return false;
+
+  // Chemin principal (Automation + Settings LearnWorlds) : jeton pré-partagé.
+  if (timingSafeStringEqual(provided, expectedToken)) {
+    return true;
+  }
+
+  // Chemin secondaire : HMAC-SHA256 hex complet uniquement (jamais tronqué).
+  const expectedHmac = computeLearnWorldsWebhookSignature(
     options.rawBody,
     options.secret,
   );
-
-  try {
-    const a = Buffer.from(provided, "utf8");
-    const b = Buffer.from(expected, "utf8");
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
-  } catch {
-    return false;
-  }
+  return timingSafeStringEqual(provided, expectedHmac);
 }

@@ -49,6 +49,7 @@ export {
 } from "@/lib/learnworlds/webhooks/signature";
 export {
   parseLearnWorldsWebhookPayload,
+  isLearnWorldsAutomationUserPayload,
   buildWebhookDeliveryKey,
   LEARNWORLDS_SYNC_EVENT_TYPES,
 } from "@/lib/learnworlds/webhooks/parse";

@@ -27,7 +27,9 @@ async function claimDelivery(
 ): Promise<"claimed" | "duplicate"> {
   const { error } = await db.from("webhook_events").insert({
     delivery_key: deliveryKey,
-    event_type: parsed.type,
+    event_type:
+      parsed.type ??
+      (parsed.isAutomationPayload ? "automation_user_update" : null),
     trigger_name: parsed.trigger,
     learnworlds_user_id: parsed.learnworldsUserId,
     payload: parsed.payload,

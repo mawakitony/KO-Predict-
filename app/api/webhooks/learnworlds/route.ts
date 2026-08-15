@@ -6,11 +6,24 @@ import { isSupabaseAdminConfigured } from "@/lib/supabase/env";
 
 export const dynamic = "force-dynamic";
 
+const SIGNATURE_HEADER_CANDIDATES = [
+  "learnworlds-webhook-signature",
+  "x-lw-signature",
+] as const;
+
+function readSignatureHeader(request: Request): string | null {
+  for (const candidate of SIGNATURE_HEADER_CANDIDATES) {
+    const value = request.headers.get(candidate);
+    if (value) return value;
+  }
+  return null;
+}
+
 /**
  * POST /api/webhooks/learnworlds
  *
- * Auth : header Learnworlds-Webhook-Signature: v1=<hmac-sha256>
- * Secret : LEARNWORLDS_WEBHOOK_SECRET (Settings → Developers → Webhooks)
+ * Auth : header Learnworlds-Webhook-Signature: v1=<WEBHOOK SIGNATURE>
+ * (jeton pré-partagé Settings → Developers → Webhooks ; comparaison timing-safe)
  * Idempotence : sha256(raw body) dans webhook_events.delivery_key
  */
 export async function POST(request: Request) {
@@ -28,10 +41,7 @@ export async function POST(request: Request) {
   }
 
   const rawBody = await request.text();
-  const signatureHeader =
-    request.headers.get("learnworlds-webhook-signature") ??
-    request.headers.get("Learnworlds-Webhook-Signature") ??
-    request.headers.get("x-lw-signature");
+  const signatureHeader = readSignatureHeader(request);
 
   const valid = verifyLearnWorldsWebhookSignature({
     rawBody,
