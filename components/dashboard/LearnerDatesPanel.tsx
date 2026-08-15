@@ -184,8 +184,9 @@ export function LearnerDatesPanel({
       </ol>
 
       <p className="ko-dates-footer">
-        MAJ {formatDateTimeFr(updatedAt)} ·{" "}
-        {dataSource === "database" ? "LearnWorlds" : "Démo"}
+        {dataSource === "database"
+          ? `Dernière synchronisation LearnWorlds : ${formatDateTimeFr(updatedAt)}`
+          : `MAJ ${formatDateTimeFr(updatedAt)} · Démo`}
       </p>
     </section>
   );

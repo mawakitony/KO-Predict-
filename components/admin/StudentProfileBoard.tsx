@@ -153,6 +153,14 @@ export function StudentProfileBoard({
                 value={formatDateTimeFr(metrics.lastActivityDate)}
               />
               <ProfileRow
+                label="Dernière synchronisation LearnWorlds"
+                value={
+                  metrics.recordedAt
+                    ? formatDateTimeFr(metrics.recordedAt)
+                    : "Pas encore synchronisé"
+                }
+              />
+              <ProfileRow
                 label="Inactivité"
                 value={`${metrics.inactiveDays} j`}
               />
