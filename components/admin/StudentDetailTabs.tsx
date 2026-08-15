@@ -1,0 +1,156 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { StudentCoachFollowUp } from "@/components/admin/StudentCoachFollowUp";
+import { StudentLearningActivities } from "@/components/admin/learning-history/StudentLearningActivities";
+import { StudentLearningQuizzes } from "@/components/admin/learning-history/StudentLearningQuizzes";
+import { StudentProfileBoard } from "@/components/admin/StudentProfileBoard";
+import type { CoachInterventionRecord } from "@/lib/admin/interventions/types";
+import type { AdminStudentDetail } from "@/lib/admin/types";
+import type {
+  LearningAssessmentSummary,
+  LearningHistoryActivity,
+} from "@/types/learning-history";
+
+type DetailTab = "overview" | "activities" | "quizzes" | "coach";
+
+interface HistoryPayload {
+  activities: LearningHistoryActivity[];
+  assessments: LearningAssessmentSummary[];
+  completedCount: number;
+  totalCount: number;
+}
+
+export function StudentDetailTabs({
+  detail,
+  interventions,
+}: {
+  detail: AdminStudentDetail;
+  interventions: CoachInterventionRecord[];
+}) {
+  const [tab, setTab] = useState<DetailTab>("overview");
+  const [history, setHistory] = useState<HistoryPayload | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+
+  const loadHistory = useCallback(
+    async (fresh = false) => {
+      setLoadingHistory(true);
+      setHistoryError(null);
+      try {
+        const qs = fresh ? "?fresh=1" : "";
+        const res = await fetch(
+          `/api/admin/students/${detail.student.studentId}/learning-history/activities${qs}`,
+        );
+        const body = (await res.json().catch(() => null)) as {
+          ok?: boolean;
+          error?: string;
+          activities?: LearningHistoryActivity[];
+          assessments?: LearningAssessmentSummary[];
+          completedCount?: number;
+          totalCount?: number;
+        } | null;
+        if (!res.ok || !body?.ok) {
+          setHistory(null);
+          setHistoryError(
+            body?.error ?? "Historique temporairement indisponible.",
+          );
+          return;
+        }
+        setHistory({
+          activities: body.activities ?? [],
+          assessments: body.assessments ?? [],
+          completedCount: body.completedCount ?? 0,
+          totalCount: body.totalCount ?? 0,
+        });
+        setHistoryLoaded(true);
+      } catch {
+        setHistory(null);
+        setHistoryError("Historique temporairement indisponible.");
+      } finally {
+        setLoadingHistory(false);
+      }
+    },
+    [detail.student.studentId],
+  );
+
+  useEffect(() => {
+    if (
+      (tab === "activities" || tab === "quizzes") &&
+      !historyLoaded &&
+      !loadingHistory
+    ) {
+      void loadHistory(false);
+    }
+  }, [tab, historyLoaded, loadingHistory, loadHistory]);
+
+  const tabs = useMemo(
+    () =>
+      [
+        { id: "overview" as const, label: "Vue d’ensemble" },
+        { id: "activities" as const, label: "Activités" },
+        { id: "quizzes" as const, label: "Quiz & examens" },
+        { id: "coach" as const, label: "Suivi coach" },
+      ] as const,
+    [],
+  );
+
+  return (
+    <div className="space-y-4 sm:space-y-5">
+      <div
+        role="tablist"
+        aria-label="Sections fiche apprenant"
+        className="flex flex-wrap gap-1 rounded-full bg-slate-100/90 p-1"
+      >
+        {tabs.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === item.id}
+            onClick={() => setTab(item.id)}
+            className={`rounded-full px-3.5 py-2 text-sm font-medium transition ${
+              tab === item.id
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "overview" ? (
+        <StudentProfileBoard detail={detail} email={detail.email} />
+      ) : null}
+
+      {tab === "activities" ? (
+        <StudentLearningActivities
+          loading={loadingHistory}
+          error={historyError}
+          activities={history?.activities ?? []}
+          completedCount={history?.completedCount ?? 0}
+          totalCount={history?.totalCount ?? 0}
+          onRefresh={() => void loadHistory(true)}
+        />
+      ) : null}
+
+      {tab === "quizzes" ? (
+        <StudentLearningQuizzes
+          studentId={detail.student.studentId}
+          loading={loadingHistory}
+          error={historyError}
+          assessments={history?.assessments ?? []}
+          qcmAverage={detail.metrics.qcmAverage}
+          recentQcmAverage={detail.metrics.recentQcmAverage}
+          onRefresh={() => void loadHistory(true)}
+        />
+      ) : null}
+
+      {tab === "coach" ? (
+        <StudentCoachFollowUp interventions={interventions} />
+      ) : null}
+    </div>
+  );
+}
