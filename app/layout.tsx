@@ -19,6 +19,13 @@ export const metadata: Metadata = {
   title: "KO Predict™",
   description:
     "Analysez votre progression et votre rythme pour savoir si vous êtes sur la bonne trajectoire vers votre examen.",
+  icons: {
+    icon: [
+      { url: "/favicon.png", type: "image/png" },
+      { url: "/favicon.webp", type: "image/webp" },
+    ],
+    apple: [{ url: "/apple-icon.png", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {
