@@ -7,6 +7,7 @@ import { StudentLearningQuizzes } from "@/components/admin/learning-history/Stud
 import { StudentProfileBoard } from "@/components/admin/StudentProfileBoard";
 import type { CoachInterventionRecord } from "@/lib/admin/interventions/types";
 import type { AdminStudentDetail } from "@/lib/admin/types";
+import type { PersistedWorkPlan } from "@/lib/planning/work-plan/memory-store";
 import type {
   LearningAssessmentSummary,
   LearningHistoryActivity,
@@ -24,9 +25,13 @@ interface HistoryPayload {
 export function StudentDetailTabs({
   detail,
   interventions,
+  activeWorkPlan = null,
+  previousWorkPlan = null,
 }: {
   detail: AdminStudentDetail;
   interventions: CoachInterventionRecord[];
+  activeWorkPlan?: PersistedWorkPlan | null;
+  previousWorkPlan?: PersistedWorkPlan | null;
 }) {
   const [tab, setTab] = useState<DetailTab>("overview");
   const [history, setHistory] = useState<HistoryPayload | null>(null);
@@ -122,7 +127,12 @@ export function StudentDetailTabs({
       </div>
 
       {tab === "overview" ? (
-        <StudentProfileBoard detail={detail} email={detail.email} />
+        <StudentProfileBoard
+          detail={detail}
+          email={detail.email}
+          activeWorkPlan={activeWorkPlan}
+          previousWorkPlan={previousWorkPlan}
+        />
       ) : null}
 
       {tab === "activities" ? (

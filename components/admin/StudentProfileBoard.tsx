@@ -11,6 +11,8 @@ import {
   IconSpark,
 } from "@/components/admin/AdminIcons";
 import type { AdminStudentDetail } from "@/lib/admin/types";
+import type { PersistedWorkPlan } from "@/lib/planning/work-plan/memory-store";
+import { AdminWorkPlanPanel } from "@/components/admin/AdminWorkPlanPanel";
 import {
   formatDateFr,
   formatDateTimeFr,
@@ -24,6 +26,8 @@ import {
 interface StudentProfileBoardProps {
   detail: AdminStudentDetail;
   email?: string | null;
+  activeWorkPlan?: PersistedWorkPlan | null;
+  previousWorkPlan?: PersistedWorkPlan | null;
 }
 
 function InsightCard({
@@ -77,6 +81,8 @@ function InsightCard({
 export function StudentProfileBoard({
   detail,
   email,
+  activeWorkPlan = null,
+  previousWorkPlan = null,
 }: StudentProfileBoardProps) {
   const { student, metrics, prediction, history, dataSource, accountStatus } =
     detail;
@@ -360,6 +366,11 @@ export function StudentProfileBoard({
                 "Continuez la formation : KO Predict™ affinera bientôt l’estimation."}
             </p>
           </section>
+
+          <AdminWorkPlanPanel
+            active={activeWorkPlan}
+            previousLatest={previousWorkPlan}
+          />
         </aside>
       </div>
     </div>
