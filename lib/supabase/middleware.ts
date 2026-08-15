@@ -13,7 +13,7 @@ function redirectToLogin(request: NextRequest, pathname: string) {
 }
 
 /**
- * Rafraîchit la session Auth et protège /dashboard + /admin + /profile.
+ * Rafraîchit la session Auth et protège /dashboard + /learning + /admin + /profile.
  * Le contrôle fin des rôles (admin vs student) est fait dans les layouts serveur.
  */
 export async function updateSession(request: NextRequest) {
@@ -48,6 +48,7 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isProtected =
     pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/learning") ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/profile");
 

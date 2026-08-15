@@ -91,7 +91,7 @@ export function activityStatusLabelFr(status: LearningActivityStatus): string {
     case "completed":
       return "Terminé";
     case "not_completed":
-      return "Non terminé";
+      return "À faire";
     default:
       return "Inconnu";
   }

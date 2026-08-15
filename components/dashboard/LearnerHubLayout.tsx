@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { BrandMark } from "@/components/ui/BrandMark";
 import {
+  IconBook,
   IconDashboard,
   IconUser,
   IconUsers,
@@ -109,6 +110,7 @@ export function LearnerHubLayout({
 }: LearnerHubLayoutProps) {
   const pathname = usePathname();
   const onDash = pathname.startsWith("/dashboard");
+  const onLearning = pathname.startsWith("/learning");
   const onAdmin = pathname.startsWith("/admin");
   const onProfile = pathname.startsWith("/profile");
   const shownName = resolveDisplayName({
@@ -142,6 +144,12 @@ export function LearnerHubLayout({
               label="Tableau de bord"
               active={onDash}
               icon={<IconDashboard className="ko-icon" />}
+            />
+            <NavItem
+              href="/learning"
+              label="Ma progression"
+              active={onLearning}
+              icon={<IconBook className="ko-icon" />}
             />
             <NavItem
               href="/profile"
@@ -317,6 +325,12 @@ export function LearnerHubLayout({
           label="Dashboard"
           active={onDash}
           icon={<IconDashboard className="ko-icon" />}
+        />
+        <MobileNavLink
+          href="/learning"
+          label="Progression"
+          active={onLearning}
+          icon={<IconBook className="ko-icon" />}
         />
         <MobileNavLink
           href="/profile"

@@ -131,7 +131,7 @@ describe("learning-history parse", () => {
     );
     expect(
       activityStatusLabelFr(normalizeActivityStatus("not_completed")),
-    ).toBe("Non terminé");
+    ).toBe("À faire");
   });
 
   it("assessments scorés + meilleur score", () => {

@@ -6,6 +6,7 @@ import { CollectionHero } from "@/components/dashboard/CollectionHero";
 import { LearnerHubLayout } from "@/components/dashboard/LearnerHubLayout";
 import { LearnerAnalyticsPanel } from "@/components/dashboard/LearnerAnalyticsPanel";
 import { LearnerGlanceCards } from "@/components/dashboard/LearnerGlanceCards";
+import { LearnerProgressSummary } from "@/components/dashboard/LearnerProgressSummary";
 import { LearnerStatRings } from "@/components/dashboard/LearnerStatRings";
 import { LearnerDatesPanel } from "@/components/dashboard/LearnerDatesPanel";
 import { PredictionHistoryNote } from "@/components/dashboard/PredictionHistoryNote";
@@ -153,6 +154,24 @@ export default async function DashboardPage() {
             inactiveDays={metrics.inactiveDays}
           />
 
+          <LearnerProgressSummary
+            progressPercent={
+              prediction.progressPercent ?? metrics.progressPercent
+            }
+            completedActivities={metrics.completedActivities}
+            totalActivities={metrics.totalActivities}
+            qcmAverage={
+              metrics.qcmAverage == null ? null : Number(metrics.qcmAverage)
+            }
+            recentQcmAverage={
+              metrics.recentQcmAverage == null
+                ? null
+                : Number(metrics.recentQcmAverage)
+            }
+            recordedAt={metrics.recordedAt}
+            collecting
+          />
+
           <p className="px-1 pb-0.5 text-center text-[11px] leading-snug text-slate-400 sm:text-xs">
             Les analyses avancées apparaîtront automatiquement après les
             premières données exploitables.
@@ -242,6 +261,23 @@ export default async function DashboardPage() {
           </div>
 
           <PredictionHistoryNote hasHistory={Boolean(trajectory)} />
+
+          <LearnerProgressSummary
+            progressPercent={
+              prediction.progressPercent ?? metrics.progressPercent
+            }
+            completedActivities={metrics.completedActivities}
+            totalActivities={metrics.totalActivities}
+            qcmAverage={
+              metrics.qcmAverage == null ? null : Number(metrics.qcmAverage)
+            }
+            recentQcmAverage={
+              metrics.recentQcmAverage == null
+                ? null
+                : Number(metrics.recentQcmAverage)
+            }
+            recordedAt={metrics.recordedAt}
+          />
 
           <p className="text-center text-sm text-slate-500">
             Estimations KO Predict™ — sans garantie de réussite. Une donnée
