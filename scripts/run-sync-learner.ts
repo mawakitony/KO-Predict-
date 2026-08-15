@@ -40,6 +40,7 @@ async function main() {
           issues: result.prediction.issues,
           paceStatus: result.prediction.paceStatus,
         },
+        workPlan: result.workPlan ?? null,
       },
       null,
       2,

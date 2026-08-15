@@ -42,6 +42,14 @@ export interface SyncLearnerResult {
   targetExamDate: string | null;
   changed: boolean;
   historyWritten: boolean;
+  /** Présent si le hook plan a tourné (succès ou échec non bloquant). */
+  workPlan?: {
+    ok: boolean;
+    planId?: string;
+    planType?: string;
+    status?: string;
+    error?: string;
+  };
   metrics: {
     progressPercent: number | null;
     completedActivities: number;
@@ -392,7 +400,7 @@ export async function syncLearnWorldsLearner(
     throw new Error("Identifiant étudiant manquant après synchronisation.");
   }
 
-  return {
+  const syncResult: SyncLearnerResult = {
     ok: true,
     studentId,
     learnworldsUserId: user.id,
@@ -413,4 +421,20 @@ export async function syncLearnWorldsLearner(
     },
     prediction,
   };
+
+  // Hook plan : échec non bloquant (métriques/prédiction déjà persistées).
+  const { applyWorkPlanAfterSuccessfulSync } = await import(
+    "@/lib/planning/work-plan/after-sync"
+  );
+  const workPlanResult = await applyWorkPlanAfterSuccessfulSync(syncResult);
+  syncResult.workPlan = workPlanResult.ok
+    ? {
+        ok: true,
+        planId: workPlanResult.plan.id,
+        planType: workPlanResult.plan.planType,
+        status: workPlanResult.plan.status,
+      }
+    : { ok: false, error: workPlanResult.error };
+
+  return syncResult;
 }
