@@ -54,11 +54,19 @@ export function AdminAvatar({
 }
 
 const ACCOUNT_STATUS_CLASS: Record<string, string> = {
-  ACTIVE: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
-  PENDING_ACTIVATION: "bg-amber-50 text-amber-800 ring-1 ring-amber-200",
-  NOT_ACTIVATED: "bg-slate-100 text-slate-700 ring-1 ring-slate-200",
-  DISABLED: "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
-  ERROR: "bg-red-50 text-red-700 ring-1 ring-red-200",
+  ACTIVE: "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/80",
+  PENDING_ACTIVATION: "bg-amber-50 text-amber-900 ring-1 ring-amber-200/80",
+  NOT_ACTIVATED: "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80",
+  DISABLED: "bg-rose-50 text-rose-800 ring-1 ring-rose-200/80",
+  ERROR: "bg-red-50 text-red-800 ring-1 ring-red-200/80",
+};
+
+const ACCOUNT_STATUS_DOT: Record<string, string> = {
+  ACTIVE: "bg-emerald-500",
+  PENDING_ACTIVATION: "bg-amber-500",
+  NOT_ACTIVATED: "bg-slate-400",
+  DISABLED: "bg-rose-500",
+  ERROR: "bg-red-500",
 };
 
 export function AccountStatusBadge({
@@ -70,10 +78,16 @@ export function AccountStatusBadge({
 }) {
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide ${
         ACCOUNT_STATUS_CLASS[status] ?? ACCOUNT_STATUS_CLASS.NOT_ACTIVATED
       }`}
     >
+      <span
+        className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+          ACCOUNT_STATUS_DOT[status] ?? ACCOUNT_STATUS_DOT.NOT_ACTIVATED
+        }`}
+        aria-hidden
+      />
       {label}
     </span>
   );

@@ -1,4 +1,5 @@
 import { SchoolInterventionSummary } from "@/components/admin/SchoolInterventionSummary";
+import { AdminLearnersKoCountSync } from "@/components/admin/AdminLearnersHeaderTabs";
 import { SchoolOverviewBoard } from "@/components/dashboard/SchoolOverviewBoard";
 import {
   getAdminDashboardData,
@@ -17,6 +18,7 @@ export default async function AdminSchoolPage() {
 
   return (
     <div className="space-y-4 sm:space-y-5">
+      <AdminLearnersKoCountSync count={adminData.rows.length} />
       <SchoolInterventionSummary cards={adminData.interventionCards} />
       <SchoolOverviewBoard overview={overview} trends={trends} />
     </div>

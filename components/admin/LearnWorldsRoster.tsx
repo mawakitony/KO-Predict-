@@ -302,13 +302,13 @@ export function LearnWorldsRoster({
           })}
         </div>
 
-        <p className="text-sm text-slate-400 lg:text-right">
+        <p className="text-sm text-slate-500 lg:text-right">
           {searching ? "Recherche… · " : null}
           {query
             ? `${totalItems ?? 0} résultat${(totalItems ?? 0) > 1 ? "s" : ""}`
             : totalItems != null
-              ? `${totalItems} apprenants · 5 / page`
-              : "5 / page"}
+              ? `${totalItems} apprenants · 10 / page`
+              : "10 / page"}
         </p>
       </div>
 
@@ -538,179 +538,218 @@ export function LearnWorldsRoster({
         </p>
       ) : null}
 
-      <div className="overflow-x-auto rounded-2xl border border-slate-100">
-        <table className="min-w-full text-left text-sm">
-          <thead>
-            <tr className="bg-slate-50/80 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-              <th className="px-3 py-3.5 font-semibold sm:px-4">Apprenant</th>
-              <th className="px-3 py-3.5 font-semibold sm:px-4">Email</th>
-              <th className="hidden px-4 py-3.5 font-semibold md:table-cell">
-                Formation
-              </th>
-              <th className="hidden px-4 py-3.5 font-semibold lg:table-cell">
-                Inscription
-              </th>
-              <th className="px-3 py-3.5 font-semibold sm:px-4">Statut</th>
-              <th className="px-3 py-3.5 font-semibold sm:px-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pending && !data ? (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="px-4 py-14 text-center text-slate-500"
-                >
-                  Chargement…
-                </td>
+      <div className="-mx-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:mx-0">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[56rem] table-fixed border-collapse text-left text-sm">
+            <colgroup>
+              <col className="w-[28%]" />
+              <col className="w-[22%]" />
+              <col className="w-[16%]" />
+              <col className="w-[12%]" />
+              <col className="w-[12%]" />
+              <col className="w-[10%]" />
+            </colgroup>
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/90">
+                <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                  Apprenant
+                </th>
+                <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                  Email
+                </th>
+                <th className="hidden px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 md:table-cell">
+                  Formation
+                </th>
+                <th className="hidden px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 lg:table-cell">
+                  Inscription
+                </th>
+                <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                  Statut
+                </th>
+                <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                  Action
+                </th>
               </tr>
-            ) : null}
-            {data?.rows.map((row) => {
-              const href = adminStudentDetailHref(
-                row.accountStatus,
-                row.studentId,
-              );
-              return (
-                <tr
-                  key={row.learnworldsUserId}
-                  className="border-t border-slate-100 transition hover:bg-slate-50/80"
-                >
-                  <td className="px-3 py-3.5 sm:px-4">
-                    <div className="flex items-center gap-3">
-                      <AdminAvatar name={row.fullName} size="sm" />
-                      <span className="font-semibold text-slate-900">
-                        {row.fullName}
-                      </span>
-                    </div>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {pending && !data ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-4 py-16 text-center text-slate-500"
+                  >
+                    Chargement de la liste…
                   </td>
-                  <td className="max-w-[12rem] truncate px-3 py-3.5 text-slate-600 sm:px-4">
-                    {row.email ?? "—"}
-                  </td>
-                  <td className="hidden max-w-[10rem] truncate px-4 py-3.5 text-slate-600 md:table-cell">
-                    {row.tags.length ? row.tags.join(", ") : "—"}
-                  </td>
-                  <td className="hidden whitespace-nowrap px-4 py-3.5 text-slate-600 lg:table-cell">
-                    {formatDateFr(row.createdAt)}
-                  </td>
-                  <td className="px-3 py-3.5 sm:px-4">
-                    <AccountStatusBadge
-                      status={row.accountStatus}
-                      label={STATUS_LABEL[row.accountStatus]}
-                    />
-                    {row.invitationError ? (
-                      <p className="mt-1 max-w-[160px] text-xs text-red-600">
-                        {row.invitationError}
+                </tr>
+              ) : null}
+              {data?.rows.map((row) => {
+                const href = adminStudentDetailHref(
+                  row.accountStatus,
+                  row.studentId,
+                );
+                return (
+                  <tr
+                    key={row.learnworldsUserId}
+                    className="group transition-colors hover:bg-blue-50/40"
+                  >
+                    <td className="px-4 py-3.5 align-middle">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <AdminAvatar name={row.fullName} size="sm" />
+                        <p className="truncate font-semibold text-slate-900">
+                          {row.fullName}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3.5 align-middle">
+                      <p className="truncate text-slate-600" title={row.email ?? undefined}>
+                        {row.email ?? "—"}
                       </p>
-                    ) : null}
-                  </td>
-                  <td className="px-3 py-3.5 sm:px-4">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {href ? (
-                        <Link href={href} className="ko-btn-blue-soft">
-                          <IconEye className="ko-icon-sm" />
-                          Voir
-                        </Link>
+                    </td>
+                    <td className="hidden px-4 py-3.5 align-middle md:table-cell">
+                      {row.tags.length ? (
+                        <div className="flex flex-wrap gap-1">
+                          {row.tags.slice(0, 2).map((tag) => (
+                            <span
+                              key={tag}
+                              className="inline-flex max-w-full truncate rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700"
+                              title={tag}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {row.tags.length > 2 ? (
+                            <span className="text-[11px] font-medium text-slate-400">
+                              +{row.tags.length - 2}
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
+                    <td className="hidden whitespace-nowrap px-4 py-3.5 align-middle text-slate-600 lg:table-cell">
+                      {formatDateFr(row.createdAt)}
+                    </td>
+                    <td className="px-4 py-3.5 align-middle">
+                      <AccountStatusBadge
+                        status={row.accountStatus}
+                        label={STATUS_LABEL[row.accountStatus]}
+                      />
+                      {row.invitationError ? (
+                        <p className="mt-1 max-w-[11rem] truncate text-[11px] text-red-600" title={row.invitationError}>
+                          {row.invitationError}
+                        </p>
                       ) : null}
-                      {canManageStudents &&
-                      row.accountStatus === "ACTIVE" &&
-                      row.studentId ? (
-                        <button
-                          type="button"
-                          disabled={busyId === row.studentId}
-                          onClick={() =>
-                            runAccessToggle(row.studentId!, "disable")
-                          }
-                          className="ko-btn-ghost"
-                        >
-                          <IconBan className="ko-icon-sm" />
-                          Désactiver
-                        </button>
-                      ) : null}
-                      {canManageStudents &&
-                      row.accountStatus === "DISABLED" &&
-                      row.studentId ? (
-                        <button
-                          type="button"
-                          disabled={busyId === row.studentId}
-                          onClick={() =>
-                            runAccessToggle(row.studentId!, "enable")
-                          }
-                          className="ko-btn-blue"
-                        >
-                          <IconCheck className="ko-icon-sm" />
-                          Réactiver
-                        </button>
-                      ) : null}
-                      {canManageStudents &&
-                      row.accountStatus === "PENDING_ACTIVATION" &&
-                      row.studentId ? (
-                        <>
-                          <button
-                            type="button"
-                            disabled={busyId === row.studentId}
-                            onClick={() =>
-                              runRegenerate({
-                                studentId: row.studentId!,
-                                fullName: row.fullName,
-                                email: row.email,
-                              })
-                            }
-                            className="ko-btn-ghost"
-                          >
-                            <IconRefresh className="ko-icon-sm" />
-                            Régénérer
-                          </button>
+                    </td>
+                    <td className="px-4 py-3.5 align-middle">
+                      <div className="flex flex-wrap items-center justify-end gap-1.5">
+                        {href ? (
+                          <Link href={href} className="ko-btn-blue-soft !px-2.5 !py-1.5 text-xs">
+                            <IconEye className="ko-icon-sm" />
+                            Voir
+                          </Link>
+                        ) : null}
+                        {canManageStudents &&
+                        row.accountStatus === "ACTIVE" &&
+                        row.studentId ? (
                           <button
                             type="button"
                             disabled={busyId === row.studentId}
                             onClick={() =>
                               runAccessToggle(row.studentId!, "disable")
                             }
-                            className="ko-btn-ghost"
+                            className="ko-btn-ghost !px-2.5 !py-1.5 text-xs"
                           >
                             <IconBan className="ko-icon-sm" />
                             Désactiver
                           </button>
-                        </>
-                      ) : null}
-                      {canManageStudents &&
-                      (row.accountStatus === "NOT_ACTIVATED" ||
-                        row.accountStatus === "ERROR") ? (
-                        <button
-                          type="button"
-                          disabled={busyId === row.learnworldsUserId}
-                          onClick={() =>
-                            runActivate({
-                              learnworldsUserId: row.learnworldsUserId,
-                              fullName: row.fullName,
-                              email: row.email,
-                            })
-                          }
-                          className="ko-btn-blue"
-                        >
-                          <IconCheck className="ko-icon-sm" />
-                          {row.accountStatus === "ERROR"
-                            ? "Réessayer"
-                            : "Activer"}
-                        </button>
-                      ) : null}
-                    </div>
+                        ) : null}
+                        {canManageStudents &&
+                        row.accountStatus === "DISABLED" &&
+                        row.studentId ? (
+                          <button
+                            type="button"
+                            disabled={busyId === row.studentId}
+                            onClick={() =>
+                              runAccessToggle(row.studentId!, "enable")
+                            }
+                            className="ko-btn-blue !px-2.5 !py-1.5 text-xs"
+                          >
+                            <IconCheck className="ko-icon-sm" />
+                            Réactiver
+                          </button>
+                        ) : null}
+                        {canManageStudents &&
+                        row.accountStatus === "PENDING_ACTIVATION" &&
+                        row.studentId ? (
+                          <>
+                            <button
+                              type="button"
+                              disabled={busyId === row.studentId}
+                              onClick={() =>
+                                runRegenerate({
+                                  studentId: row.studentId!,
+                                  fullName: row.fullName,
+                                  email: row.email,
+                                })
+                              }
+                              className="ko-btn-ghost !px-2.5 !py-1.5 text-xs"
+                            >
+                              <IconRefresh className="ko-icon-sm" />
+                              Régénérer
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busyId === row.studentId}
+                              onClick={() =>
+                                runAccessToggle(row.studentId!, "disable")
+                              }
+                              className="ko-btn-ghost !px-2.5 !py-1.5 text-xs"
+                            >
+                              <IconBan className="ko-icon-sm" />
+                              Désactiver
+                            </button>
+                          </>
+                        ) : null}
+                        {canManageStudents &&
+                        (row.accountStatus === "NOT_ACTIVATED" ||
+                          row.accountStatus === "ERROR") ? (
+                          <button
+                            type="button"
+                            disabled={busyId === row.learnworldsUserId}
+                            onClick={() =>
+                              runActivate({
+                                learnworldsUserId: row.learnworldsUserId,
+                                fullName: row.fullName,
+                                email: row.email,
+                              })
+                            }
+                            className="ko-btn-blue !px-3 !py-1.5 text-xs"
+                          >
+                            <IconCheck className="ko-icon-sm" />
+                            {row.accountStatus === "ERROR"
+                              ? "Réessayer"
+                              : "Activer"}
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {data && data.rows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-4 py-16 text-center text-slate-500"
+                  >
+                    Aucun apprenant pour ce filtre.
                   </td>
                 </tr>
-              );
-            })}
-            {data && data.rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="px-4 py-14 text-center text-slate-500"
-                >
-                  Aucun apprenant pour ce filtre.
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <AdminPagination
@@ -718,7 +757,7 @@ export function LearnWorldsRoster({
         totalPages={totalPages}
         pending={pending}
         onChange={setPage}
-        pageSize={5}
+        pageSize={10}
         rowCount={data?.rows.length ?? 0}
       />
     </div>

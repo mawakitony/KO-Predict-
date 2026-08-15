@@ -25,7 +25,7 @@ export default async function PlanPage() {
       displayName={profile?.displayName}
       avatarUrl={profile?.avatarUrl}
       title="Mon plan de progression"
-      subtitle="Objectifs concrets pour les 7 prochains jours"
+      subtitle="Courbe d'avancement, objectifs et historique du cycle"
       showAdminLink={showAdmin}
     >
       {error === "UNAVAILABLE" ? (

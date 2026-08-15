@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { BrandMark } from "@/components/ui/BrandMark";
 import {
+  IconBell,
   IconBook,
   IconCalendar,
   IconDashboard,
+  IconSearch,
   IconUser,
   IconUsers,
 } from "@/components/admin/AdminIcons";
@@ -93,6 +95,68 @@ function MobileNavLink({
   );
 }
 
+function LearnerHeaderTools({
+  shownName,
+  displayName,
+  firstName,
+  lastName,
+  email,
+  avatarUrl,
+  headerAction,
+}: {
+  shownName: string;
+  displayName?: string | null;
+  firstName?: string;
+  lastName?: string | null;
+  email?: string | null;
+  avatarUrl?: string | null;
+  headerAction?: { href: string; label: string };
+}) {
+  return (
+    <div className="ko-dash-header-aside">
+      <Link
+        href="/learning"
+        className="ko-dash-toolbar-btn"
+        aria-label="Rechercher une activité"
+        title="Rechercher"
+      >
+        <IconSearch className="ko-icon" />
+      </Link>
+      <Link
+        href="/plan"
+        className="ko-dash-toolbar-btn"
+        aria-label="Notifications du plan"
+        title="Notifications"
+      >
+        <IconBell className="ko-icon" />
+        <span className="ko-dash-toolbar-badge" aria-hidden />
+      </Link>
+      <Link
+        href="/profile"
+        className="ko-dash-profile-pill"
+        aria-label="Modifier mon profil"
+        title="Modifier mon profil"
+      >
+        <UserAvatar
+          displayName={displayName}
+          firstName={firstName}
+          lastName={lastName}
+          email={email}
+          imageUrl={avatarUrl}
+          size="sm"
+        />
+        <p className="ko-dash-profile-name truncate">{shownName}</p>
+      </Link>
+      {headerAction ? (
+        <Link href={headerAction.href} className="ko-dash-header-cta">
+          {headerAction.label}
+          <span aria-hidden>→</span>
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
 /** Shell dashboard apprenant — desktop sidebar + nav mobile uniquement < lg. */
 export function LearnerHubLayout({
   email,
@@ -125,7 +189,7 @@ export function LearnerHubLayout({
   return (
     <div className="ko-dash-bg ko-dash-shell min-h-full flex-1">
       <div aria-hidden className="ko-dash-aurora" />
-      <div className="relative mx-auto w-full max-w-[1440px] lg:px-4 lg:py-4">
+      <div className="relative mx-auto w-full lg:pl-0">
         <aside className="ko-dash-sidebar ko-dash-sidebar-pin hidden lg:flex">
           <div className="shrink-0 px-5 pt-6">
             <BrandMark href="/" size="sm" tone="dark" />
@@ -204,7 +268,7 @@ export function LearnerHubLayout({
           </div>
         </aside>
 
-        <div className="ko-dash-main-offset flex min-w-0 flex-col px-3 pb-24 pt-0 sm:px-5 lg:px-2 lg:pb-10 lg:pt-0">
+        <div className="ko-dash-main-offset flex min-w-0 flex-col px-0 pb-24 lg:pb-8">
           {topBar ? (
             <section className="ko-school-head" aria-label="En-tête vue école">
               <div className="ko-school-topbar">
@@ -224,27 +288,15 @@ export function LearnerHubLayout({
                     ) : null}
                   </div>
                 </div>
-                <Link
-                  href="/profile"
-                  className="ko-dash-profile-pill ko-school-topbar-account"
-                  aria-label="Modifier mon profil"
-                  title="Modifier mon profil"
-                >
-                  <UserAvatar
-                    displayName={displayName}
-                    firstName={firstName}
-                    lastName={lastName}
-                    email={email}
-                    imageUrl={avatarUrl}
-                    size="sm"
-                  />
-                  <div className="hidden min-w-0 text-left sm:block">
-                    <p className="ko-dash-profile-name">{shownName}</p>
-                    <p className="ko-dash-profile-email">
-                      {email ?? "KO Predict™"}
-                    </p>
-                  </div>
-                </Link>
+                <LearnerHeaderTools
+                  shownName={shownName}
+                  displayName={displayName}
+                  firstName={firstName}
+                  lastName={lastName}
+                  email={email}
+                  avatarUrl={avatarUrl}
+                  headerAction={headerAction}
+                />
               </div>
 
               {statusBadge ? (
@@ -258,67 +310,51 @@ export function LearnerHubLayout({
             </section>
           ) : (
             <header
-              className={`ko-dash-header mb-5 flex flex-wrap items-start justify-between gap-4 pt-4 sm:mb-7 sm:gap-5 sm:pt-5 lg:pt-1${
+              className={`ko-dash-header${
                 statusBadge || sectionTitle ? " is-school" : ""
               }`}
             >
-              <div className="min-w-0 flex-1">
-                <div className="mb-2 flex items-center gap-2 lg:hidden">
-                  <BrandMark href="/" size="sm" tone="dark" />
+              <div className="ko-dash-header-inner">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2 flex items-center gap-2 lg:hidden">
+                    <BrandMark href="/" size="sm" tone="dark" />
+                  </div>
+                  {shownName ? (
+                    <p className="ko-dash-hello">Bonjour, {shownName}</p>
+                  ) : null}
+                  <h1 className="ko-dash-title">{title}</h1>
+                  {subtitle ? (
+                    <p className="ko-dash-subtitle">{subtitle}</p>
+                  ) : null}
+                  {statusBadge || sectionTitle ? (
+                    <div className="ko-dash-school-meta">
+                      {statusBadge ? (
+                        <p className="ko-dash-status">
+                          <span className="ko-dash-status-dot" aria-hidden />
+                          {statusBadge}
+                        </p>
+                      ) : null}
+                      {sectionTitle ? (
+                        <h2 className="ko-dash-section-title">{sectionTitle}</h2>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
-                {shownName ? (
-                  <p className="ko-dash-hello">Bonjour, {shownName}</p>
-                ) : null}
-                <h1 className="ko-dash-title">{title}</h1>
-                {subtitle ? <p className="ko-dash-subtitle">{subtitle}</p> : null}
-                {statusBadge || sectionTitle ? (
-                  <div className="ko-dash-school-meta">
-                    {statusBadge ? (
-                      <p className="ko-dash-status">
-                        <span className="ko-dash-status-dot" aria-hidden />
-                        {statusBadge}
-                      </p>
-                    ) : null}
-                    {sectionTitle ? (
-                      <h2 className="ko-dash-section-title">{sectionTitle}</h2>
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
 
-              <div className="ko-dash-header-aside">
-                <Link
-                  href="/profile"
-                  className="ko-dash-profile-pill"
-                  aria-label="Modifier mon profil"
-                  title="Modifier mon profil"
-                >
-                  <UserAvatar
-                    displayName={displayName}
-                    firstName={firstName}
-                    lastName={lastName}
-                    email={email}
-                    imageUrl={avatarUrl}
-                    size="sm"
-                  />
-                  <div className="hidden min-w-0 text-left sm:block">
-                    <p className="ko-dash-profile-name">{shownName}</p>
-                    <p className="ko-dash-profile-email">
-                      {email ?? "KO Predict™"}
-                    </p>
-                  </div>
-                </Link>
-                {headerAction ? (
-                  <Link href={headerAction.href} className="ko-dash-header-cta">
-                    {headerAction.label}
-                    <span aria-hidden>→</span>
-                  </Link>
-                ) : null}
+                <LearnerHeaderTools
+                  shownName={shownName}
+                  displayName={displayName}
+                  firstName={firstName}
+                  lastName={lastName}
+                  email={email}
+                  avatarUrl={avatarUrl}
+                  headerAction={headerAction}
+                />
               </div>
             </header>
           )}
 
-          <main className="ko-dash-stagger min-w-0 space-y-3 sm:space-y-4">
+          <main className="ko-dash-stagger min-w-0 space-y-3 px-3 pt-4 sm:space-y-4 sm:px-5 lg:px-6 lg:pt-5">
             {children}
           </main>
         </div>

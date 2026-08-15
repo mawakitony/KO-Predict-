@@ -12,6 +12,8 @@ import type {
   WorkPlanType,
 } from "@/lib/planning/work-plan/types";
 import type { PersistedWorkPlan } from "@/lib/planning/work-plan/memory-store";
+import type { PaceStatus } from "@/types/prediction";
+import type { WeeklyPlanStatus } from "@/lib/planning/weekly-plan";
 
 export function formatWorkPlanPeriodFr(
   startsAt: string,
@@ -80,9 +82,153 @@ export interface WorkPlanSummaryView {
   activitiesLabel: string | null;
   measurableCompleted: number;
   measurableTotal: number;
+  /** Ex. « 0/2 objectifs mesurables » — jamais le total brut des tâches. */
+  measurableProgressLabel: string;
+  taskCount: number;
   reevaluationLabel: string;
   status: WorkPlanStatus;
   statusLabel: string;
+}
+
+export type WorkPlanPaceTone = "up" | "down" | "neutral";
+
+/** Libellés rythme UI — une seule source pour KPI + courbe. */
+export interface WorkPlanPaceView {
+  valueLabel: string;
+  detailLabel: string;
+  tone: WorkPlanPaceTone;
+}
+
+/**
+ * Rythme affiché à partir des données métier du snapshot / type de plan.
+ * Ne compare jamais un % mesurable au temps écoulé du cycle.
+ */
+export function buildWorkPlanPaceView(plan: PersistedWorkPlan): WorkPlanPaceView {
+  return mapWorkPlanPaceView({
+    paceStatus: plan.snapshot.paceStatusStart,
+    weeklyStatus: plan.snapshot.weeklyStatusStart,
+    planType: plan.planType,
+  });
+}
+
+export function mapWorkPlanPaceView(input: {
+  paceStatus: PaceStatus | null;
+  weeklyStatus: WeeklyPlanStatus;
+  planType: WorkPlanType;
+}): WorkPlanPaceView {
+  const { paceStatus, weeklyStatus, planType } = input;
+
+  if (paceStatus === "AHEAD" || weeklyStatus === "AHEAD") {
+    return {
+      valueLabel: "En avance",
+      detailLabel: "En avance",
+      tone: "up",
+    };
+  }
+
+  if (paceStatus === "ON_TRACK" || weeklyStatus === "ON_TRACK") {
+    return {
+      valueLabel: "Sur le rythme",
+      detailLabel: "Sur le rythme",
+      tone: "up",
+    };
+  }
+
+  if (paceStatus === "NO_ACTIVITY" || weeklyStatus === "NO_ACTIVITY") {
+    return {
+      valueLabel: "Reprise",
+      detailLabel: "Reprise nécessaire",
+      tone: "down",
+    };
+  }
+
+  if (
+    paceStatus === "BEHIND" ||
+    paceStatus === "SLIGHTLY_BEHIND" ||
+    weeklyStatus === "BEHIND" ||
+    weeklyStatus === "SLIGHTLY_BEHIND" ||
+    planType === "CATCH_UP"
+  ) {
+    return {
+      valueLabel: "Rattrapage",
+      detailLabel: "Rattrapage en cours",
+      tone: "down",
+    };
+  }
+
+  if (
+    planType === "STARTUP" ||
+    weeklyStatus === "INSUFFICIENT_DATA" ||
+    paceStatus == null
+  ) {
+    return {
+      valueLabel: "À préciser",
+      detailLabel: "Données insuffisantes",
+      tone: "neutral",
+    };
+  }
+
+  if (planType === "CONSOLIDATION" || weeklyStatus === "COMPLETE") {
+    return {
+      valueLabel: "Sur le rythme",
+      detailLabel: "Sur le rythme",
+      tone: "up",
+    };
+  }
+
+  return {
+    valueLabel: "—",
+    detailLabel: "Statut indisponible",
+    tone: "neutral",
+  };
+}
+
+export interface WorkPlanTaskProgressView {
+  /** null = pas de pourcentage affiché (guidance / non mesurable). */
+  percent: number | null;
+  label: string;
+  showGauge: boolean;
+}
+
+/**
+ * Progression affichable d'une tâche.
+ * QCM_PRACTICE / MAINTAIN_PACE = guidance : jamais de 50 % conventionnel.
+ */
+export function workPlanTaskProgressView(
+  task: WorkPlanTask,
+): WorkPlanTaskProgressView {
+  if (task.type === "QCM_PRACTICE" || task.type === "MAINTAIN_PACE") {
+    return {
+      percent: null,
+      label: "Objectif qualitatif",
+      showGauge: false,
+    };
+  }
+
+  if (!task.measurable) {
+    return {
+      percent: null,
+      label: "Orientation",
+      showGauge: false,
+    };
+  }
+
+  if (task.status === "COMPLETED") {
+    return { percent: 100, label: "100 %", showGauge: true };
+  }
+
+  if (task.type === "ACTIVITIES" && task.target != null && task.target > 0) {
+    const progress = task.progress == null ? 0 : Math.max(0, task.progress);
+    const percent = Math.min(100, Math.round((progress / task.target) * 100));
+    return {
+      percent,
+      label: `${percent} %`,
+      showGauge: true,
+    };
+  }
+
+  // Mesurable binaire (date, reprise) : 0 % tant que non terminé — jamais 50 %.
+  return { percent: 0, label: "0 %", showGauge: true };
 }
 
 export function buildWorkPlanSummaryView(
@@ -99,6 +245,8 @@ export function buildWorkPlanSummaryView(
     activitiesLabel: activities,
     measurableCompleted: completed,
     measurableTotal: total,
+    measurableProgressLabel: `${completed}/${total} objectifs mesurables`,
+    taskCount: plan.tasks.length,
     reevaluationLabel: formatDateShortFr(plan.endsAt.slice(0, 10)),
     status: plan.status,
     statusLabel: workPlanStatusLabelFr(plan.status),

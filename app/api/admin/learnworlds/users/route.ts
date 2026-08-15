@@ -47,7 +47,7 @@ export async function GET(request: Request) {
   try {
     const data = await getLearnWorldsRosterPage({
       page: Number.isFinite(page) ? page : 1,
-      itemsPerPage: 5,
+      itemsPerPage: 10,
       statusFilter: status,
       query: q,
       sort,

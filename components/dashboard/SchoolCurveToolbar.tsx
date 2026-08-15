@@ -1,19 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import type { FormEvent } from "react";
 import {
-  IconBook,
   IconFilter,
   IconMore,
   IconRefresh,
   IconSearch,
   IconSort,
-  IconSpark,
 } from "@/components/admin/AdminIcons";
 
 export function SchoolCurveToolbar({
-  learnerCount,
   query,
   onQueryChange,
   onSearch,
@@ -24,7 +20,6 @@ export function SchoolCurveToolbar({
   onReset,
   sortLabel = "Trier",
 }: {
-  learnerCount: number;
   query: string;
   onQueryChange: (value: string) => void;
   onSearch: () => void;
@@ -42,28 +37,6 @@ export function SchoolCurveToolbar({
 
   return (
     <div className="ko-curve-toolbar" aria-label="Recherche sur la vue d'ensemble">
-      <div className="ko-curve-scope" role="navigation" aria-label="Portée">
-        <Link href="/admin" className="ko-curve-scope-seg is-active">
-          <IconBook className="ko-curve-scope-icon" />
-          <span>Tous les apprenants</span>
-        </Link>
-
-        <Link
-          href="/admin?tab=kopredict"
-          className="ko-curve-scope-seg"
-          aria-label="KO Predict™"
-        >
-          <IconSpark className="ko-curve-scope-icon is-muted" />
-          <span className="ko-curve-scope-mark">
-            <span className="ko-curve-scope-ko">KO</span>
-            <span className="ko-curve-scope-predict">
-              Predict<sup>™</sup>
-            </span>
-          </span>
-          <span className="ko-curve-scope-count">{learnerCount}</span>
-        </Link>
-      </div>
-
       <form className="ko-curve-tools" onSubmit={handleSubmit}>
         <button
           type="button"
@@ -77,7 +50,9 @@ export function SchoolCurveToolbar({
 
         <label className="ko-curve-search">
           <IconSearch className="ko-curve-search-icon" />
-          <span className="sr-only">Rechercher un apprenant sur la vue d&apos;ensemble</span>
+          <span className="sr-only">
+            Rechercher un apprenant sur la vue d&apos;ensemble
+          </span>
           <input
             type="search"
             value={query}

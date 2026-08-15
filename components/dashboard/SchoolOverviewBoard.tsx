@@ -192,7 +192,6 @@ export function SchoolOverviewBoard({
     <div className="ko-inv-board">
       <section className="ko-curve-block" aria-label="Évolution de la promotion">
         <SchoolCurveToolbar
-          learnerCount={overview.totalStudents}
           query={query}
           onQueryChange={setQuery}
           onSearch={runSearch}

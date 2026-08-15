@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AdminStudentFocusSync } from "@/components/admin/AdminLearnersHeaderTabs";
 import { StudentCoachFollowUp } from "@/components/admin/StudentCoachFollowUp";
 import { StudentLearningActivities } from "@/components/admin/learning-history/StudentLearningActivities";
 import { StudentLearningQuizzes } from "@/components/admin/learning-history/StudentLearningQuizzes";
@@ -103,6 +104,10 @@ export function StudentDetailTabs({
 
   return (
     <div className="space-y-4 sm:space-y-5">
+      <AdminStudentFocusSync
+        fullName={detail.student.fullName}
+        certification={detail.student.certification}
+      />
       <div
         role="tablist"
         aria-label="Sections fiche apprenant"
