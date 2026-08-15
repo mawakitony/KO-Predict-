@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   activityStatusLabelFr,
@@ -14,6 +14,11 @@ import {
 } from "@/lib/admin/learning-history/parse";
 import { formatDateTimeFr } from "@/lib/dashboard/format";
 import { formatPercentOrDash } from "@/lib/learning/format";
+import {
+  interpretActivitiesResponse,
+  LEARNER_HISTORY_TEMPORARY_MESSAGE,
+  shouldAutoFetchOnMount,
+} from "@/lib/learning/lw-id";
 import type {
   LearningActivityFilter,
   LearningAssessmentAttempt,
@@ -63,13 +68,13 @@ export function LearnerLearningPanel({
   const [assessments, setAssessments] = useState<LearningAssessmentSummary[]>(
     [],
   );
-  const [loaded, setLoaded] = useState(false);
   const [filter, setFilter] = useState<LearningActivityFilter>("all");
   const [query, setQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [attemptById, setAttemptById] = useState<Record<string, AttemptState>>(
     {},
   );
+  const didMountFetch = useRef(false);
 
   const load = useCallback(async (fresh = false) => {
     setLoading(true);
@@ -80,29 +85,37 @@ export function LearnerLearningPanel({
       const body = (await res.json().catch(() => null)) as {
         ok?: boolean;
         error?: string;
+        message?: string;
+        code?: string;
         activities?: LearningHistoryActivity[];
         assessments?: LearningAssessmentSummary[];
       } | null;
-      if (!res.ok || !body?.ok) {
-        setError(
-          body?.error ??
-            "Vos données LearnWorlds sont temporairement indisponibles.",
-        );
+      const interpreted = interpretActivitiesResponse({
+        httpOk: res.ok,
+        body,
+      });
+      if (!interpreted.ok) {
+        setError(interpreted.error);
+        setActivities([]);
+        setAssessments([]);
         return;
       }
-      setActivities(body.activities ?? []);
-      setAssessments(body.assessments ?? []);
-      setLoaded(true);
+      setActivities(body?.activities ?? []);
+      setAssessments(body?.assessments ?? []);
     } catch {
-      setError("Vos données LearnWorlds sont temporairement indisponibles.");
+      setError(LEARNER_HISTORY_TEMPORARY_MESSAGE);
+      setActivities([]);
+      setAssessments([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (!loaded && !loading) void load(false);
-  }, [loaded, loading, load]);
+    if (!shouldAutoFetchOnMount(didMountFetch.current)) return;
+    didMountFetch.current = true;
+    void load(false);
+  }, [load]);
 
   function selectTab(next: Tab) {
     const params = new URLSearchParams(searchParams.toString());
@@ -249,10 +262,17 @@ export function LearnerLearningPanel({
       {loading ? (
         <p className="text-sm text-slate-500">Chargement de votre parcours…</p>
       ) : null}
-      {error ? (
-        <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800">
-          {error}
-        </p>
+      {error && !loading ? (
+        <div className="rounded-2xl bg-rose-50 px-4 py-4 text-sm text-rose-800">
+          <p>{error}</p>
+          <button
+            type="button"
+            onClick={() => void load(true)}
+            className="mt-3 inline-flex rounded-full bg-rose-700 px-4 py-2 text-xs font-semibold text-white transition hover:bg-rose-800"
+          >
+            Réessayer
+          </button>
+        </div>
       ) : null}
 
       {!loading && !error && tab === "activities" ? (

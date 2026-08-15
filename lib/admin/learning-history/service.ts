@@ -18,7 +18,10 @@ import { createLearnWorldsClient } from "@/lib/learnworlds/client";
 import { LEARNWORLDS_PATHS, lwPath } from "@/lib/learnworlds/config";
 import { LearnWorldsApiError } from "@/lib/learnworlds/errors";
 import { asRecord } from "@/lib/learnworlds/mappers";
-import { getUserCourseProgressList } from "@/lib/learnworlds/progress";
+import {
+  isManifestlyInvalidLearnWorldsUserId,
+  LEARNER_HISTORY_UNAVAILABLE_MESSAGE,
+} from "@/lib/learning/lw-id";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   LearningAssessmentAttempt,
@@ -35,6 +38,7 @@ export class LearningHistoryError extends Error {
     message: string,
     readonly code:
       | "NO_LW_ID"
+      | "INVALID_LW_ID"
       | "NOT_FOUND"
       | "UNAVAILABLE"
       | "ATTEMPTS_UNAVAILABLE"
@@ -67,8 +71,15 @@ export async function resolveStudentLearnWorldsId(
   const lwId = data.learnworlds_user_id?.trim();
   if (!lwId) {
     throw new LearningHistoryError(
-      "Aucun identifiant LearnWorlds pour cet apprenant.",
+      LEARNER_HISTORY_UNAVAILABLE_MESSAGE,
       "NO_LW_ID",
+      422,
+    );
+  }
+  if (isManifestlyInvalidLearnWorldsUserId(lwId)) {
+    throw new LearningHistoryError(
+      LEARNER_HISTORY_UNAVAILABLE_MESSAGE,
+      "INVALID_LW_ID",
       422,
     );
   }
@@ -84,12 +95,34 @@ async function fetchProgressRaw(
     if (cached) return cached;
   }
 
+  // Appel direct (pas getUserCourseProgressList) : un 404 « User not found »
+  // ne doit pas être transformé en historique vide inventé.
+  const client = createLearnWorldsClient();
+  const path = lwPath(LEARNWORLDS_PATHS.userProgress, {
+    id: learnworldsUserId,
+  });
+
   try {
-    const list = await getUserCourseProgressList(learnworldsUserId);
-    const raw = list.map((item) => item.raw ?? item);
-    setCachedProgress(learnworldsUserId, raw);
-    return raw;
+    const raw = await client.request<unknown>(path);
+    const body = asRecord(raw);
+    const data = Array.isArray(body.data)
+      ? body.data
+      : Array.isArray(raw)
+        ? raw
+        : [];
+    setCachedProgress(learnworldsUserId, data);
+    return data;
   } catch (error) {
+    if (
+      error instanceof LearnWorldsApiError &&
+      (error.status === 404 || error.status === 400)
+    ) {
+      throw new LearningHistoryError(
+        LEARNER_HISTORY_UNAVAILABLE_MESSAGE,
+        "INVALID_LW_ID",
+        422,
+      );
+    }
     if (error instanceof LearnWorldsApiError && error.status === 429) {
       throw new LearningHistoryError(
         "Historique temporairement indisponible.",

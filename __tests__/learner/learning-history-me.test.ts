@@ -17,6 +17,10 @@ import {
   formatPercentOrDash,
   formatSyncRelativeFr,
 } from "@/lib/learning/format";
+import {
+  isManifestlyInvalidLearnWorldsUserId,
+  LEARNER_HISTORY_UNAVAILABLE_MESSAGE,
+} from "@/lib/learning/lw-id";
 
 /**
  * Sécurité apprenant : les routes /api/me ne prennent jamais un studentId
@@ -47,6 +51,21 @@ describe("learner /api/me learning-history contract", () => {
     // Documente le contrat : studentId query ne doit pas être utilisé comme identité.
     const identitySource = "session.profile_id → students.id";
     expect(identitySource).toContain("session");
+  });
+
+  it("INVALID_LW_ID → message stable user-friendly", () => {
+    expect(isManifestlyInvalidLearnWorldsUserId("lw_tony_test_demo")).toBe(
+      true,
+    );
+    const payload = {
+      ok: false as const,
+      code: "INVALID_LW_ID",
+      message: LEARNER_HISTORY_UNAVAILABLE_MESSAGE,
+      error: LEARNER_HISTORY_UNAVAILABLE_MESSAGE,
+    };
+    expect(payload.message).toBe(
+      "Historique pédagogique indisponible pour ce compte.",
+    );
   });
 });
 
