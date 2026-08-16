@@ -2,20 +2,18 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { recordMfaSecurityAuditAction } from "@/lib/auth/mfa-security-actions";
-import { resolveAdditionalTotpEnrollPrep } from "@/lib/auth/mfa-security";
 import {
-  isValidTotpCode,
-  mapMfaSetupError,
-  mapTotpEnrollForDisplay,
-  resolveTotpVerifyOutcome,
-} from "@/lib/auth/mfa-setup";
+  activateAdditionalMfaFactor,
+  restartAdditionalMfaFactor,
+  startAdditionalMfaFactor,
+} from "@/lib/auth/mfa-additional-actions";
+import { isValidTotpCode } from "@/lib/auth/mfa-setup";
 
-type Phase = "preparing" | "ready" | "submitting" | "done";
+type Phase = "preparing" | "ready" | "submitting" | "restarting" | "done";
 
 /**
- * Ajout d’un facteur TOTP supplémentaire (QR/secret en mémoire uniquement).
+ * Ajout d’un facteur TOTP supplémentaire via Server Actions SSR.
+ * QR / secret uniquement en mémoire React — jamais loggés ni persistés.
  */
 export function MfaAddFactorForm({ onCancel }: { onCancel: () => void }) {
   const router = useRouter();
@@ -29,36 +27,32 @@ export function MfaAddFactorForm({ onCancel }: { onCancel: () => void }) {
   const [pending, startTransition] = useTransition();
   const started = useRef(false);
 
+  function applyEnrollment(payload: {
+    factorId: string;
+    qrDataUrl: string;
+    manualSecret: string;
+  }) {
+    setFactorId(payload.factorId);
+    setQrDataUrl(payload.qrDataUrl);
+    setManualSecret(payload.manualSecret);
+  }
+
   useEffect(() => {
     if (started.current) return;
     started.current = true;
 
     void (async () => {
       try {
-        const supabase = createClient();
-        const listed = await supabase.auth.mfa.listFactors();
-        if (listed.error) throw listed.error;
-
-        const totp = listed.data?.totp ?? [];
-        const prep = resolveAdditionalTotpEnrollPrep(totp);
-        for (const id of prep.unverifiedIdsToRemove) {
-          const removed = await supabase.auth.mfa.unenroll({ factorId: id });
-          if (removed.error) throw removed.error;
+        const result = await startAdditionalMfaFactor();
+        if (!result.ok) {
+          setError(result.error);
+          setPhase("ready");
+          return;
         }
-
-        const enrolled = await supabase.auth.mfa.enroll({
-          factorType: "totp",
-          friendlyName: `KO Predict Authenticator ${totp.filter((f) => f.status === "verified").length + 1}`,
-        });
-        if (enrolled.error || !enrolled.data) throw enrolled.error;
-
-        const display = mapTotpEnrollForDisplay(enrolled.data);
-        setFactorId(display.factorId);
-        setQrDataUrl(display.qrDataUrl);
-        setManualSecret(display.manualSecret);
+        applyEnrollment(result);
         setPhase("ready");
-      } catch (err) {
-        setError(mapMfaSetupError(err));
+      } catch {
+        setError("Impossible d’ajouter un facteur. Réessayez.");
         setPhase("ready");
       }
     })();
@@ -80,28 +74,15 @@ export function MfaAddFactorForm({ onCancel }: { onCancel: () => void }) {
     startTransition(async () => {
       setPhase("submitting");
       try {
-        const supabase = createClient();
-        const challenge = await supabase.auth.mfa.challenge({ factorId });
-        if (challenge.error || !challenge.data) throw challenge.error;
-
-        const verified = await supabase.auth.mfa.verify({
+        const result = await activateAdditionalMfaFactor({
           factorId,
-          challengeId: challenge.data.id,
           code: trimmed,
         });
-        if (verified.error) throw verified.error;
-
-        const aal = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (resolveTotpVerifyOutcome(aal.data?.currentLevel) !== "ok_aal2") {
-          setError("Vérification incomplète. Réessayez.");
+        if (!result.ok) {
+          setError(result.error);
           setPhase("ready");
           return;
         }
-
-        await recordMfaSecurityAuditAction({
-          eventType: "MFA_FACTOR_ADDED",
-          factorId,
-        });
 
         setQrDataUrl(null);
         setManualSecret(null);
@@ -109,16 +90,43 @@ export function MfaAddFactorForm({ onCancel }: { onCancel: () => void }) {
         setPhase("done");
         router.refresh();
         onCancel();
-      } catch (err) {
-        setError(mapMfaSetupError(err));
+      } catch {
+        setError("Impossible d’ajouter un facteur. Réessayez.");
         setPhase("ready");
       }
     });
   }
 
-  if (phase === "preparing") {
+  function onRestart() {
+    startTransition(async () => {
+      setError(null);
+      setPhase("restarting");
+      setCode("");
+      try {
+        const result = await restartAdditionalMfaFactor({
+          currentFactorId: factorId,
+        });
+        if (!result.ok) {
+          setError(result.error);
+          setPhase("ready");
+          return;
+        }
+        applyEnrollment(result);
+        setPhase("ready");
+      } catch {
+        setError("Impossible d’ajouter un facteur. Réessayez.");
+        setPhase("ready");
+      }
+    });
+  }
+
+  if (phase === "preparing" || phase === "restarting") {
     return (
-      <p className="text-sm text-slate-500">Préparation du nouveau facteur…</p>
+      <p className="text-sm text-slate-500">
+        {phase === "restarting"
+          ? "Nouvelle configuration…"
+          : "Préparation du nouveau facteur…"}
+      </p>
     );
   }
 
@@ -201,6 +209,16 @@ export function MfaAddFactorForm({ onCancel }: { onCancel: () => void }) {
         >
           Annuler
         </button>
+        {error || factorId ? (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={onRestart}
+            className="text-sm font-semibold text-slate-600 underline disabled:opacity-50"
+          >
+            Recommencer
+          </button>
+        ) : null}
       </div>
     </form>
   );

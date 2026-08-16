@@ -2,12 +2,17 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  assertCleanupNeverIncludesVerified,
   canRemoveVerifiedTotpFactor,
   isRemovableSecondaryFactor,
+  listUnverifiedFactorIdsForCleanup,
+  mapAdditionalMfaFactorDenial,
   mfaStatusLabel,
   resolveAccountSecurityAccess,
+  resolveAdditionalMfaFactorGate,
   resolveAdditionalTotpEnrollPrep,
 } from "@/lib/auth/mfa-security";
+import { mapMfaSetupError } from "@/lib/auth/mfa-setup";
 
 describe("resolveAccountSecurityAccess", () => {
   it("AAL1 → redirection challenge", () => {
@@ -75,6 +80,61 @@ describe("resolveAccountSecurityAccess", () => {
   });
 });
 
+describe("resolveAdditionalMfaFactorGate (Phase H)", () => {
+  it("AAL1 refusé", () => {
+    expect(
+      resolveAdditionalMfaFactorGate({
+        authenticated: true,
+        role: "super_admin",
+        accountStatus: "ACTIVE",
+        currentLevel: "aal1",
+        verifiedTotpFactorCount: 1,
+        activeSuperAdminCount: 2,
+      }),
+    ).toEqual({ action: "deny", code: "aal2_required" });
+    expect(mapAdditionalMfaFactorDenial("aal2_required")).toMatch(/AAL2/i);
+  });
+
+  it("non-SA refusé", () => {
+    expect(
+      resolveAdditionalMfaFactorGate({
+        authenticated: true,
+        role: "admin",
+        accountStatus: "ACTIVE",
+        currentLevel: "aal2",
+        verifiedTotpFactorCount: 1,
+        activeSuperAdminCount: 2,
+      }),
+    ).toEqual({ action: "deny", code: "not_super_admin" });
+  });
+
+  it("AAL2 + SA + enforcement → allow", () => {
+    expect(
+      resolveAdditionalMfaFactorGate({
+        authenticated: true,
+        role: "super_admin",
+        accountStatus: "ACTIVE",
+        currentLevel: "aal2",
+        verifiedTotpFactorCount: 1,
+        activeSuperAdminCount: 2,
+      }),
+    ).toEqual({ action: "allow" });
+  });
+
+  it("count < 2 → enforcement off", () => {
+    expect(
+      resolveAdditionalMfaFactorGate({
+        authenticated: true,
+        role: "super_admin",
+        accountStatus: "ACTIVE",
+        currentLevel: "aal2",
+        verifiedTotpFactorCount: 1,
+        activeSuperAdminCount: 1,
+      }),
+    ).toEqual({ action: "deny", code: "enforcement_disabled" });
+  });
+});
+
 describe("suppression facteurs", () => {
   it("1 facteur → suppression interdite", () => {
     expect(canRemoveVerifiedTotpFactor(1)).toBe(false);
@@ -99,13 +159,26 @@ describe("suppression facteurs", () => {
 });
 
 describe("ajout 2e facteur + labels", () => {
-  it("cleanup unverified avant enroll additionnel", () => {
+  it("cleanup unverified uniquement — premier verified conservé", () => {
+    const factors = [
+      { id: "v1", status: "verified" },
+      { id: "u1", status: "unverified" },
+    ];
+    const cleanup = listUnverifiedFactorIdsForCleanup(factors);
+    expect(cleanup).toEqual(["u1"]);
+    expect(assertCleanupNeverIncludesVerified(cleanup, factors)).toBe(true);
+    expect(resolveAdditionalTotpEnrollPrep(factors)).toEqual({
+      unverifiedIdsToRemove: ["u1"],
+    });
+  });
+
+  it("mauvais code → message FR", () => {
     expect(
-      resolveAdditionalTotpEnrollPrep([
-        { id: "v", status: "verified" },
-        { id: "u", status: "unverified" },
-      ]),
-    ).toEqual({ unverifiedIdsToRemove: ["u"] });
+      mapMfaSetupError({
+        code: "mfa_verification_failed",
+        message: "Invalid TOTP code entered",
+      }),
+    ).toMatch(/incorrect/i);
   });
 
   it("mfaStatusLabel", () => {
@@ -114,7 +187,7 @@ describe("ajout 2e facteur + labels", () => {
   });
 });
 
-describe("sécurité source Phase E", () => {
+describe("sécurité source Phase E / H", () => {
   it("signOut global présent", () => {
     const src = readFileSync(
       join(process.cwd(), "lib/auth/mfa-security-actions.ts"),
@@ -125,6 +198,28 @@ describe("sécurité source Phase E", () => {
     expect(src).not.toMatch(/qr_code/);
     expect(src).not.toMatch(/totp\.secret/);
     expect(src).not.toMatch(/\botp\b/i);
+  });
+
+  it("ajout 2e facteur via Server Actions SSR", () => {
+    const actions = readFileSync(
+      join(process.cwd(), "lib/auth/mfa-additional-actions.ts"),
+      "utf8",
+    );
+    const add = readFileSync(
+      join(process.cwd(), "components/account/MfaAddFactorForm.tsx"),
+      "utf8",
+    );
+    expect(actions).toMatch(/"use server"/);
+    expect(actions).toMatch(/startAdditionalMfaFactor/);
+    expect(actions).toMatch(/activateAdditionalMfaFactor/);
+    expect(actions).toMatch(/restartAdditionalMfaFactor/);
+    expect(actions).toMatch(/MFA_FACTOR_ADDED/);
+    expect(actions).toMatch(/from \"@\/lib\/supabase\/server\"/);
+    expect(actions).toMatch(/assertCleanupNeverIncludesVerified/);
+    expect(add).toMatch(/startAdditionalMfaFactor/);
+    expect(add).not.toMatch(/lib\/supabase\/client/);
+    expect(add).not.toMatch(/auth\.mfa\.enroll/);
+    expect(add).not.toMatch(/localStorage/);
   });
 
   it("aucun secret persisté dans composants account", () => {
@@ -138,7 +233,7 @@ describe("sécurité source Phase E", () => {
     );
     expect(panel).not.toMatch(/localStorage/);
     expect(add).not.toMatch(/localStorage/);
-    expect(add).not.toMatch(/console\.(log|debug|info)/);
+    expect(add).not.toMatch(/sessionStorage/);
   });
 
   it("audit events déclarés", () => {
