@@ -1,9 +1,14 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { countActiveSuperAdmins } from "@/lib/admin/super-admin-guards";
 import { canAccessAdmin } from "@/lib/auth/permissions";
+import {
+  resolveSuperAdminPostLoginMfaPath,
+  sanitizeInternalNextPath,
+} from "@/lib/auth/mfa-aal";
 import { homePathForRole, parseUserRole } from "@/lib/auth/roles";
+import { createClient } from "@/lib/supabase/server";
 
 export type AuthActionState = {
   error: string | null;
@@ -63,12 +68,34 @@ export async function signInAction(
 
   const role = parseUserRole(profile?.role);
   const fallback = homePathForRole(role);
-  const destination =
-    next.startsWith("/") && !next.startsWith("//") ? next : fallback;
+  const destination = sanitizeInternalNextPath(next) ?? fallback;
 
   // Un student ne doit pas être renvoyé vers /admin via ?next=
   if (!canAccessAdmin(role) && destination.startsWith("/admin")) {
     redirect("/dashboard");
+  }
+
+  // MFA post-login : super_admin uniquement (Phase C). Pas d’enforcement /admin ici.
+  if (role === "super_admin") {
+    const activeCount = await countActiveSuperAdmins();
+    const [aal, factors] = await Promise.all([
+      supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+      supabase.auth.mfa.listFactors(),
+    ]);
+    const verifiedTotpFactorCount = (factors.data?.totp ?? []).filter(
+      (f) => f.status === "verified",
+    ).length;
+
+    const mfaPath = resolveSuperAdminPostLoginMfaPath({
+      activeSuperAdminCount: activeCount,
+      currentLevel: aal.data?.currentLevel ?? null,
+      verifiedTotpFactorCount,
+      intendedDestination: destination,
+    });
+
+    if (mfaPath) {
+      redirect(mfaPath);
+    }
   }
 
   redirect(destination);

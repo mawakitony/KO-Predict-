@@ -1,4 +1,5 @@
 import { AdminHubLayout } from "@/components/admin/AdminHubLayout";
+import { enforceSuperAdminMfaInAdminArea } from "@/lib/auth/require-super-admin-aal2";
 import { staffPermissions } from "@/lib/auth/permissions";
 import { requireAdmin } from "@/lib/auth/session";
 
@@ -8,6 +9,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const profile = await requireAdmin();
+  await enforceSuperAdminMfaInAdminArea(profile, { next: "/admin" });
   const permissions = staffPermissions(profile.role);
 
   return (
@@ -18,6 +20,7 @@ export default async function AdminLayout({
       displayName={profile.displayName}
       avatarUrl={profile.avatarUrl}
       canManageTeam={permissions.canManageTeam}
+      showSecurityLink={profile.role === "super_admin"}
     >
       {children}
     </AdminHubLayout>

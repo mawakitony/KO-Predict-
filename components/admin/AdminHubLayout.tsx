@@ -27,6 +27,8 @@ interface AdminHubLayoutProps {
   displayName?: string | null;
   avatarUrl?: string | null;
   canManageTeam?: boolean;
+  /** Lien Sécurité (/account/security) — super_admin uniquement. */
+  showSecurityLink?: boolean;
   children: ReactNode;
 }
 
@@ -94,7 +96,13 @@ function KoPredictNavItem({ active }: { active: boolean }) {
   );
 }
 
-function AdminNavLinks({ canManageTeam }: { canManageTeam: boolean }) {
+function AdminNavLinks({
+  canManageTeam,
+  showSecurityLink,
+}: {
+  canManageTeam: boolean;
+  showSecurityLink: boolean;
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const onKoPredict =
@@ -105,6 +113,7 @@ function AdminNavLinks({ canManageTeam }: { canManageTeam: boolean }) {
   const onTeam = pathname.startsWith("/admin/team");
   const onSchool = pathname.startsWith("/admin/ecole");
   const onProfile = pathname.startsWith("/profile");
+  const onSecurity = pathname.startsWith("/account/security");
 
   return (
     <>
@@ -135,6 +144,14 @@ function AdminNavLinks({ canManageTeam }: { canManageTeam: boolean }) {
         active={onProfile}
         icon={<IconUser className="ko-icon" />}
       />
+      {showSecurityLink ? (
+        <NavItem
+          href="/account/security"
+          label="Sécurité"
+          active={onSecurity}
+          icon={<IconSpark className="ko-icon" />}
+        />
+      ) : null}
     </>
   );
 }
@@ -149,55 +166,98 @@ function AdminHeaderMeta() {
   const onLearnersList = pathname === "/admin";
   const onTeam = pathname.startsWith("/admin/team");
   const onSchool = pathname.startsWith("/admin/ecole");
+  const onProfile = pathname.startsWith("/profile");
+  const onSecurity = pathname.startsWith("/account/security");
 
-  const headerTitle = onTeam
-    ? "Équipe WOLOYEM"
-    : onSchool
-      ? "Tableau de bord de l'école"
-      : onStudentDetail
-        ? (studentFocus?.fullName ?? "Apprenant")
-        : onKoPredict
-          ? "KO Predict™"
-          : onLearnersList
-            ? "Apprenants"
-            : "Administration";
-  const headerSubtitle = onTeam
-    ? "Comptes coach et admin"
-    : onSchool
-      ? "Vue d'ensemble de la promotion KO Predict™"
-      : onStudentDetail
-        ? studentFocus?.certification
-          ? `${studentFocus.certification} · Dossier apprenant`
-          : "Dossier apprenant"
-        : onKoPredict
-          ? "Suivi et interventions des apprenants activés"
-          : "Gestion des comptes LearnWorlds et KO Predict™";
-  const HeaderIcon = onTeam
-    ? IconTeam
-    : onSchool
-      ? IconDashboard
-      : onStudentDetail
-        ? IconUser
-        : onKoPredict
-          ? IconSpark
-          : IconUsers;
+  const headerTitle = onSecurity
+    ? "Sécurité du compte"
+    : onProfile
+    ? "Mon profil"
+    : onTeam
+      ? "Équipe WOLOYEM"
+      : onSchool
+        ? "Tableau de bord de l'école"
+        : onStudentDetail
+          ? (studentFocus?.fullName ?? "Apprenant")
+          : onKoPredict
+            ? "KO Predict™"
+            : onLearnersList
+              ? "Apprenants"
+              : "Administration";
+  const headerSubtitle = onSecurity
+    ? "Vérification en deux étapes et sessions"
+    : onProfile
+    ? "Préférences KO Predict™"
+    : onTeam
+      ? "Comptes coach et admin"
+      : onSchool
+        ? "Vue d'ensemble de la promotion KO Predict™"
+        : onStudentDetail
+          ? studentFocus?.certification
+            ? `${studentFocus.certification} · Dossier apprenant`
+            : "Dossier apprenant"
+          : onKoPredict
+            ? "Suivi et interventions des apprenants activés"
+            : "Gestion des comptes LearnWorlds et KO Predict™";
+  const HeaderIcon = onSecurity || onProfile
+    ? IconUser
+    : onTeam
+      ? IconTeam
+      : onSchool
+        ? IconDashboard
+        : onStudentDetail
+          ? IconUser
+          : onKoPredict
+            ? IconSpark
+            : IconUsers;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2">
       <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-blue-soft)] text-[var(--admin-blue)]">
         <HeaderIcon className="ko-icon" />
       </span>
       <div className="min-w-0">
-        <p className="ko-display truncate text-lg font-semibold text-slate-900">
+        <p className="ko-display truncate text-base font-semibold text-slate-900 sm:text-lg">
           {headerTitle}
         </p>
-        <p className="truncate text-sm text-slate-500">{headerSubtitle}</p>
+        <p className="truncate text-xs text-slate-500 sm:text-sm">
+          {headerSubtitle}
+        </p>
       </div>
     </div>
   );
 }
 
-function AdminMobileNav({ canManageTeam }: { canManageTeam: boolean }) {
+function AdminBottomNavLink({
+  href,
+  label,
+  active,
+  icon,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+  icon: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`ko-admin-bottom-link${active ? " is-active" : ""}`}
+      aria-current={active ? "page" : undefined}
+    >
+      <span className="ko-admin-bottom-icon">{icon}</span>
+      <span className="ko-admin-bottom-label">{label}</span>
+    </Link>
+  );
+}
+
+function AdminBottomNav({
+  canManageTeam,
+  showSecurityLink,
+}: {
+  canManageTeam: boolean;
+  showSecurityLink: boolean;
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const onKoPredict =
@@ -207,59 +267,56 @@ function AdminMobileNav({ canManageTeam }: { canManageTeam: boolean }) {
     pathname.startsWith("/admin/students");
   const onTeam = pathname.startsWith("/admin/team");
   const onSchool = pathname.startsWith("/admin/ecole");
+  const onProfile = pathname.startsWith("/profile");
+  const onSecurity = pathname.startsWith("/account/security");
 
   return (
-    <nav
-      className="flex max-w-[48vw] items-center gap-1 overflow-x-auto text-sm scrollbar-none sm:max-w-none sm:gap-2 lg:hidden"
-      aria-label="Navigation admin mobile"
-    >
-      <Link
+    <nav className="ko-admin-mobile-nav" aria-label="Navigation admin mobile">
+      <AdminBottomNavLink
         href="/admin"
-        className={`whitespace-nowrap rounded-full px-2.5 py-1 font-medium ${
-          onAllLearners
-            ? "bg-[var(--admin-blue-soft)] text-[var(--admin-blue-hover)]"
-            : "text-slate-500"
-        }`}
-      >
-        Apprenants
-      </Link>
-      <Link
+        label="Apprenants"
+        active={onAllLearners}
+        icon={<IconUsers className="ko-icon" />}
+      />
+      <AdminBottomNavLink
         href="/admin?tab=kopredict"
-        className={`whitespace-nowrap rounded-full px-2.5 py-1 font-semibold ${
-          onKoPredict
-            ? "bg-[var(--admin-blue-soft)] text-[var(--admin-blue-hover)]"
-            : "text-slate-500"
-        }`}
-      >
-        KO Predict™
-      </Link>
-      {canManageTeam ? (
-        <Link
-          href="/admin/team"
-          className={`whitespace-nowrap rounded-full px-2.5 py-1 ${
-            onTeam
-              ? "bg-[var(--admin-blue-soft)] font-medium text-[var(--admin-blue-hover)]"
-              : "text-slate-500"
-          }`}
-        >
-          Équipe
-        </Link>
-      ) : null}
-      <Link
+        label="KO Predict"
+        active={onKoPredict}
+        icon={<IconSpark className="ko-icon" />}
+      />
+      <AdminBottomNavLink
         href="/admin/ecole"
-        className={`whitespace-nowrap rounded-full px-2.5 py-1 ${
-          onSchool
-            ? "bg-[var(--admin-blue-soft)] font-medium text-[var(--admin-blue-hover)]"
-            : "text-slate-500"
-        }`}
-      >
-        École
-      </Link>
+        label="École"
+        active={onSchool}
+        icon={<IconDashboard className="ko-icon" />}
+      />
+      {canManageTeam ? (
+        <AdminBottomNavLink
+          href="/admin/team"
+          label="Équipe"
+          active={onTeam}
+          icon={<IconTeam className="ko-icon" />}
+        />
+      ) : null}
+      <AdminBottomNavLink
+        href="/profile"
+        label="Profil"
+        active={onProfile}
+        icon={<IconUser className="ko-icon" />}
+      />
+      {showSecurityLink ? (
+        <AdminBottomNavLink
+          href="/account/security"
+          label="Sécurité"
+          active={onSecurity}
+          icon={<IconSpark className="ko-icon" />}
+        />
+      ) : null}
     </nav>
   );
 }
 
-/** Layout admin type hub (sidebar + contenu carte). Accent bleu. */
+/** Layout admin type hub (sidebar desktop + bottom nav mobile). */
 export function AdminHubLayout({
   email,
   firstName,
@@ -267,6 +324,7 @@ export function AdminHubLayout({
   displayName,
   avatarUrl,
   canManageTeam = false,
+  showSecurityLink = false,
   children,
 }: AdminHubLayoutProps) {
   const shownName = resolveDisplayName({
@@ -278,18 +336,26 @@ export function AdminHubLayout({
 
   return (
     <AdminLearnersChromeProvider>
-      <div className="min-h-full flex-1 bg-[linear-gradient(180deg,#eef4ff_0%,#f3f5f7_40%,#f3f5f7_100%)]">
+      <div className="ko-admin-shell min-h-full flex-1">
         <div className="flex min-h-full w-full">
-          <aside className="sticky top-0 z-30 hidden h-dvh w-60 shrink-0 flex-col self-start border-r border-slate-200/80 bg-white px-4 py-6 shadow-[4px_0_24px_-20px_rgba(37,99,235,0.35)] lg:flex">
-            <BrandMark href="/" size="sm" tone="dark" />
-            <p className="mt-1 px-1 text-xs text-slate-400">Espace équipe</p>
+          <aside className="ko-admin-sidebar hidden lg:flex">
+            <div className="shrink-0 px-1">
+              <BrandMark href="/" size="sm" tone="dark" />
+              <p className="mt-1 px-1 text-xs text-slate-400">Espace équipe</p>
+            </div>
 
-            <nav className="mt-8 space-y-1" aria-label="Navigation admin">
+            <nav
+              className="mt-8 flex-1 space-y-1 overflow-y-auto"
+              aria-label="Navigation admin"
+            >
               <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                 Principal
               </p>
               <Suspense fallback={null}>
-                <AdminNavLinks canManageTeam={canManageTeam} />
+                <AdminNavLinks
+                  canManageTeam={canManageTeam}
+                  showSecurityLink={showSecurityLink}
+                />
               </Suspense>
             </nav>
 
@@ -323,30 +389,28 @@ export function AdminHubLayout({
           </aside>
 
           <div className="flex min-w-0 flex-1 flex-col">
-            <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-blue-100/80 bg-white/95 px-3 py-3 backdrop-blur sm:px-4 lg:px-5">
-              <div className="flex min-w-0 items-center gap-3 lg:hidden">
-                <BrandMark href="/" size="sm" tone="dark" />
+            <header className="ko-admin-topbar">
+              <div className="ko-admin-topbar-left">
+                <div className="lg:hidden">
+                  <BrandMark href="/" size="sm" tone="dark" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <Suspense fallback={null}>
+                    <AdminHeaderMeta />
+                  </Suspense>
+                </div>
               </div>
 
-              <div className="hidden min-w-0 shrink lg:block lg:max-w-[18rem] xl:max-w-[22rem]">
-                <Suspense fallback={null}>
-                  <AdminHeaderMeta />
-                </Suspense>
-              </div>
-
-              <div className="flex min-w-0 flex-1 items-center justify-center px-1">
+              <div className="ko-admin-topbar-tabs">
                 <Suspense fallback={null}>
                   <AdminLearnersHeaderTabs />
                 </Suspense>
               </div>
 
-              <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-                <Suspense fallback={null}>
-                  <AdminMobileNav canManageTeam={canManageTeam} />
-                </Suspense>
+              <div className="ko-admin-topbar-right">
                 <Link
                   href="/profile"
-                  className="hidden rounded-full ring-2 ring-transparent transition hover:ring-blue-200 sm:block"
+                  className="hidden rounded-full ring-2 ring-transparent transition hover:ring-blue-200 sm:inline-flex"
                   aria-label="Modifier mon profil"
                   title="Modifier mon profil"
                 >
@@ -359,17 +423,22 @@ export function AdminHubLayout({
                     size="sm"
                   />
                 </Link>
-                <div className="lg:hidden">
+                <div className="hidden lg:block">
                   <SignOutButton variant="dark" />
                 </div>
               </div>
             </header>
 
-            <main className="min-w-0 flex-1 px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5">
-              {children}
-            </main>
+            <main className="ko-admin-main">{children}</main>
           </div>
         </div>
+
+        <Suspense fallback={null}>
+          <AdminBottomNav
+            canManageTeam={canManageTeam}
+            showSecurityLink={showSecurityLink}
+          />
+        </Suspense>
       </div>
     </AdminLearnersChromeProvider>
   );

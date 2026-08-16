@@ -23,7 +23,10 @@ export type AccessAuditEventType =
   | "SUPER_ADMIN_ROLE_CHANGE_BLOCKED"
   | "STAFF_ROLE_CHANGE_BLOCKED"
   | "SUPER_ADMIN_PROMOTED"
-  | "SUPER_ADMIN_PROMOTION_BLOCKED";
+  | "SUPER_ADMIN_PROMOTION_BLOCKED"
+  | "MFA_ENROLLED"
+  | "MFA_FACTOR_ADDED"
+  | "MFA_FACTOR_REMOVED";
 
 /** Audit minimal — jamais de mot de passe, code clair, hash, ni secrets. */
 export async function recordAccessAudit(options: {

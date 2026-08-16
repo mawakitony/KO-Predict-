@@ -6,6 +6,7 @@ import { isSupabaseAdminConfigured } from "@/lib/supabase/env";
 import { isLearnWorldsConfigured } from "@/lib/learnworlds/config";
 import { canManageStudents } from "@/lib/auth/permissions";
 import { parseUserRole } from "@/lib/auth/roles";
+import { assertSuperAdminAal2Api } from "@/lib/auth/require-super-admin-aal2";
 import type { UserRole } from "@/types/student";
 
 export type PermissionGate =
@@ -90,6 +91,10 @@ export async function requirePermissionApi(
       ),
     };
   }
+
+  // Phase D : SA + enforcement → AAL2 obligatoire (toutes routes /api/admin via ce guard).
+  const mfa = await assertSuperAdminAal2Api(gate.role);
+  if (!mfa.ok) return mfa;
 
   return gate;
 }
