@@ -29,9 +29,14 @@ const FILTERS: Array<{ id: LearningActivityFilter; label: string }> = [
 ];
 
 function statusTone(status: LearningHistoryActivity["status"]) {
-  if (status === "completed" || status === "passed") return "is-done";
-  if (status === "failed") return "is-fail";
-  return "is-todo";
+  switch (status) {
+    case "completed":
+      return "is-done";
+    case "not_completed":
+      return "is-todo";
+    default:
+      return "is-unknown";
+  }
 }
 
 export function StudentLearningActivities({
