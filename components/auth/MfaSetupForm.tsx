@@ -4,14 +4,15 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
-  assertFactorReadyForChallenge,
   isValidTotpCode,
-  MFA_FACTOR_STALE_MESSAGE,
+  logMfaSetupDiagnostic,
   mapMfaSetupError,
   mapTotpEnrollForDisplay,
+  MFA_FACTOR_STALE_MESSAGE,
+  resolveSetupChallengeFactorId,
   resolveTotpMountPrep,
   resolveTotpRestartCleanupIds,
-  resolveTotpVerifyOutcome,
+  runMfaSetupActivation,
   throwMfaStepError,
 } from "@/lib/auth/mfa-setup";
 import { recordMfaSecurityAuditAction } from "@/lib/auth/mfa-security-actions";
@@ -21,7 +22,7 @@ type SetupPhase = "preparing" | "ready" | "submitting" | "restarting" | "done";
 /**
  * Enroll TOTP côté navigateur uniquement.
  * QR / secret / URI restent en mémoire React — jamais loggés ni persistés.
- * Pas de cleanup agressif au mount : unenroll seulement via « Recommencer ».
+ * factorId = id retourné par enroll (unverified) → challenge/verify directs.
  */
 export function MfaSetupForm() {
   const router = useRouter();
@@ -39,17 +40,19 @@ export function MfaSetupForm() {
     supabase: ReturnType<typeof createClient>,
     friendlyName: string,
   ) {
+    logMfaSetupDiagnostic("enroll", { code: "attempt", status: null });
     const enrolled = await supabase.auth.mfa.enroll({
       factorType: "totp",
       friendlyName,
     });
     if (enrolled.error) throwMfaStepError("enroll", enrolled.error);
-    if (!enrolled.data) {
+    if (!enrolled.data?.id) {
       throwMfaStepError("enroll", {
         message: "enroll_empty",
         code: "enroll_empty",
       });
     }
+    logMfaSetupDiagnostic("enroll", { code: "ok", status: null });
     return mapTotpEnrollForDisplay(enrolled.data);
   }
 
@@ -61,13 +64,16 @@ export function MfaSetupForm() {
       try {
         const supabase = createClient();
         const listed = await supabase.auth.mfa.listFactors();
-        if (listed.error) throwMfaStepError("listFactors", listed.error);
-
-        const totp = listed.data?.totp ?? [];
-        const prep = resolveTotpMountPrep(totp);
-        if (prep.action === "already_verified") {
-          router.replace("/admin");
-          return;
+        if (listed.error) {
+          // Ne bloque pas enroll : listFactors lit /user ; un échec ici
+          // empêchait POST /factors (diagnostic prod).
+          logMfaSetupDiagnostic("listFactors", listed.error);
+        } else {
+          const prep = resolveTotpMountPrep(listed.data?.totp ?? []);
+          if (prep.action === "already_verified") {
+            router.replace("/admin");
+            return;
+          }
         }
 
         const display = await enrollFresh(
@@ -93,7 +99,9 @@ export function MfaSetupForm() {
       setError("Entrez le code à 6 chiffres affiché dans votre application.");
       return;
     }
-    if (!factorId) {
+
+    const resolved = resolveSetupChallengeFactorId(factorId);
+    if (!resolved.ok) {
       setError(MFA_FACTOR_STALE_MESSAGE);
       return;
     }
@@ -102,53 +110,21 @@ export function MfaSetupForm() {
       setPhase("submitting");
       try {
         const supabase = createClient();
-
-        const listed = await supabase.auth.mfa.listFactors();
-        if (listed.error) throwMfaStepError("listFactors", listed.error);
-
-        const factorCheck = assertFactorReadyForChallenge(
-          listed.data?.totp,
-          factorId,
-        );
-        if (!factorCheck.ok) {
-          throwMfaStepError("challenge", {
-            message: MFA_FACTOR_STALE_MESSAGE,
-            code:
-              factorCheck.reason === "missing"
-                ? "factor_missing"
-                : "factor_not_unverified",
-          });
-        }
-
-        const challenge = await supabase.auth.mfa.challenge({ factorId });
-        if (challenge.error) throwMfaStepError("challenge", challenge.error);
-        if (!challenge.data) {
-          throwMfaStepError("challenge", {
-            message: "challenge_empty",
-            code: "challenge_empty",
-          });
-        }
-
-        const verified = await supabase.auth.mfa.verify({
-          factorId,
-          challengeId: challenge.data.id,
+        await runMfaSetupActivation({
+          factorId: resolved.factorId,
           code: trimmed,
+          challenge: (args) => supabase.auth.mfa.challenge(args),
+          verify: (args) => supabase.auth.mfa.verify(args),
+          refreshSession: () => supabase.auth.refreshSession(),
+          getCurrentAal: async () => {
+            const aal = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+            return aal.data?.currentLevel;
+          },
         });
-        if (verified.error) throwMfaStepError("verify", verified.error);
-
-        await supabase.auth.refreshSession();
-        const aal = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (resolveTotpVerifyOutcome(aal.data?.currentLevel) !== "ok_aal2") {
-          setError(
-            "Vérification enregistrée, mais le niveau de sécurité n’est pas encore AAL2. Reconnectez-vous.",
-          );
-          setPhase("ready");
-          return;
-        }
 
         await recordMfaSecurityAuditAction({
           eventType: "MFA_ENROLLED",
-          factorId,
+          factorId: resolved.factorId,
         });
 
         setQrDataUrl(null);
@@ -158,8 +134,18 @@ export function MfaSetupForm() {
         router.replace("/admin");
         router.refresh();
       } catch (err) {
-        // Conserve QR + factorId ; pas de nouvel enroll auto.
-        setError(mapMfaSetupError(err));
+        if (
+          err &&
+          typeof err === "object" &&
+          "code" in err &&
+          (err as { code: unknown }).code === "aal_incomplete"
+        ) {
+          setError(
+            "Vérification enregistrée, mais le niveau de sécurité n’est pas encore AAL2. Reconnectez-vous.",
+          );
+        } else {
+          setError(mapMfaSetupError(err));
+        }
         setPhase("ready");
       }
     });
@@ -175,8 +161,8 @@ export function MfaSetupForm() {
         const listed = await supabase.auth.mfa.listFactors();
         if (listed.error) throwMfaStepError("listFactors", listed.error);
 
-        const totp = listed.data?.totp ?? [];
-        const toRemove = resolveTotpRestartCleanupIds(totp);
+        // `all` inclut unverified ; `totp` = verified only (inadapté au cleanup setup).
+        const toRemove = resolveTotpRestartCleanupIds(listed.data?.all ?? []);
         for (const id of toRemove) {
           const removed = await supabase.auth.mfa.unenroll({ factorId: id });
           if (removed.error) throw removed.error;

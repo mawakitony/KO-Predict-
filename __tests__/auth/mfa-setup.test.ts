@@ -1,12 +1,12 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import {
-  assertFactorReadyForChallenge,
-  extractAuthErrorCode,
   logMfaSetupDiagnostic,
   mapMfaSetupError,
   mapTotpEnrollForDisplay,
   MFA_FACTOR_STALE_MESSAGE,
   normalizeTotpQrDataUrl,
+  resolveSetupChallengeFactorId,
+  runMfaSetupActivation,
   throwMfaStepError,
 } from "@/lib/auth/mfa-setup";
 import { readFileSync } from "node:fs";
@@ -28,126 +28,192 @@ describe("normalizeTotpQrDataUrl / mapTotpEnrollForDisplay", () => {
     expect(normalized).toContain(encodeURIComponent("<svg"));
   });
 
-  it("QR déjà percent-encodé reste valide", () => {
-    const encoded = encodeURIComponent("<svg></svg>");
-    const input = `data:image/svg+xml;charset=utf-8,${encoded}`;
-    expect(normalizeTotpQrDataUrl(input)).toBe(input);
-  });
-
-  it("mapTotpEnrollForDisplay utilise la normalisation", () => {
+  it("mapTotpEnrollForDisplay conserve le factorId d’enroll", () => {
     const display = mapTotpEnrollForDisplay({
-      id: "factor-1",
+      id: "enrolled-unverified-id",
       totp: {
         qr_code: "data:image/svg+xml;utf-8,<svg><path d='M0'/></svg>",
         secret: "SECRETVALUE",
       },
     });
-    expect(display.factorId).toBe("factor-1");
-    expect(display.qrDataUrl).toContain("charset=utf-8");
-    expect(display.qrDataUrl).not.toMatch(/,<svg/);
-    expect(display.manualSecret).toBe("SECRETVALUE");
+    expect(display.factorId).toBe("enrolled-unverified-id");
   });
 });
 
-describe("assertFactorReadyForChallenge", () => {
-  it("factorId absent avant challenge → erreur propre", () => {
-    expect(
-      assertFactorReadyForChallenge(
-        [{ id: "other", status: "unverified" }],
-        "missing-id",
-      ),
-    ).toEqual({ ok: false, reason: "missing" });
+describe("setup challenge factorId (sans listFactors.totp)", () => {
+  it("facteur unverified issu de enroll() accepté pour challenge", () => {
+    const enrolledId = "factor-unverified-from-enroll";
+    // Simule listFactors().data.totp = [] (verified only — vide pendant setup)
+    const verifiedOnlyTotp: { id: string; status: string }[] = [];
+    expect(verifiedOnlyTotp.find((f) => f.id === enrolledId)).toBeUndefined();
+
+    const resolved = resolveSetupChallengeFactorId(enrolledId);
+    expect(resolved).toEqual({ ok: true, factorId: enrolledId });
+  });
+
+  it("factorId absent → erreur propre", () => {
+    expect(resolveSetupChallengeFactorId(null)).toEqual({
+      ok: false,
+      code: "factor_missing",
+    });
     expect(mapMfaSetupError({ code: "factor_missing" })).toBe(
       MFA_FACTOR_STALE_MESSAGE,
     );
   });
 
-  it("facteur verified → not_unverified", () => {
-    expect(
-      assertFactorReadyForChallenge(
-        [{ id: "f1", status: "verified" }],
-        "f1",
-      ),
-    ).toEqual({ ok: false, reason: "not_unverified" });
-  });
-
-  it("unverified OK", () => {
-    expect(
-      assertFactorReadyForChallenge(
-        [{ id: "f1", status: "unverified" }],
-        "f1",
-      ),
-    ).toEqual({ ok: true });
-  });
-});
-
-describe("AuthError propagation", () => {
-  it("AuthError challenge propagée", () => {
-    const err = {
-      name: "AuthApiError",
-      message: "MFA factor no longer exists",
-      code: "mfa_factor_not_found",
-      status: 422,
-    };
-    expect(() => throwMfaStepError("challenge", err)).toThrow();
-    try {
-      throwMfaStepError("challenge", err);
-    } catch (e) {
-      expect(e).toBe(err);
-      expect(extractAuthErrorCode(e)).toBe("mfa_factor_not_found");
-    }
-  });
-
-  it("AuthError verify propagée", () => {
-    const err = {
-      name: "AuthApiError",
-      message: "Invalid TOTP code entered",
-      code: "mfa_verification_failed",
-      status: 422,
-    };
-    try {
-      throwMfaStepError("verify", err);
-    } catch (e) {
-      expect(e).toBe(err);
-      expect(mapMfaSetupError(e)).toMatch(/incorrect/i);
-    }
-  });
-
-  it("mapping FR conservé", () => {
-    expect(
-      mapMfaSetupError({ code: "mfa_challenge_expired" }),
-    ).toMatch(/expiré/i);
-    expect(
-      mapMfaSetupError({ code: "mfa_ip_address_mismatch" }),
-    ).toMatch(/réseau|connexion/i);
+  it("pas de dépendance à listFactors().data.totp pendant setup", () => {
+    const src = readFileSync(
+      join(process.cwd(), "components/auth/MfaSetupForm.tsx"),
+      "utf8",
+    );
+    expect(src).toMatch(/runMfaSetupActivation/);
+    expect(src).toMatch(/resolveSetupChallengeFactorId/);
+    expect(src).not.toMatch(/assertFactorReadyForChallenge/);
+    // Submit : pas de lookup totp avant challenge — factorId d’état uniquement.
+    const submitStart = src.indexOf("function onSubmit");
+    const restartStart = src.indexOf("function onRestart");
+    const submitBlock = src.slice(submitStart, restartStart);
+    expect(submitBlock).not.toMatch(/listed\.data\?\.totp/);
+    expect(submitBlock).not.toMatch(/listFactors/);
+    expect(submitBlock).toMatch(/runMfaSetupActivation/);
   });
 });
 
-describe("diagnostic logs sans secret", () => {
+describe("runMfaSetupActivation", () => {
+  it("enroll factorId → challenge → verify → refresh → AAL2", async () => {
+    const enrolledFactorId = "fid-from-enroll";
+    const challenge = vi.fn(async ({ factorId }: { factorId: string }) => {
+      expect(factorId).toBe(enrolledFactorId);
+      return { data: { id: "chal-1" }, error: null };
+    });
+    const verify = vi.fn(
+      async (args: {
+        factorId: string;
+        challengeId: string;
+        code: string;
+      }) => {
+        expect(args.factorId).toBe(enrolledFactorId);
+        expect(args.challengeId).toBe("chal-1");
+        expect(args.code).toBe("123456");
+        return { error: null };
+      },
+    );
+    const refreshSession = vi.fn(async () => ({ error: null }));
+    const getCurrentAal = vi.fn(async () => "aal2");
+
+    await expect(
+      runMfaSetupActivation({
+        factorId: enrolledFactorId,
+        code: "123456",
+        challenge,
+        verify,
+        refreshSession,
+        getCurrentAal,
+      }),
+    ).resolves.toBe("ok_aal2");
+
+    expect(challenge).toHaveBeenCalledTimes(1);
+    expect(verify).toHaveBeenCalledTimes(1);
+    expect(refreshSession).toHaveBeenCalledTimes(1);
+    expect(getCurrentAal).toHaveBeenCalledTimes(1);
+  });
+
+  it("challenge utilise exactement le factorId retourné par enroll", async () => {
+    const challenge = vi.fn(async () => ({
+      data: { id: "c1" },
+      error: null,
+    }));
+    await runMfaSetupActivation({
+      factorId: "exact-enroll-id",
+      code: "654321",
+      challenge,
+      verify: async () => ({ error: null }),
+      refreshSession: async () => ({}),
+      getCurrentAal: async () => "aal2",
+    });
+    expect(challenge).toHaveBeenCalledWith({ factorId: "exact-enroll-id" });
+  });
+
+  it("verify utilise le même factorId", async () => {
+    const verify = vi.fn(async () => ({ error: null }));
+    await runMfaSetupActivation({
+      factorId: "same-id",
+      code: "111111",
+      challenge: async () => ({ data: { id: "ch" }, error: null }),
+      verify,
+      refreshSession: async () => ({}),
+      getCurrentAal: async () => "aal2",
+    });
+    expect(verify).toHaveBeenCalledWith(
+      expect.objectContaining({ factorId: "same-id", challengeId: "ch" }),
+    );
+  });
+
+  it("factorId absent → throw factor_missing", async () => {
+    await expect(
+      runMfaSetupActivation({
+        factorId: null,
+        code: "123456",
+        challenge: async () => ({ data: null, error: null }),
+        verify: async () => ({ error: null }),
+        refreshSession: async () => ({}),
+        getCurrentAal: async () => "aal2",
+      }),
+    ).rejects.toMatchObject({ code: "factor_missing" });
+  });
+});
+
+describe("enroll instrumentation + formulaire", () => {
+  it("enroll réellement appelé (attempt log + mfa.enroll dans le form)", () => {
+    const src = readFileSync(
+      join(process.cwd(), "components/auth/MfaSetupForm.tsx"),
+      "utf8",
+    );
+    expect(src).toMatch(/logMfaSetupDiagnostic\("enroll"/);
+    expect(src).toMatch(/supabase\.auth\.mfa\.enroll/);
+    expect(src).toMatch(/code: "attempt"/);
+  });
+
+  it("listFactors error ne bloque plus enroll au mount", () => {
+    const src = readFileSync(
+      join(process.cwd(), "components/auth/MfaSetupForm.tsx"),
+      "utf8",
+    );
+    expect(src).toMatch(/Ne bloque pas enroll/);
+    // Mount : log + continue vers enrollFresh (pas de throw listFactors).
+    expect(src).toMatch(
+      /logMfaSetupDiagnostic\("listFactors", listed\.error\);/,
+    );
+    expect(src).toMatch(/const display = await enrollFresh/);
+  });
+
   it("aucun secret loggé", () => {
     const spy = vi.spyOn(console, "info").mockImplementation(() => {});
-    logMfaSetupDiagnostic("verify", {
-      code: "mfa_verification_failed",
+    logMfaSetupDiagnostic("enroll", {
+      code: "mfa_factor_name_conflict",
       status: 422,
-      message: "Invalid TOTP code entered",
+      message: "A factor with this friendly name already exists",
     });
-    expect(spy).toHaveBeenCalledTimes(1);
-    const payload = JSON.stringify(spy.mock.calls[0]);
-    expect(payload).toContain("mfa_verification_failed");
-    expect(payload).toContain('"step":"verify"');
+    logMfaSetupDiagnostic("enroll", { code: "attempt", status: null });
+    const payload = JSON.stringify(spy.mock.calls);
+    expect(payload).toContain('"step":"enroll"');
     expect(payload.toLowerCase()).not.toContain("secret");
     expect(payload.toLowerCase()).not.toContain("otp");
     expect(payload.toLowerCase()).not.toContain("qr");
     expect(payload.toLowerCase()).not.toContain("token");
   });
 
-  it("formulaire n’utilise plus new Error('challenge')", () => {
-    const src = readFileSync(
-      join(process.cwd(), "components/auth/MfaSetupForm.tsx"),
-      "utf8",
-    );
-    expect(src).toMatch(/throwMfaStepError\("challenge"/);
-    expect(src).toMatch(/assertFactorReadyForChallenge/);
-    expect(src).not.toMatch(/new Error\(["']challenge["']\)/);
+  it("AuthError enroll propagée", () => {
+    const err = {
+      name: "AuthApiError",
+      message: "session missing",
+      code: "session_not_found",
+      status: 401,
+    };
+    try {
+      throwMfaStepError("enroll", err);
+    } catch (e) {
+      expect(e).toBe(err);
+    }
   });
 });

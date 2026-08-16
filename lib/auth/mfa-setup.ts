@@ -210,7 +210,21 @@ export function shouldPreserveEnrollmentUiOnSubmitError(): boolean {
 export const MFA_FACTOR_STALE_MESSAGE =
   "Configuration MFA invalide ou expirée. Utilisez « Recommencer la configuration ».";
 
-/** Avant challenge : le factorId UI doit exister et être unverified. */
+/**
+ * Setup : le factorId vient de mfa.enroll() (souvent unverified).
+ * Ne pas valider via listFactors().data.totp (verified only).
+ */
+export function resolveSetupChallengeFactorId(
+  enrolledFactorId: string | null | undefined,
+): { ok: true; factorId: string } | { ok: false; code: "factor_missing" } {
+  if (!enrolledFactorId) return { ok: false, code: "factor_missing" };
+  return { ok: true, factorId: enrolledFactorId };
+}
+
+/**
+ * @deprecated Ne plus utiliser pour le setup (totp = verified only).
+ * Conservé pour d’éventuels flux hors enroll courant.
+ */
 export function assertFactorReadyForChallenge(
   factors: MfaTotpFactorLite[] | null | undefined,
   factorId: string,
@@ -221,6 +235,58 @@ export function assertFactorReadyForChallenge(
     return { ok: false, reason: "not_unverified" };
   }
   return { ok: true };
+}
+
+/** Activation setup : challenge → verify → refresh → AAL2 (même factorId enroll). */
+export async function runMfaSetupActivation(options: {
+  factorId: string | null | undefined;
+  code: string;
+  challenge: (args: {
+    factorId: string;
+  }) => Promise<{ data: { id: string } | null; error: unknown }>;
+  verify: (args: {
+    factorId: string;
+    challengeId: string;
+    code: string;
+  }) => Promise<{ error: unknown }>;
+  refreshSession: () => Promise<unknown>;
+  getCurrentAal: () => Promise<string | null | undefined>;
+}): Promise<"ok_aal2"> {
+  const resolved = resolveSetupChallengeFactorId(options.factorId);
+  if (!resolved.ok) {
+    throwMfaStepError("challenge", {
+      message: MFA_FACTOR_STALE_MESSAGE,
+      code: resolved.code,
+    });
+  }
+
+  const { factorId } = resolved;
+  const challenge = await options.challenge({ factorId });
+  if (challenge.error) throwMfaStepError("challenge", challenge.error);
+  if (!challenge.data?.id) {
+    throwMfaStepError("challenge", {
+      message: "challenge_empty",
+      code: "challenge_empty",
+    });
+  }
+
+  const verified = await options.verify({
+    factorId,
+    challengeId: challenge.data.id,
+    code: options.code,
+  });
+  if (verified.error) throwMfaStepError("verify", verified.error);
+
+  await options.refreshSession();
+  const level = await options.getCurrentAal();
+  if (resolveTotpVerifyOutcome(level) !== "ok_aal2") {
+    throw {
+      name: "MfaAalIncompleteError",
+      message: "aal_incomplete",
+      code: "aal_incomplete",
+    };
+  }
+  return "ok_aal2";
 }
 
 export function extractAuthErrorCode(error: unknown): string | null {
