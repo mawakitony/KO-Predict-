@@ -25,6 +25,7 @@ import {
   IconCheck,
   IconEye,
   IconFilter,
+  IconMail,
   IconMore,
   IconRefresh,
   IconSearch,
@@ -71,6 +72,7 @@ export function LearnWorldsRoster({
   const [sort, setSort] = useState<RosterSort>("name-asc");
   const [data, setData] = useState<LearnWorldsRosterPage | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [successFlash, setSuccessFlash] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [modal, setModal] = useState<ActivationCodeModalData | null>(null);
@@ -223,6 +225,38 @@ export function LearnWorldsRoster({
         );
       }
       load(undefined, true);
+    } catch {
+      setError("Erreur réseau.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function runPasswordRecovery(row: {
+    studentId: string;
+    email: string | null;
+  }) {
+    const displayEmail = row.email?.trim() || "l’apprenant";
+    const ok = window.confirm(
+      `Cette action permettra à l’apprenant de définir un nouveau mot de passe. Un email de récupération sera envoyé à ${displayEmail}.`,
+    );
+    if (!ok) return;
+
+    setBusyId(row.studentId);
+    setError(null);
+    setSuccessFlash(null);
+    try {
+      const res = await fetch("/api/admin/students/send-password-recovery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId: row.studentId }),
+      });
+      const json = await res.json();
+      if (!json.ok) {
+        setError(json.error ?? "Envoi du lien impossible.");
+      } else {
+        setSuccessFlash("Lien de réinitialisation envoyé.");
+      }
     } catch {
       setError("Erreur réseau.");
     } finally {
@@ -537,6 +571,14 @@ export function LearnWorldsRoster({
           {error}
         </p>
       ) : null}
+      {successFlash ? (
+        <p
+          className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800"
+          role="status"
+        >
+          {successFlash}
+        </p>
+      ) : null}
 
       <div className="ko-admin-table-scroll -mx-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:mx-0">
         <div className="overflow-x-auto overscroll-x-contain">
@@ -652,17 +694,33 @@ export function LearnWorldsRoster({
                         {canManageStudents &&
                         row.accountStatus === "ACTIVE" &&
                         row.studentId ? (
-                          <button
-                            type="button"
-                            disabled={busyId === row.studentId}
-                            onClick={() =>
-                              runAccessToggle(row.studentId!, "disable")
-                            }
-                            className="ko-btn-ghost !px-2.5 !py-1.5 text-xs"
-                          >
-                            <IconBan className="ko-icon-sm" />
-                            Désactiver
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              disabled={busyId === row.studentId}
+                              onClick={() =>
+                                runPasswordRecovery({
+                                  studentId: row.studentId!,
+                                  email: row.email,
+                                })
+                              }
+                              className="ko-btn-ghost !px-2.5 !py-1.5 text-xs"
+                            >
+                              <IconMail className="ko-icon-sm" />
+                              Réinit. MDP
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busyId === row.studentId}
+                              onClick={() =>
+                                runAccessToggle(row.studentId!, "disable")
+                              }
+                              className="ko-btn-ghost !px-2.5 !py-1.5 text-xs"
+                            >
+                              <IconBan className="ko-icon-sm" />
+                              Désactiver
+                            </button>
+                          </>
                         ) : null}
                         {canManageStudents &&
                         row.accountStatus === "DISABLED" &&

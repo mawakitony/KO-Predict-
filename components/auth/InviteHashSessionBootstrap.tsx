@@ -9,8 +9,10 @@ import { createClient } from "@/lib/supabase/client";
  */
 export function InviteHashSessionBootstrap({
   onReady,
+  pendingMessage = "Vérification de l'invitation…",
 }: {
   onReady: (hasSession: boolean) => void;
+  pendingMessage?: string;
 }) {
   const [done, setDone] = useState(false);
 
@@ -78,11 +80,7 @@ export function InviteHashSessionBootstrap({
   }, [onReady]);
 
   if (!done) {
-    return (
-      <p className="mt-6 text-sm text-slate-500">
-        Vérification de l&apos;invitation…
-      </p>
-    );
+    return <p className="mt-6 text-sm text-slate-500">{pendingMessage}</p>;
   }
 
   return null;

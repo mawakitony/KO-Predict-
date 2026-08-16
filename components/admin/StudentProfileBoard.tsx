@@ -13,6 +13,7 @@ import {
 import type { AdminStudentDetail } from "@/lib/admin/types";
 import type { PersistedWorkPlan } from "@/lib/planning/work-plan/memory-store";
 import { AdminWorkPlanPanel } from "@/components/admin/AdminWorkPlanPanel";
+import { StudentPasswordRecoveryAction } from "@/components/admin/StudentPasswordRecoveryAction";
 import {
   formatDateFr,
   formatDateTimeFr,
@@ -26,6 +27,7 @@ import {
 interface StudentProfileBoardProps {
   detail: AdminStudentDetail;
   email?: string | null;
+  canManageStudents?: boolean;
   activeWorkPlan?: PersistedWorkPlan | null;
   previousWorkPlan?: PersistedWorkPlan | null;
 }
@@ -81,6 +83,7 @@ function InsightCard({
 export function StudentProfileBoard({
   detail,
   email,
+  canManageStudents = false,
   activeWorkPlan = null,
   previousWorkPlan = null,
 }: StudentProfileBoardProps) {
@@ -150,6 +153,16 @@ export function StudentProfileBoard({
                       : "Actif"
                 }
               />
+              {canManageStudents ? (
+                <div className="pt-2">
+                  <StudentPasswordRecoveryAction
+                    studentId={student.studentId}
+                    email={email}
+                    accountStatus={accountStatus}
+                    canManage={canManageStudents}
+                  />
+                </div>
+              ) : null}
               <ProfileRow
                 label="Fuseau"
                 value={student.timezone ?? "—"}

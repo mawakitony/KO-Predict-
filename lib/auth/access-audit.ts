@@ -31,7 +31,8 @@ export type AccessAuditEventType =
   | "LEARNWORLDS_COACH_PROMOTION_BLOCKED"
   | "LEARNWORLDS_COACH_ROLE_CONFLICT"
   | "LEARNWORLDS_SUPER_ADMIN_AUTHORIZED"
-  | "LEARNWORLDS_SUPER_ADMIN_AUTHORIZATION_REVOKED";
+  | "LEARNWORLDS_SUPER_ADMIN_AUTHORIZATION_REVOKED"
+  | "PASSWORD_RECOVERY_SENT";
 
 /** Audit minimal — jamais de mot de passe, code clair, hash, ni secrets. */
 export async function recordAccessAudit(options: {

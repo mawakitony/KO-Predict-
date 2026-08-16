@@ -66,3 +66,8 @@ export function getAppOrigin(): string {
 export function getFinalizeRedirectUrl(): string {
   return `${getAppOrigin()}/auth/callback?next=/auth/finalize`;
 }
+
+/** Redirect après clic sur l’email Supabase recovery (apprenant ACTIVE). */
+export function getPasswordRecoveryRedirectUrl(): string {
+  return `${getAppOrigin()}/auth/reset-password`;
+}

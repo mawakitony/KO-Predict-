@@ -7,7 +7,7 @@ import { getCurrentProfile } from "@/lib/auth/session";
 import { homePathForRole } from "@/lib/auth/roles";
 
 interface PageProps {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; reset?: string }>;
 }
 
 export default async function LoginPage({ searchParams }: PageProps) {
@@ -25,6 +25,12 @@ export default async function LoginPage({ searchParams }: PageProps) {
         subtitle="Accédez à votre tableau de bord de préparation."
         footer={
           <>
+            {params.reset === "1" ? (
+              <p className="text-center text-sm font-semibold text-emerald-200">
+                Mot de passe mis à jour. Connectez-vous avec le nouveau mot de
+                passe.
+              </p>
+            ) : null}
             <p className="text-center text-sm ko-auth-muted">
               Première connexion ?{" "}
               <Link href="/first-access" className="ko-auth-link font-semibold">

@@ -34,11 +34,13 @@ export function StudentDetailTabs({
   interventions,
   activeWorkPlan = null,
   previousWorkPlan = null,
+  canManageStudents = false,
 }: {
   detail: AdminStudentDetail;
   interventions: CoachInterventionRecord[];
   activeWorkPlan?: PersistedWorkPlan | null;
   previousWorkPlan?: PersistedWorkPlan | null;
+  canManageStudents?: boolean;
 }) {
   const [tab, setTab] = useState<DetailTab>("overview");
   const [history, setHistory] = useState<HistoryPayload | null>(null);
@@ -155,6 +157,7 @@ export function StudentDetailTabs({
         <StudentProfileBoard
           detail={detail}
           email={detail.email}
+          canManageStudents={canManageStudents}
           activeWorkPlan={activeWorkPlan}
           previousWorkPlan={previousWorkPlan}
         />

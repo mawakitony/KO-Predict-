@@ -51,6 +51,13 @@ export function canRegenerateActivationCode(
   return isAdminOrAbove(role);
 }
 
+/** Envoyer un lien de récupération mot de passe (apprenant ACTIVE). */
+export function canSendStudentPasswordRecovery(
+  role: UserRole | null | undefined,
+): boolean {
+  return isAdminOrAbove(role);
+}
+
 export function canSyncStudents(role: UserRole | null | undefined): boolean {
   return isAdminOrAbove(role);
 }
@@ -92,6 +99,7 @@ export function staffPermissions(role: UserRole | null | undefined) {
     canActivateStudents: canActivateStudents(role),
     canDisableStudents: canDisableStudents(role),
     canRegenerateActivationCode: canRegenerateActivationCode(role),
+    canSendStudentPasswordRecovery: canSendStudentPasswordRecovery(role),
     canSyncStudents: canSyncStudents(role),
     canManageTeam: canManageTeam(role),
     canChangeTeamRoles: canChangeTeamRoles(role),

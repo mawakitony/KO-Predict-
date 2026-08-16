@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { StudentDetailTabs } from "@/components/admin/StudentDetailTabs";
 import { listStudentInterventions } from "@/lib/admin/interventions/service";
 import { getAdminStudentDetail } from "@/lib/admin/students";
+import { staffPermissions } from "@/lib/auth/permissions";
+import { getCurrentProfile } from "@/lib/auth/session";
 import {
   getActiveWorkPlan,
   listPreviousWorkPlans,
@@ -21,6 +23,9 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  const profile = await getCurrentProfile();
+  const permissions = staffPermissions(profile?.role);
+
   const [interventions, activeWorkPlan, previousPlans] = await Promise.all([
     listStudentInterventions(id),
     getActiveWorkPlan(id).catch(() => null),
@@ -33,6 +38,7 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
       interventions={interventions}
       activeWorkPlan={activeWorkPlan}
       previousWorkPlan={previousPlans[0] ?? null}
+      canManageStudents={permissions.canManageStudents}
     />
   );
 }

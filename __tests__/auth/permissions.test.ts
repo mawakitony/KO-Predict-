@@ -8,6 +8,7 @@ import {
   canManageStudents,
   canManageTeam,
   canRegenerateActivationCode,
+  canSendStudentPasswordRecovery,
   canSyncStudents,
   canViewStudentAudit,
   canViewStudents,
@@ -34,6 +35,7 @@ describe("permissions matrix", () => {
     expect(canActivateStudents("coach")).toBe(false);
     expect(canDisableStudents("coach")).toBe(false);
     expect(canRegenerateActivationCode("coach")).toBe(false);
+    expect(canSendStudentPasswordRecovery("coach")).toBe(false);
     expect(canSyncStudents("coach")).toBe(false);
     expect(canManageTeam("coach")).toBe(false);
     expect(canChangeTeamRoles("coach")).toBe(false);
@@ -47,6 +49,7 @@ describe("permissions matrix", () => {
     expect(canManageStudents("admin")).toBe(true);
     expect(canActivateStudents("admin")).toBe(true);
     expect(canDisableStudents("admin")).toBe(true);
+    expect(canSendStudentPasswordRecovery("admin")).toBe(true);
     expect(canSyncStudents("admin")).toBe(true);
     expect(canManageTeam("admin")).toBe(false);
     expect(canChangeTeamRoles("admin")).toBe(false);
@@ -57,6 +60,7 @@ describe("permissions matrix", () => {
   it("super_admin : tout", () => {
     expect(canAccessAdmin("super_admin")).toBe(true);
     expect(canManageStudents("super_admin")).toBe(true);
+    expect(canSendStudentPasswordRecovery("super_admin")).toBe(true);
     expect(canManageTeam("super_admin")).toBe(true);
     expect(canChangeTeamRoles("super_admin")).toBe(true);
     expect(canViewStudentAudit("super_admin")).toBe(true);
