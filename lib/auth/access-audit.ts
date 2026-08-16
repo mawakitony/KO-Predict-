@@ -19,7 +19,9 @@ export type AccessAuditEventType =
   | "team_activation_expired"
   | "INTERVENTION_CONTACTED"
   | "INTERVENTION_FOLLOW_UP"
-  | "INTERVENTION_RESOLVED";
+  | "INTERVENTION_RESOLVED"
+  | "SUPER_ADMIN_ROLE_CHANGE_BLOCKED"
+  | "STAFF_ROLE_CHANGE_BLOCKED";
 
 /** Audit minimal — jamais de mot de passe, code clair, hash, ni secrets. */
 export async function recordAccessAudit(options: {

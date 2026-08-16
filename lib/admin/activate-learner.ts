@@ -14,6 +14,12 @@ import type {
 } from "@/lib/admin/types";
 import { AUTH_EMAIL_CONFIRM_ADMIN_ACTIVATION_NOTE } from "@/lib/auth/activation-constants";
 import { issueActivationCode } from "@/lib/auth/activation-codes";
+import { recordAccessAudit } from "@/lib/auth/access-audit";
+import {
+  evaluateAutomaticRoleChange,
+  isStaffProtectedFromLearnerActivation,
+} from "@/lib/auth/role-guards";
+import { parseUserRole } from "@/lib/auth/roles";
 import { getLearnWorldsUserById } from "@/lib/learnworlds/users";
 import { mapLearnWorldsUserToStudentFields } from "@/lib/learnworlds/mappers";
 import { syncLearnWorldsLearner } from "@/lib/learnworlds/sync";
@@ -80,8 +86,25 @@ async function ensureProfileAndStudent(options: {
 }): Promise<string> {
   const admin = createAdminClient();
 
-  await admin.from("profiles").upsert(
-    {
+  const { data: existingProfile } = await admin
+    .from("profiles")
+    .select("role, account_status")
+    .eq("id", options.authUserId)
+    .maybeSingle();
+
+  const currentRole = parseUserRole(existingProfile?.role);
+  const demotionGuard = evaluateAutomaticRoleChange({
+    currentRole,
+    proposedRole: "student",
+    source: "activate_learner",
+  });
+  if (!demotionGuard.allowed) {
+    throw new Error(demotionGuard.reason);
+  }
+
+  // Nouveau profil student uniquement — jamais écraser un staff.
+  if (!existingProfile) {
+    await admin.from("profiles").insert({
       id: options.authUserId,
       email: options.email,
       first_name: options.firstName,
@@ -89,21 +112,22 @@ async function ensureProfileAndStudent(options: {
       role: "student",
       account_status: options.accountStatus,
       updated_at: new Date().toISOString(),
-    },
-    { onConflict: "id" },
-  );
-
-  await admin
-    .from("profiles")
-    .update({
-      email: options.email,
-      first_name: options.firstName,
-      last_name: options.lastName,
-      role: "student",
-      account_status: options.accountStatus,
-    })
-    .eq("id", options.authUserId)
-    .neq("account_status", "DISABLED");
+    });
+  } else {
+    await admin
+      .from("profiles")
+      .update({
+        email: options.email,
+        first_name: options.firstName,
+        last_name: options.lastName,
+        // role volontairement omis — source de vérité KO
+        account_status: options.accountStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", options.authUserId)
+      .neq("account_status", "DISABLED")
+      .eq("role", "student");
+  }
 
   const existing = await findStudentForLwUser(
     options.learnworldsUserId,
@@ -214,7 +238,7 @@ export async function activateLearnWorldsLearner(
 
     const { data: existingProfile } = await admin
       .from("profiles")
-      .select("account_status")
+      .select("account_status, role")
       .eq("id", authUser.id)
       .maybeSingle();
 
@@ -228,6 +252,44 @@ export async function activateLearnWorldsLearner(
         invitationId: null,
         error:
           "Compte désactivé. Réactivez-le avant de générer un code d’activation.",
+      };
+    }
+
+    const currentRole = parseUserRole(existingProfile?.role);
+    if (isStaffProtectedFromLearnerActivation(currentRole)) {
+      const guard = evaluateAutomaticRoleChange({
+        currentRole,
+        proposedRole: "student",
+        source: "activate_learner",
+      });
+      if (!guard.allowed) {
+        await recordAccessAudit({
+          eventType: guard.auditEvent,
+          authUserId: authUser.id,
+          actorId: options?.actorId ?? null,
+          meta: {
+            source: "activate_learner",
+            current_role: guard.currentRole,
+            proposed_role: guard.proposedRole,
+            learnworlds_user_id: learnworldsUserId,
+          },
+        });
+      }
+      return {
+        ok: false,
+        accountStatus:
+          existingProfile?.account_status === "ACTIVE"
+            ? "ACTIVE"
+            : existingProfile?.account_status === "PENDING_ACTIVATION"
+              ? "PENDING_ACTIVATION"
+              : "ERROR",
+        predictionStatus: "NONE",
+        studentId: null,
+        authUserId: authUser.id,
+        invitationId: null,
+        alreadyExisted: !created,
+        error:
+          "Ce compte est déjà un membre staff KO Predict™. Activation apprenant refusée — le rôle n’a pas été modifié.",
       };
     }
 

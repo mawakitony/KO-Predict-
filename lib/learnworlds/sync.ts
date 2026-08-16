@@ -9,6 +9,7 @@ import {
   summarizeAssessmentScores,
 } from "@/lib/learnworlds/aggregations";
 import { createLearnWorldsClient } from "@/lib/learnworlds/client";
+import { buildLearnWorldsProfileIdentityUpdate } from "@/lib/auth/role-guards";
 import {
   mapLearnWorldsUserToStudentFields,
   resolvePersistedTargetExamDate,
@@ -270,22 +271,22 @@ export async function syncLearnWorldsLearner(
   }
 
   // Identité LearnWorlds : ne remplit first/last que s'ils sont vides.
-  // Ne jamais toucher display_name / avatar_url (préférences KO Predict™).
+  // Ne jamais toucher role / account_status / display_name / avatar_url.
   const { data: existingProfile } = await supabase
     .from("profiles")
     .select("first_name, last_name")
     .eq("id", profileId)
     .maybeSingle();
 
-  await supabase
-    .from("profiles")
-    .update({
-      first_name: existingProfile?.first_name || mapped.firstName,
-      last_name: existingProfile?.last_name || mapped.lastName,
-      email: mapped.email,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", profileId);
+  const identityUpdate = buildLearnWorldsProfileIdentityUpdate({
+    email: mapped.email,
+    firstName: mapped.firstName,
+    lastName: mapped.lastName,
+    existingFirstName: existingProfile?.first_name,
+    existingLastName: existingProfile?.last_name,
+  });
+
+  await supabase.from("profiles").update(identityUpdate).eq("id", profileId);
 
   // QCM : scores unitaires assessmentV2 depuis /progress (confirmé live).
   // Si aucun score trouvé, conserver les valeurs précédentes (ne pas inventer).
