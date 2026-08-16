@@ -214,7 +214,7 @@ export function workPlanTaskProgressView(
   }
 
   if (task.status === "COMPLETED") {
-    return { percent: 100, label: "100 %", showGauge: true };
+    return { percent: 100, label: "100%", showGauge: true };
   }
 
   if (task.type === "ACTIVITIES" && task.target != null && task.target > 0) {
@@ -222,13 +222,13 @@ export function workPlanTaskProgressView(
     const percent = Math.min(100, Math.round((progress / task.target) * 100));
     return {
       percent,
-      label: `${percent} %`,
+      label: `${percent}%`,
       showGauge: true,
     };
   }
 
   // Mesurable binaire (date, reprise) : 0 % tant que non terminé — jamais 50 %.
-  return { percent: 0, label: "0 %", showGauge: true };
+  return { percent: 0, label: "0%", showGauge: true };
 }
 
 export function buildWorkPlanSummaryView(

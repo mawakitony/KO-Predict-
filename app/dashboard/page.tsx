@@ -24,6 +24,7 @@ import {
   resolveLearnerPredictionUiState,
   resolveLearnerRecommendedAction,
 } from "@/lib/dashboard/learner-presentation";
+import { buildEstimationPopupContent } from "@/lib/dashboard/estimation-popup";
 import {
   DashboardDataError,
   getStudentDashboardData,
@@ -120,6 +121,7 @@ export default async function DashboardPage() {
           : ""
       }${collecting ? "" : ` · ${todayLabel}`}`}
       showAdminLink={showAdmin}
+      estimationPopup={buildEstimationPopupContent(prediction)}
     >
       {collecting ? (
         <div className="space-y-2.5 sm:space-y-3">

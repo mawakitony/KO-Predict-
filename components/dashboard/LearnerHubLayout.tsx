@@ -1,21 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
 import { BrandMark } from "@/components/ui/BrandMark";
 import {
-  IconBell,
   IconBook,
   IconCalendar,
   IconDashboard,
-  IconSearch,
   IconUser,
   IconUsers,
 } from "@/components/admin/AdminIcons";
+import {
+  Icon3dBell,
+  Icon3dSearch,
+} from "@/components/dashboard/LearnerHeaderIcons";
+import { LearnerEstimationPopup } from "@/components/dashboard/LearnerEstimationPopup";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { resolveDisplayName } from "@/lib/profile/display";
+import type { EstimationPopupContent } from "@/lib/dashboard/estimation-popup";
 
 interface LearnerHubLayoutProps {
   email?: string | null;
@@ -34,6 +38,8 @@ interface LearnerHubLayoutProps {
   /** Affiche la barre sticky type admin en haut (vue école) */
   topBar?: boolean;
   showAdminLink?: boolean;
+  /** Contenu popup estimation (évite un fetch si déjà connu côté serveur). */
+  estimationPopup?: EstimationPopupContent | null;
   children: ReactNode;
 }
 
@@ -112,24 +118,64 @@ function LearnerHeaderTools({
   avatarUrl?: string | null;
   headerAction?: { href: string; label: string };
 }) {
+  const pathname = usePathname();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/me/reminders");
+        const body = (await res.json().catch(() => null)) as {
+          ok?: boolean;
+          unreadCount?: number;
+        } | null;
+        if (!cancelled && res.ok && body?.ok) {
+          setUnreadCount(
+            typeof body.unreadCount === "number" ? body.unreadCount : 0,
+          );
+        }
+      } catch {
+        if (!cancelled) setUnreadCount(0);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    if (pathname.startsWith("/messages")) {
+      setUnreadCount(0);
+    }
+  }, [pathname]);
+
+  const hasUnread = unreadCount > 0;
+
   return (
     <div className="ko-dash-header-aside">
       <Link
         href="/learning"
-        className="ko-dash-toolbar-btn"
+        className="ko-dash-toolbar-btn is-3d"
         aria-label="Rechercher une activité"
         title="Rechercher"
       >
-        <IconSearch className="ko-icon" />
+        <Icon3dSearch />
       </Link>
       <Link
-        href="/plan"
-        className="ko-dash-toolbar-btn"
-        aria-label="Notifications du plan"
-        title="Notifications"
+        href="/messages"
+        className="ko-dash-toolbar-btn is-3d"
+        aria-label={
+          hasUnread
+            ? `Messages — ${unreadCount} rappel${unreadCount > 1 ? "s" : ""} non lu${unreadCount > 1 ? "s" : ""}`
+            : "Messages et rappels"
+        }
+        title="Messages"
       >
-        <IconBell className="ko-icon" />
-        <span className="ko-dash-toolbar-badge" aria-hidden />
+        <Icon3dBell />
+        {hasUnread ? (
+          <span className="ko-dash-toolbar-badge" aria-hidden />
+        ) : null}
       </Link>
       <Link
         href="/profile"
@@ -145,7 +191,26 @@ function LearnerHeaderTools({
           imageUrl={avatarUrl}
           size="sm"
         />
-        <p className="ko-dash-profile-name truncate">{shownName}</p>
+        <span className="ko-dash-profile-meta">
+          <span className="ko-dash-profile-welcome">Bienvenue</span>
+          <span className="ko-dash-profile-name-row">
+            <span className="ko-dash-profile-name truncate">{shownName}</span>
+            <svg
+              className="ko-dash-profile-chevron"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden
+            >
+              <path
+                d="M5 7.5 10 12.5 15 7.5"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+        </span>
       </Link>
       {headerAction ? (
         <Link href={headerAction.href} className="ko-dash-header-cta">
@@ -171,6 +236,7 @@ export function LearnerHubLayout({
   headerAction,
   topBar,
   showAdminLink = false,
+  estimationPopup = null,
   children,
 }: LearnerHubLayoutProps) {
   const pathname = usePathname();
@@ -194,13 +260,19 @@ export function LearnerHubLayout({
           <div className="shrink-0 px-5 pt-6">
             <BrandMark href="/" size="sm" tone="dark" />
             <p className="mt-1 text-xs font-medium text-slate-400">
-              {topBar ? "Tableau de bord de l'école" : "Espace apprenant"}
+              {topBar
+                ? "Tableau de bord de l'école"
+                : showAdminLink
+                  ? "Espace équipe"
+                  : "Espace apprenant"}
             </p>
           </div>
 
           <nav
             className="mt-6 flex-1 space-y-1 overflow-y-auto px-3"
-            aria-label="Navigation apprenant"
+            aria-label={
+              showAdminLink ? "Navigation équipe" : "Navigation apprenant"
+            }
           >
             <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
               Menu
@@ -211,18 +283,22 @@ export function LearnerHubLayout({
               active={onDash}
               icon={<IconDashboard className="ko-icon" />}
             />
-            <NavItem
-              href="/learning"
-              label="Ma progression"
-              active={onLearning}
-              icon={<IconBook className="ko-icon" />}
-            />
-            <NavItem
-              href="/plan"
-              label="Mon plan"
-              active={onPlan}
-              icon={<IconCalendar className="ko-icon" />}
-            />
+            {!showAdminLink ? (
+              <>
+                <NavItem
+                  href="/learning"
+                  label="Ma progression"
+                  active={onLearning}
+                  icon={<IconBook className="ko-icon" />}
+                />
+                <NavItem
+                  href="/plan"
+                  label="Mon plan"
+                  active={onPlan}
+                  icon={<IconCalendar className="ko-icon" />}
+                />
+              </>
+            ) : null}
             <NavItem
               href="/profile"
               label="Mon profil"
@@ -360,9 +436,13 @@ export function LearnerHubLayout({
         </div>
       </div>
 
+      <LearnerEstimationPopup initialContent={estimationPopup} />
+
       <nav
         className="ko-mobile-nav"
-        aria-label="Navigation mobile apprenant"
+        aria-label={
+          showAdminLink ? "Navigation mobile équipe" : "Navigation mobile apprenant"
+        }
       >
         <MobileNavLink
           href="/dashboard"
@@ -370,18 +450,22 @@ export function LearnerHubLayout({
           active={onDash}
           icon={<IconDashboard className="ko-icon" />}
         />
-        <MobileNavLink
-          href="/learning"
-          label="Progression"
-          active={onLearning}
-          icon={<IconBook className="ko-icon" />}
-        />
-        <MobileNavLink
-          href="/plan"
-          label="Plan"
-          active={onPlan}
-          icon={<IconCalendar className="ko-icon" />}
-        />
+        {!showAdminLink ? (
+          <>
+            <MobileNavLink
+              href="/learning"
+              label="Progression"
+              active={onLearning}
+              icon={<IconBook className="ko-icon" />}
+            />
+            <MobileNavLink
+              href="/plan"
+              label="Plan"
+              active={onPlan}
+              icon={<IconCalendar className="ko-icon" />}
+            />
+          </>
+        ) : null}
         <MobileNavLink
           href="/profile"
           label="Profil"
