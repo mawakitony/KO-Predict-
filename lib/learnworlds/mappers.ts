@@ -4,7 +4,10 @@ import {
   LW_CUSTOM_FIELD_TARGET_EXAM_DATE,
   type LearnWorldsNormalizedLearnerSnapshot,
   type LearnWorldsUser,
+  type LearnWorldsUserRoleInfo,
 } from "@/types/learnworlds";
+
+export type { LearnWorldsUserRoleInfo };
 
 /**
  * Parse la date cible depuis les custom fields LearnWorlds.
@@ -119,4 +122,19 @@ export function asNumber(value: unknown): number | null {
     return Number.isFinite(n) ? n : null;
   }
   return null;
+}
+
+/**
+ * Extrait le rôle LW depuis un user brut API.
+ * Éligibilité coach : se baser sur `role.level`, jamais sur `role.name` seul.
+ */
+export function mapLearnWorldsUserRole(raw: unknown): LearnWorldsUserRoleInfo {
+  const row = asRecord(raw);
+  const role = asRecord(row.role);
+  return {
+    level: asString(role.level),
+    name: asString(role.name),
+    isInstructor: row.is_instructor === true,
+    isAdmin: row.is_admin === true,
+  };
 }

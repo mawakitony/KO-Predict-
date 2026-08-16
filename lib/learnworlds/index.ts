@@ -36,6 +36,7 @@ export {
   parseTargetExamDateFromCustomFields,
   resolvePersistedTargetExamDate,
   mapLearnWorldsUserToStudentFields,
+  mapLearnWorldsUserRole,
   emptyNormalizedSnapshot,
 } from "@/lib/learnworlds/mappers";
 export {

@@ -20,6 +20,14 @@ export interface LearnWorldsAuthToken {
   obtainedAt: string; // ISO
 }
 
+/** Rôle pédagogique LW — `level` = access_level (pas le titre custom). */
+export interface LearnWorldsUserRoleInfo {
+  level: string | null;
+  name: string | null;
+  isInstructor: boolean;
+  isAdmin: boolean;
+}
+
 export interface LearnWorldsUser {
   id: string;
   email: string | null;
@@ -30,6 +38,8 @@ export interface LearnWorldsUser {
   tags: string[];
   /** Champs personnalisés (ex. cf_ko_target_exam_date). */
   customFields: Record<string, string | number | boolean | null>;
+  /** Rôle LW mappé depuis role.level / flags (jamais depuis role.name seul). */
+  role: LearnWorldsUserRoleInfo;
   createdAt: string | null;
   lastLoginAt: string | null;
   raw?: unknown;

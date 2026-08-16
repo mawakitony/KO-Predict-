@@ -61,6 +61,12 @@ describe("activateLearnWorldsLearner — protection staff", () => {
       lastName: "User",
       tags: [],
       customFields: {},
+      role: {
+        level: "user",
+        name: "User",
+        isInstructor: false,
+        isAdmin: false,
+      },
       createdAt: null,
       lastLoginAt: null,
     });

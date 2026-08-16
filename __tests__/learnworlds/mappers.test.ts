@@ -66,6 +66,12 @@ describe("LearnWorlds mappers", () => {
       lastName: "Test",
       tags: ["PMP"],
       customFields: { [LEARNWORLDS_TARGET_EXAM_FIELD_KEY]: "2026-09-26" },
+      role: {
+        level: "user",
+        name: "User",
+        isInstructor: false,
+        isAdmin: false,
+      },
       createdAt: null,
       lastLoginAt: null,
     });

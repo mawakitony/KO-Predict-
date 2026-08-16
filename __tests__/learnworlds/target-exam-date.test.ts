@@ -61,6 +61,12 @@ describe("target_exam_date — LearnWorlds source de vérité", () => {
       lastName: "eliane",
       tags: [],
       customFields: { [LEARNWORLDS_TARGET_EXAM_FIELD_KEY]: null },
+      role: {
+        level: "user",
+        name: "User",
+        isInstructor: false,
+        isAdmin: false,
+      },
       createdAt: null,
       lastLoginAt: null,
     });

@@ -9,6 +9,7 @@ import { LearnWorldsApiError } from "@/lib/learnworlds/errors";
 import {
   asRecord,
   asString,
+  mapLearnWorldsUserRole,
   parseTargetExamDateFromCustomFields,
   unixToIso,
 } from "@/lib/learnworlds/mappers";
@@ -42,6 +43,7 @@ function mapRawUser(raw: unknown): LearnWorldsUser {
       ? row.tags.map((t) => String(t)).filter(Boolean)
       : [],
     customFields,
+    role: mapLearnWorldsUserRole(raw),
     createdAt: unixToIso(row.created),
     lastLoginAt: unixToIso(row.last_login),
     raw,

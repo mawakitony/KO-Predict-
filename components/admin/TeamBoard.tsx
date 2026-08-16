@@ -8,6 +8,7 @@ import {
   ActivationCodeModal,
   type ActivationCodeModalData,
 } from "@/components/admin/ActivationCodeModal";
+import { AddLearnWorldsCoachModal } from "@/components/admin/AddLearnWorldsCoachModal";
 import {
   IconBan,
   IconCheck,
@@ -63,6 +64,7 @@ export function TeamBoard({ initialMembers, currentUserId }: TeamBoardProps) {
   );
   const [promoteEmail, setPromoteEmail] = useState("");
   const [promoteAck, setPromoteAck] = useState(false);
+  const [showLwCoachModal, setShowLwCoachModal] = useState(false);
 
   const sorted = useMemo(
     () => [...members].sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
@@ -205,14 +207,30 @@ export function TeamBoard({ initialMembers, currentUserId }: TeamBoardProps) {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowForm((v) => !v)}
-            className="ko-btn-blue self-start"
-          >
-            {!showForm ? <IconPlus className="ko-icon-sm" /> : null}
-            {showForm ? "Fermer le formulaire" : "Ajouter un membre"}
-          </button>
+          <div className="flex w-full flex-col gap-2 self-start sm:w-auto sm:flex-row">
+            <button
+              type="button"
+              onClick={() => {
+                setShowForm(false);
+                setShowLwCoachModal(true);
+              }}
+              className="ko-btn-blue-soft w-full min-h-11 justify-center sm:w-auto"
+            >
+              <IconMail className="ko-icon-sm" />
+              Ajouter un coach LearnWorlds
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowLwCoachModal(false);
+                setShowForm((v) => !v);
+              }}
+              className="ko-btn-blue w-full min-h-11 justify-center sm:w-auto"
+            >
+              {!showForm ? <IconPlus className="ko-icon-sm" /> : null}
+              {showForm ? "Fermer le formulaire" : "Ajouter un membre"}
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -528,6 +546,22 @@ export function TeamBoard({ initialMembers, currentUserId }: TeamBoardProps) {
           onClose={() => setModal(null)}
           title="Code d’activation équipe"
           hint="Communiquez ce code une seule fois. Le membre finalise sur /first-access."
+        />
+      ) : null}
+
+      {showLwCoachModal ? (
+        <AddLearnWorldsCoachModal
+          onClose={() => setShowLwCoachModal(false)}
+          onCreated={(payload) => {
+            setShowLwCoachModal(false);
+            setModal({
+              fullName: payload.fullName,
+              email: payload.email,
+              activationCode: payload.activationCode,
+              expiresAt: payload.expiresAt,
+            });
+            void refresh();
+          }}
         />
       ) : null}
 
