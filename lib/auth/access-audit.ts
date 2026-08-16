@@ -29,7 +29,9 @@ export type AccessAuditEventType =
   | "MFA_FACTOR_REMOVED"
   | "LEARNWORLDS_COACH_CREATED"
   | "LEARNWORLDS_COACH_PROMOTION_BLOCKED"
-  | "LEARNWORLDS_COACH_ROLE_CONFLICT";
+  | "LEARNWORLDS_COACH_ROLE_CONFLICT"
+  | "LEARNWORLDS_SUPER_ADMIN_AUTHORIZED"
+  | "LEARNWORLDS_SUPER_ADMIN_AUTHORIZATION_REVOKED";
 
 /** Audit minimal — jamais de mot de passe, code clair, hash, ni secrets. */
 export async function recordAccessAudit(options: {

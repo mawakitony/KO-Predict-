@@ -20,6 +20,11 @@ import {
 } from "@/components/admin/AdminIcons";
 import { AdminAvatar } from "@/components/admin/AdminUi";
 import { canShowChangeTeamRoleAction } from "@/lib/admin/team-role-ui";
+import {
+  LW_SA_AUTH_SECTION_ID,
+  resolveAdminPromoteLwAuthUiState,
+  type LwSuperAdminAuthorizationListItem,
+} from "@/lib/admin/learnworlds-super-admin-auth-ui";
 
 const STATUS_LABEL: Record<string, string> = {
   ACTIVE: "Actif",
@@ -48,9 +53,14 @@ const ROLE_CLASS: Record<string, string> = {
 interface TeamBoardProps {
   initialMembers: TeamMemberRow[];
   currentUserId: string;
+  lwSuperAdminAuthorizations?: LwSuperAdminAuthorizationListItem[];
 }
 
-export function TeamBoard({ initialMembers, currentUserId }: TeamBoardProps) {
+export function TeamBoard({
+  initialMembers,
+  currentUserId,
+  lwSuperAdminAuthorizations = [],
+}: TeamBoardProps) {
   const [members, setMembers] = useState(initialMembers);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -506,15 +516,52 @@ export function TeamBoard({ initialMembers, currentUserId }: TeamBoardProps) {
                             ) : null}
                             {m.role === "admin" &&
                             m.accountStatus === "ACTIVE" ? (
-                              <button
-                                type="button"
-                                disabled={busyId === m.id}
-                                onClick={() => openPromoteModal(m)}
-                                className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-semibold text-violet-900 hover:bg-violet-100 disabled:opacity-50"
-                              >
-                                <IconTeam className="ko-icon-sm" />
-                                Super admin
-                              </button>
+                              (() => {
+                                const promoteState =
+                                  resolveAdminPromoteLwAuthUiState({
+                                    memberEmail: m.email,
+                                    authorizations: lwSuperAdminAuthorizations,
+                                  });
+                                if (promoteState === "can_promote") {
+                                  return (
+                                    <button
+                                      type="button"
+                                      disabled={busyId === m.id}
+                                      onClick={() => openPromoteModal(m)}
+                                      className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-semibold text-violet-900 hover:bg-violet-100 disabled:opacity-50"
+                                    >
+                                      <IconTeam className="ko-icon-sm" />
+                                      Super admin
+                                    </button>
+                                  );
+                                }
+                                if (promoteState === "auth_revoked") {
+                                  return (
+                                    <p className="max-w-[14rem] text-right text-xs text-amber-800">
+                                      Autorisation LearnWorlds révoquée. Une
+                                      nouvelle autorisation est requise.{" "}
+                                      <a
+                                        href={`#${LW_SA_AUTH_SECTION_ID}`}
+                                        className="font-semibold underline"
+                                      >
+                                        Voir les autorisations
+                                      </a>
+                                    </p>
+                                  );
+                                }
+                                return (
+                                  <p className="max-w-[14rem] text-right text-xs text-slate-500">
+                                    Autorisation LearnWorlds requise avant la
+                                    promotion.{" "}
+                                    <a
+                                      href={`#${LW_SA_AUTH_SECTION_ID}`}
+                                      className="font-semibold text-violet-800 underline"
+                                    >
+                                      Autoriser
+                                    </a>
+                                  </p>
+                                );
+                              })()
                             ) : null}
                           </div>
                         )}
@@ -602,7 +649,8 @@ export function TeamBoard({ initialMembers, currentUserId }: TeamBoardProps) {
               />
               <span>
                 Je confirme promouvoir ce compte admin ACTIVE en super_admin KO
-                Predict™. Je comprends que LearnWorlds n’intervient pas.
+                Predict™. L’autorisation LearnWorlds ACTIVE a été vérifiée ; cette
+                action ne crée pas de compte et ne contourne pas la MFA.
               </span>
             </label>
             <div className="mt-5 flex flex-wrap justify-end gap-2">

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { normalizeEmail } from "@/lib/admin/status";
+import { requireActiveLwSuperAdminAuthorizationForPromotion } from "@/lib/admin/learnworlds-super-admin-authorizations";
 import { countActiveSuperAdmins } from "@/lib/admin/super-admin-guards";
 import { recordAccessAudit } from "@/lib/auth/access-audit";
 import { parseUserRole } from "@/lib/auth/roles";
@@ -49,7 +50,9 @@ async function blockPromotion(options: {
 
 /**
  * Promotion contrôlée admin ACTIVE → super_admin.
- * Aucune lecture LearnWorlds. Pas de demote/disable ici.
+ * Prérequis : autorisation LearnWorlds Super Admin ACTIVE (futures promotions).
+ * Les SA déjà existants restent no-op sans exiger d’autorisation historique.
+ * Pas de demote/disable ici.
  */
 export async function promoteToSuperAdmin(options: {
   targetProfileId: string;
@@ -140,6 +143,7 @@ export async function promoteToSuperAdmin(options: {
     });
   }
 
+  // SA existants : no-op sans exiger d’autorisation LW historique.
   if (from === "super_admin") {
     const activeSuperAdminCount = await countActiveSuperAdmins();
     return {
@@ -174,6 +178,22 @@ export async function promoteToSuperAdmin(options: {
       meta: {
         from_role: from,
         account_status: target.account_status,
+      },
+    });
+  }
+
+  const authGate = await requireActiveLwSuperAdminAuthorizationForPromotion({
+    email: targetEmail,
+  });
+  if (!authGate.ok) {
+    return blockPromotion({
+      actorId: options.actorId,
+      targetProfileId: options.targetProfileId,
+      reasonCode: authGate.reasonCode,
+      error: authGate.error,
+      meta: {
+        from_role: from,
+        authorization_id: authGate.authorizationId ?? null,
       },
     });
   }
@@ -227,6 +247,8 @@ export async function promoteToSuperAdmin(options: {
       to_role: "super_admin",
       target_profile_id: target.id,
       active_super_admin_count: activeSuperAdminCount,
+      authorization_id: authGate.authorization.id,
+      learnworlds_user_id: authGate.authorization.learnworldsUserId,
     },
   });
 
