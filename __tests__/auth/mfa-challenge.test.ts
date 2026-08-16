@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi, afterEach } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -7,32 +7,46 @@ import {
 } from "@/lib/auth/mfa-aal";
 import {
   isAllowedChallengeFactorId,
+  logMfaChallengeDiagnostic,
+  mapMfaChallengeAccessDenial,
   mapMfaChallengeError,
   mapVerifiedTotpFactorOptions,
   MFA_CHALLENGE_ERROR_COOLDOWN_MS,
+  MFA_CHALLENGE_FACTOR_ABSENT_MESSAGE,
   pickDefaultChallengeFactorId,
+  resolveChallengeVerifiedFactorId,
   resolveMfaChallengeAccess,
   resolveTotpVerifyOutcome,
+  runMfaChallengeVerification,
 } from "@/lib/auth/mfa-challenge";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 const factorA = { id: "fa", label: "Téléphone" };
 const factorB = { id: "fb", label: "Tablette" };
 
 describe("resolveMfaChallengeAccess", () => {
-  it("non authentifié → login", () => {
-    expect(
-      resolveMfaChallengeAccess({
-        authenticated: false,
-        role: null,
-        accountStatus: null,
-        activeSuperAdminCount: 2,
-        currentLevel: "aal1",
-        verifiedFactors: [factorA],
-      }),
-    ).toMatchObject({ action: "redirect", reason: "unauthenticated" });
+  it("session absente → refus", () => {
+    const access = resolveMfaChallengeAccess({
+      authenticated: false,
+      role: null,
+      accountStatus: null,
+      activeSuperAdminCount: 2,
+      currentLevel: "aal1",
+      verifiedFactors: [factorA],
+    });
+    expect(access).toMatchObject({
+      action: "redirect",
+      reason: "unauthenticated",
+    });
+    if (access.action === "redirect") {
+      expect(mapMfaChallengeAccessDenial(access.reason)).toMatch(/session/i);
+    }
   });
 
-  it("non-SA → home du rôle", () => {
+  it("non-SA → refus", () => {
     expect(
       resolveMfaChallengeAccess({
         authenticated: true,
@@ -49,7 +63,7 @@ describe("resolveMfaChallengeAccess", () => {
     });
   });
 
-  it("DISABLED", () => {
+  it("DISABLED → refus", () => {
     expect(
       resolveMfaChallengeAccess({
         authenticated: true,
@@ -115,7 +129,7 @@ describe("resolveMfaChallengeAccess", () => {
     });
   });
 
-  it("plusieurs facteurs → allow avec tous", () => {
+  it("plusieurs facteurs → allow avec tous (choix conservé)", () => {
     const access = resolveMfaChallengeAccess({
       authenticated: true,
       role: "super_admin",
@@ -129,6 +143,7 @@ describe("resolveMfaChallengeAccess", () => {
       factors: [factorA, factorB],
       next: "/admin",
     });
+    expect(isAllowedChallengeFactorId("fb", [factorA, factorB])).toBe(true);
   });
 
   it("AAL2 → redirect direct next", () => {
@@ -150,6 +165,38 @@ describe("resolveMfaChallengeAccess", () => {
   });
 });
 
+describe("resolveChallengeVerifiedFactorId", () => {
+  it("facteur absent → refus", () => {
+    expect(resolveChallengeVerifiedFactorId("", [factorA])).toEqual({
+      ok: false,
+      code: "factor_missing",
+    });
+    expect(resolveChallengeVerifiedFactorId("unknown", [factorA])).toEqual({
+      ok: false,
+      code: "factor_not_verified",
+    });
+    expect(mapMfaChallengeError({ code: "factor_not_verified" })).toBe(
+      MFA_CHALLENGE_FACTOR_ABSENT_MESSAGE,
+    );
+  });
+
+  it("facteur non verified (hors liste verified) → refus", () => {
+    expect(resolveChallengeVerifiedFactorId("unverified-id", [factorA])).toEqual(
+      {
+        ok: false,
+        code: "factor_not_verified",
+      },
+    );
+  });
+
+  it("facteur verified → ok pour challenge", () => {
+    expect(resolveChallengeVerifiedFactorId("fb", [factorA, factorB])).toEqual({
+      ok: true,
+      factorId: "fb",
+    });
+  });
+});
+
 describe("multi-facteur + next", () => {
   it("mapVerifiedTotpFactorOptions ignore unverified", () => {
     expect(
@@ -164,7 +211,7 @@ describe("multi-facteur + next", () => {
     ]);
   });
 
-  it("pickDefault + allowed", () => {
+  it("pickDefault + allowed (multi-facteur conserve le choix)", () => {
     expect(pickDefaultChallengeFactorId([factorA, factorB])).toBe("fa");
     expect(isAllowedChallengeFactorId("fb", [factorA, factorB])).toBe(true);
     expect(isAllowedChallengeFactorId("x", [factorA])).toBe(false);
@@ -188,17 +235,114 @@ describe("multi-facteur + next", () => {
   });
 });
 
+describe("runMfaChallengeVerification", () => {
+  it("facteur verified → challenge puis verify OK → refreshSession → AAL2", async () => {
+    const challenge = vi.fn(async ({ factorId }: { factorId: string }) => {
+      expect(factorId).toBe("fa");
+      return { data: { id: "chal-1" }, error: null };
+    });
+    const verify = vi.fn(async () => ({ error: null }));
+    const refreshSession = vi.fn(async () => ({}));
+    const getCurrentAal = vi.fn(async () => "aal2");
+
+    await expect(
+      runMfaChallengeVerification({
+        factorId: "fa",
+        code: "123456",
+        challenge,
+        verify,
+        refreshSession,
+        getCurrentAal,
+      }),
+    ).resolves.toBe("ok_aal2");
+
+    expect(challenge).toHaveBeenCalledWith({ factorId: "fa" });
+    expect(verify).toHaveBeenCalledWith(
+      expect.objectContaining({
+        factorId: "fa",
+        challengeId: "chal-1",
+        code: "123456",
+      }),
+    );
+    expect(refreshSession).toHaveBeenCalled();
+    expect(getCurrentAal).toHaveBeenCalled();
+  });
+
+  it("mauvais code → erreur FR", async () => {
+    await expect(
+      runMfaChallengeVerification({
+        factorId: "fa",
+        code: "000000",
+        challenge: async () => ({ data: { id: "c1" }, error: null }),
+        verify: async () => ({
+          error: {
+            code: "mfa_verification_failed",
+            message: "Invalid TOTP code entered",
+          },
+        }),
+        refreshSession: async () => ({}),
+        getCurrentAal: async () => "aal1",
+      }),
+    ).rejects.toMatchObject({ code: "mfa_verification_failed" });
+
+    expect(
+      mapMfaChallengeError({
+        code: "mfa_verification_failed",
+        message: "Invalid TOTP code entered",
+      }),
+    ).toMatch(/incorrect/i);
+  });
+
+  it("aucun facteur n’est modifié (pas d’enroll/unenroll dans le runner)", async () => {
+    const challenge = vi.fn(
+      async (args: { factorId: string }) => ({
+        data: { id: "c1" },
+        error: null as unknown,
+      }),
+    );
+    const verify = vi.fn(
+      async (args: {
+        factorId: string;
+        challengeId: string;
+        code: string;
+      }) => ({ error: null as unknown }),
+    );
+    await runMfaChallengeVerification({
+      factorId: "fa",
+      code: "123456",
+      challenge,
+      verify,
+      refreshSession: async () => ({}),
+      getCurrentAal: async () => "aal2",
+    });
+    expect(challenge.mock.calls[0]?.[0]).toEqual({ factorId: "fa" });
+    const verifyArgs = verify.mock.calls[0]?.[0];
+    expect(verifyArgs).toBeDefined();
+    expect(Object.keys(verifyArgs ?? {})).toEqual([
+      "factorId",
+      "challengeId",
+      "code",
+    ]);
+  });
+});
+
 describe("erreurs challenge", () => {
-  it("code incorrect / challenge expiré", () => {
+  it("code incorrect / challenge expiré / facteur absent", () => {
     expect(mapMfaChallengeError({ message: "Invalid code" })).toMatch(
       /incorrect/i,
     );
     expect(mapMfaChallengeError({ message: "Challenge expired" })).toMatch(
       /expiré/i,
     );
-    expect(mapMfaChallengeError({ message: "Invalid code" }).toLowerCase()).not.toContain(
-      "otp",
+    expect(mapMfaChallengeError({ code: "mfa_challenge_expired" })).toMatch(
+      /expiré/i,
     );
+    expect(mapMfaChallengeError({ code: "mfa_factor_not_found" })).toBe(
+      MFA_CHALLENGE_FACTOR_ABSENT_MESSAGE,
+    );
+    expect(
+      mapMfaChallengeError({ message: "Invalid code" }).toLowerCase(),
+    ).not.toContain("otp");
   });
 
   it("verify OK si AAL2", () => {
@@ -213,7 +357,6 @@ describe("erreurs challenge", () => {
 
 describe("post-login SA (signInAction)", () => {
   it("student/admin/coach inchangés (pas de path MFA pour non-SA helpers)", () => {
-    // resolveSuperAdminPostLoginMfaPath n’est appelé que pour SA dans signInAction
     expect(
       resolveSuperAdminPostLoginMfaPath({
         activeSuperAdminCount: 2,
@@ -258,15 +401,48 @@ describe("post-login SA (signInAction)", () => {
   });
 });
 
-describe("sécurité source challenge", () => {
-  it("formulaire : pas d’enroll / unenroll / localStorage / logs", () => {
+describe("architecture Server Action challenge (pas de MFA browser)", () => {
+  it("formulaire : verifyMfaChallenge SSR, pas createClient / mfa.challenge browser", () => {
     const src = readFileSync(
       join(process.cwd(), "components/auth/MfaChallengeForm.tsx"),
       "utf8",
     );
+    expect(src).toMatch(/verifyMfaChallenge/);
+    expect(src).toMatch(/mfa-challenge-actions/);
+    expect(src).not.toMatch(/lib\/supabase\/client/);
+    expect(src).not.toMatch(/createClient/);
+    expect(src).not.toMatch(/auth\.mfa\.challenge/);
+    expect(src).not.toMatch(/auth\.mfa\.verify/);
     expect(src).not.toMatch(/\.enroll\(/);
     expect(src).not.toMatch(/\.unenroll\(/);
     expect(src).not.toMatch(/localStorage/);
     expect(src).not.toMatch(/console\.(log|debug|info|warn|error)/);
+  });
+
+  it("actions serveur exposent verifyMfaChallenge SSR", () => {
+    const src = readFileSync(
+      join(process.cwd(), "lib/auth/mfa-challenge-actions.ts"),
+      "utf8",
+    );
+    expect(src).toMatch(/"use server"/);
+    expect(src).toMatch(/export async function verifyMfaChallenge/);
+    expect(src).toMatch(/from \"@\/lib\/supabase\/server\"/);
+    expect(src).toMatch(/runMfaChallengeVerification/);
+    expect(src).toMatch(/resolveChallengeVerifiedFactorId/);
+    expect(src).not.toMatch(/\.enroll\(/);
+    expect(src).not.toMatch(/\.unenroll\(/);
+    expect(src).not.toMatch(/console\.(?:info|log|error|warn)\([^)]*(?:secret|otpauth|otp)/i);
+  });
+
+  it("aucun secret / OTP dans logs diagnostiques", () => {
+    const spy = vi.spyOn(console, "info").mockImplementation(() => {});
+    logMfaChallengeDiagnostic("verify", {
+      code: "mfa_verification_failed",
+      message: "Invalid TOTP code entered",
+    });
+    const payload = JSON.stringify(spy.mock.calls);
+    expect(payload.toLowerCase()).not.toContain("otp");
+    expect(payload.toLowerCase()).not.toContain("secret");
+    expect(payload).not.toContain("123456");
   });
 });

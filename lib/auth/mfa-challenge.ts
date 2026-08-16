@@ -139,7 +139,151 @@ export function isAllowedChallengeFactorId(
   return factors.some((f) => f.id === factorId);
 }
 
+/** Challenge post-login : factorId doit être un TOTP verified du user. */
+export function resolveChallengeVerifiedFactorId(
+  factorId: string | null | undefined,
+  verifiedFactors: MfaChallengeFactorOption[],
+):
+  | { ok: true; factorId: string }
+  | { ok: false; code: "factor_missing" | "factor_not_verified" } {
+  const id = factorId?.trim() ?? "";
+  if (!id) return { ok: false, code: "factor_missing" };
+  if (!isAllowedChallengeFactorId(id, verifiedFactors)) {
+    return { ok: false, code: "factor_not_verified" };
+  }
+  return { ok: true, factorId: id };
+}
+
+export const MFA_CHALLENGE_FACTOR_ABSENT_MESSAGE =
+  "Facteur d’authentification introuvable ou non actif. Reconnectez-vous puis réessayez.";
+
+export function mapMfaChallengeAccessDenial(
+  reason: Exclude<
+    MfaChallengeAccessDecision,
+    { action: "allow_challenge" }
+  >["reason"],
+): string {
+  switch (reason) {
+    case "unauthenticated":
+      return "Session expirée. Reconnectez-vous puis réessayez.";
+    case "disabled":
+      return "Votre accès KO Predict™ a été désactivé.";
+    case "pending":
+      return "Compte non finalisé. Utilisez Première connexion.";
+    case "not_super_admin":
+      return "Accès réservé aux super administrateurs.";
+    case "enforcement_disabled":
+      return "La vérification en deux étapes n’est pas requise pour le moment.";
+    case "no_verified_factor":
+      return "Aucun facteur d’authentification actif. Configurez la MFA.";
+    case "already_aal2":
+      return "Vérification déjà effectuée.";
+    default:
+      return "Vérification impossible. Réessayez.";
+  }
+}
+
+function extractChallengeErrorCode(error: unknown): string | null {
+  if (!error || typeof error !== "object") return null;
+  if ("code" in error && typeof (error as { code: unknown }).code === "string") {
+    return (error as { code: string }).code;
+  }
+  return null;
+}
+
+function extractChallengeErrorStatus(error: unknown): number | null {
+  if (!error || typeof error !== "object") return null;
+  if ("status" in error) {
+    const status = Number((error as { status: unknown }).status);
+    return Number.isFinite(status) ? status : null;
+  }
+  return null;
+}
+
+/**
+ * Diagnostic challenge serveur — step / code / status uniquement.
+ * Jamais OTP, secret, QR, URI, token, cookie.
+ */
+export function logMfaChallengeDiagnostic(
+  step: "challenge" | "verify" | "listFactors",
+  error?: unknown,
+): void {
+  console.info("[mfa-challenge]", {
+    step,
+    code: extractChallengeErrorCode(error ?? null),
+    status: extractChallengeErrorStatus(error ?? null),
+  });
+}
+
+/**
+ * Challenge post-login : challenge → verify → refresh → AAL2.
+ * Aucun enroll / unenroll. factorId déjà validé (verified).
+ */
+export async function runMfaChallengeVerification(options: {
+  factorId: string;
+  code: string;
+  challenge: (args: {
+    factorId: string;
+  }) => Promise<{ data: { id: string } | null; error: unknown }>;
+  verify: (args: {
+    factorId: string;
+    challengeId: string;
+    code: string;
+  }) => Promise<{ error: unknown }>;
+  refreshSession: () => Promise<unknown>;
+  getCurrentAal: () => Promise<string | null | undefined>;
+}): Promise<"ok_aal2"> {
+  const challenge = await options.challenge({ factorId: options.factorId });
+  if (challenge.error) throw challenge.error;
+  if (!challenge.data?.id) {
+    throw {
+      name: "MfaStepError",
+      message: "challenge_empty",
+      code: "challenge_empty",
+    };
+  }
+
+  const verified = await options.verify({
+    factorId: options.factorId,
+    challengeId: challenge.data.id,
+    code: options.code,
+  });
+  if (verified.error) throw verified.error;
+
+  await options.refreshSession();
+  const level = await options.getCurrentAal();
+  if (resolveTotpVerifyOutcome(level) !== "ok_aal2") {
+    throw {
+      name: "MfaAalIncompleteError",
+      message: "aal_incomplete",
+      code: "aal_incomplete",
+    };
+  }
+  return "ok_aal2";
+}
+
 export function mapMfaChallengeError(error: unknown): string {
+  const code = extractChallengeErrorCode(error);
+  if (code === "mfa_verification_failed") {
+    return "Code incorrect. Vérifiez l’application d’authentification et réessayez.";
+  }
+  if (code === "mfa_challenge_expired") {
+    return "Le défi a expiré. Entrez un nouveau code et réessayez.";
+  }
+  if (
+    code === "mfa_factor_not_found" ||
+    code === "factor_missing" ||
+    code === "factor_not_verified"
+  ) {
+    return MFA_CHALLENGE_FACTOR_ABSENT_MESSAGE;
+  }
+  if (code === "aal_incomplete") {
+    return "Vérification incomplète. Entrez un nouveau code et réessayez.";
+  }
+  if (code === "challenge_empty") {
+    return "Vérification impossible. Réessayez.";
+  }
+
   const message =
     error && typeof error === "object" && "message" in error
       ? String((error as { message: unknown }).message)
@@ -154,7 +298,8 @@ export function mapMfaChallengeError(error: unknown): string {
   if (
     lower.includes("invalid") ||
     lower.includes("incorrect") ||
-    lower.includes("code")
+    lower.includes("totp") ||
+    (lower.includes("code") && !lower.includes("encode"))
   ) {
     return "Code incorrect. Vérifiez l’application d’authentification et réessayez.";
   }

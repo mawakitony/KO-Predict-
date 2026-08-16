@@ -2,14 +2,12 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { verifyMfaChallenge } from "@/lib/auth/mfa-challenge-actions";
 import {
   isAllowedChallengeFactorId,
   isValidTotpCode,
-  mapMfaChallengeError,
   MFA_CHALLENGE_ERROR_COOLDOWN_MS,
   pickDefaultChallengeFactorId,
-  resolveTotpVerifyOutcome,
   type MfaChallengeFactorOption,
 } from "@/lib/auth/mfa-challenge";
 
@@ -19,8 +17,8 @@ interface MfaChallengeFormProps {
 }
 
 /**
- * Challenge TOTP côté navigateur — challenge + verify uniquement.
- * Aucun enroll / unenroll. Aucun OTP loggé.
+ * Challenge TOTP via Server Action SSR — aucun auth.mfa browser.
+ * Sélection multi-facteur conservée. Aucun enroll / unenroll. Aucun OTP loggé.
  */
 export function MfaChallengeForm({ factors, next }: MfaChallengeFormProps) {
   const router = useRouter();
@@ -60,31 +58,22 @@ export function MfaChallengeForm({ factors, next }: MfaChallengeFormProps) {
 
     startTransition(async () => {
       try {
-        const supabase = createClient();
-        const challenge = await supabase.auth.mfa.challenge({ factorId });
-        if (challenge.error || !challenge.data) throw challenge.error;
-
-        const verified = await supabase.auth.mfa.verify({
+        const result = await verifyMfaChallenge({
           factorId,
-          challengeId: challenge.data.id,
           code: trimmed,
+          next,
         });
-        if (verified.error) throw verified.error;
-
-        const aal = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (resolveTotpVerifyOutcome(aal.data?.currentLevel) !== "ok_aal2") {
-          setError(
-            "Vérification incomplète. Entrez un nouveau code et réessayez.",
-          );
+        if (!result.ok) {
+          setError(result.error);
           setCooldownUntil(Date.now() + MFA_CHALLENGE_ERROR_COOLDOWN_MS);
           return;
         }
 
         setCode("");
-        router.replace(next);
+        router.replace(result.next);
         router.refresh();
-      } catch (err) {
-        setError(mapMfaChallengeError(err));
+      } catch {
+        setError("Vérification impossible. Réessayez.");
         setCooldownUntil(Date.now() + MFA_CHALLENGE_ERROR_COOLDOWN_MS);
       }
     });
