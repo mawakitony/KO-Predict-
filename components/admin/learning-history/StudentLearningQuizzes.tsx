@@ -1,6 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+import {
+  Icon3dQuiz,
+  Icon3dRefresh,
+} from "@/components/learning/Learning3dIcons";
 import {
   activityStatusLabelFr,
   bestAssessmentScore,
@@ -124,131 +128,132 @@ export function StudentLearningQuizzes({
   }
 
   return (
-    <section className="rounded-[1.5rem] bg-white p-4 shadow-[0_12px_40px_-24px_rgba(37,99,235,0.45)] ring-1 ring-blue-100/80 sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="ko-display text-lg font-semibold text-slate-900">
-            Quiz & examens
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Scores LearnWorlds — tentatives chargées à la demande.
-          </p>
+    <section className="ko-learn-panel space-y-4">
+      <div className="ko-learn-panel-head">
+        <div className="ko-learn-panel-title-row">
+          <span className="ko-learn-card-icon" aria-hidden>
+            <Icon3dQuiz className="ko-learn-3d is-sm" />
+          </span>
+          <div>
+            <h2 className="ko-learn-panel-title">Quiz &amp; examens</h2>
+            <p className="ko-learn-panel-sub">
+              Scores LearnWorlds — tentatives chargées à la demande.
+            </p>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={onRefresh}
-          className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
-        >
+        <button type="button" onClick={onRefresh} className="ko-learn-refresh">
+          <Icon3dRefresh className="ko-learn-3d is-xs" />
           Actualiser
         </button>
       </div>
 
-      {loading ? (
-        <p className="mt-6 text-sm text-slate-500">Chargement…</p>
-      ) : null}
+      {loading ? <p className="ko-learn-loading">Chargement…</p> : null}
       {error ? (
-        <p className="mt-6 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-800">
-          {error}
-        </p>
+        <div className="ko-learn-error">
+          <p>{error}</p>
+        </div>
       ) : null}
 
       {!loading && !error ? (
         <>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Metric
+          <div className="ko-learn-kpi-row">
+            <MiniStat
               label="Moyenne QCM"
               value={formatScorePercent(qcmAverage)}
+              icon={<Icon3dQuiz className="ko-learn-3d is-sm" />}
             />
-            <Metric
+            <MiniStat
               label="Moyenne récente"
               value={formatScorePercent(recentQcmAverage)}
+              icon={<Icon3dQuiz className="ko-learn-3d is-sm" />}
             />
-            <Metric
+            <MiniStat
               label="Évaluations scorées"
               value={String(scored.length)}
             />
-            <Metric
+            <MiniStat
               label="Meilleur score"
               value={formatScorePercent(bestScore)}
             />
           </div>
 
-          <ul className="mt-5 space-y-3">
+          <ul className="ko-learn-list">
             {scored.map((a) => {
               const state = attemptById[a.id] ?? { status: "idle" as const };
               const open = expandedId === a.id;
               return (
-                <li
-                  key={a.id}
-                  className="rounded-xl border border-slate-100 bg-slate-50/70 px-3.5 py-3"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-slate-900">
-                        {a.name}
-                      </p>
-                      <p className="mt-0.5 text-xs text-slate-500">
-                        {a.section ?? "Sans section"} ·{" "}
-                        {activityStatusLabelFr(a.status)}
-                      </p>
-                      <p className="mt-2 text-sm text-slate-700">
-                        Score enregistré{" "}
-                        <span className="font-semibold">
-                          {formatScorePercent(a.score)}
-                        </span>
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        Tentatives :{" "}
-                        {state.status === "ok"
-                          ? String(state.attempts.length)
-                          : state.status === "unavailable"
-                            ? "Indisponible"
-                            : "Non chargées"}
-                        {" · "}
-                        Date :{" "}
-                        {state.status === "ok" && state.lastSubmittedAt
-                          ? formatDateTimeFr(state.lastSubmittedAt)
-                          : "—"}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (open && state.status !== "idle") {
-                          setExpandedId(null);
-                          return;
-                        }
-                        void loadAttempts(a.id, false);
-                      }}
-                      className="shrink-0 rounded-full bg-[var(--admin-blue)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
-                    >
-                      {open ? "Masquer" : "Voir les tentatives"}
-                    </button>
+                <li key={a.id} className="ko-learn-card">
+                  <div className="ko-learn-card-icon">
+                    <Icon3dQuiz />
                   </div>
-
-                  {open ? (
-                    <div className="mt-3 border-t border-slate-200/80 pt-3">
-                      {state.status === "loading" ? (
-                        <p className="text-sm text-slate-500">
-                          Chargement des tentatives…
+                  <div className="ko-learn-card-body">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="ko-learn-card-title">{a.name}</p>
+                        <p className="ko-learn-card-meta">
+                          {a.section ?? "Sans section"} ·{" "}
+                          {activityStatusLabelFr(a.status)}
                         </p>
-                      ) : null}
-                      {state.status === "unavailable" ||
-                      state.status === "error" ? (
-                        <p className="text-sm text-amber-800">
-                          {state.message}
-                        </p>
-                      ) : null}
-                      {state.status === "ok" ? (
-                        <AttemptsDetail state={state} />
-                      ) : null}
+                        <div className="ko-learn-card-foot">
+                          <span>
+                            Score{" "}
+                            <strong>{formatScorePercent(a.score)}</strong>
+                          </span>
+                          <span>
+                            Tentatives :{" "}
+                            {state.status === "ok"
+                              ? String(state.attempts.length)
+                              : state.status === "unavailable"
+                                ? "Indisponible"
+                                : "Non chargées"}
+                          </span>
+                          <span>
+                            Date :{" "}
+                            {state.status === "ok" && state.lastSubmittedAt
+                              ? formatDateTimeFr(state.lastSubmittedAt)
+                              : "—"}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (open && state.status !== "idle") {
+                            setExpandedId(null);
+                            return;
+                          }
+                          void loadAttempts(a.id, false);
+                        }}
+                        className="ko-learn-refresh shrink-0"
+                      >
+                        {open ? "Masquer" : "Voir les tentatives"}
+                      </button>
                     </div>
-                  ) : null}
+
+                    {open ? (
+                      <div className="mt-3 border-t border-slate-200/80 pt-3">
+                        {state.status === "loading" ? (
+                          <p className="ko-learn-loading">
+                            Chargement des tentatives…
+                          </p>
+                        ) : null}
+                        {state.status === "unavailable" ||
+                        state.status === "error" ? (
+                          <p className="text-sm font-medium text-amber-800">
+                            {state.message}
+                          </p>
+                        ) : null}
+                        {state.status === "ok" ? (
+                          <AttemptsDetail state={state} />
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
                 </li>
               );
             })}
             {scored.length === 0 ? (
-              <li className="text-sm text-slate-500">
+              <li className="ko-learn-empty">
                 Aucune évaluation scorée pour cet apprenant.
               </li>
             ) : null}
@@ -259,14 +264,23 @@ export function StudentLearningQuizzes({
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function MiniStat({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string;
+  icon?: ReactNode;
+}) {
   return (
-    <div className="rounded-xl border border-slate-100 bg-white px-3.5 py-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-semibold text-slate-900">{value}</p>
-    </div>
+    <article className="ko-learn-kpi">
+      <div className="ko-learn-kpi-top">
+        <p className="ko-learn-kpi-label">{label}</p>
+        {icon}
+      </div>
+      <p className="ko-learn-kpi-value">{value}</p>
+    </article>
   );
 }
 
@@ -287,7 +301,7 @@ function AttemptsDetail({
         {chronological.map((attempt, index) => (
           <li
             key={attempt.id}
-            className="rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-slate-100"
+            className="rounded-xl border border-slate-100 bg-white px-3 py-2.5 text-sm shadow-sm"
           >
             <p className="font-semibold text-slate-900">
               Tentative {index + 1}

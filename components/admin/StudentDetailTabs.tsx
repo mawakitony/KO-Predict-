@@ -6,6 +6,12 @@ import { StudentCoachFollowUp } from "@/components/admin/StudentCoachFollowUp";
 import { StudentLearningActivities } from "@/components/admin/learning-history/StudentLearningActivities";
 import { StudentLearningQuizzes } from "@/components/admin/learning-history/StudentLearningQuizzes";
 import { StudentProfileBoard } from "@/components/admin/StudentProfileBoard";
+import {
+  Icon3dActivities,
+  Icon3dCoach,
+  Icon3dOverview,
+  Icon3dQuiz,
+} from "@/components/learning/Learning3dIcons";
 import type { CoachInterventionRecord } from "@/lib/admin/interventions/types";
 import type { AdminStudentDetail } from "@/lib/admin/types";
 import type { PersistedWorkPlan } from "@/lib/planning/work-plan/memory-store";
@@ -94,41 +100,55 @@ export function StudentDetailTabs({
   const tabs = useMemo(
     () =>
       [
-        { id: "overview" as const, label: "Vue d’ensemble" },
-        { id: "activities" as const, label: "Activités" },
-        { id: "quizzes" as const, label: "Quiz & examens" },
-        { id: "coach" as const, label: "Suivi coach" },
+        {
+          id: "overview" as const,
+          label: "Vue d’ensemble",
+          Icon: Icon3dOverview,
+        },
+        {
+          id: "activities" as const,
+          label: "Activités",
+          Icon: Icon3dActivities,
+        },
+        {
+          id: "quizzes" as const,
+          label: "Quiz & examens",
+          Icon: Icon3dQuiz,
+        },
+        {
+          id: "coach" as const,
+          label: "Suivi coach",
+          Icon: Icon3dCoach,
+        },
       ] as const,
     [],
   );
 
   return (
-    <div className="space-y-4 sm:space-y-5">
+    <div className="ko-learn-board space-y-4 sm:space-y-5">
       <AdminStudentFocusSync
         fullName={detail.student.fullName}
         certification={detail.student.certification}
       />
-      <div
-        role="tablist"
-        aria-label="Sections fiche apprenant"
-        className="flex flex-wrap gap-1 rounded-full bg-slate-100/90 p-1"
-      >
-        {tabs.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === item.id}
-            onClick={() => setTab(item.id)}
-            className={`rounded-full px-3.5 py-2 text-sm font-medium transition ${
-              tab === item.id
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div className="ko-learn-toolbar" role="tablist" aria-label="Sections fiche apprenant">
+        <div className="ko-learn-tabs">
+          {tabs.map((item) => {
+            const Icon = item.Icon;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === item.id}
+                onClick={() => setTab(item.id)}
+                className={`ko-learn-tab${tab === item.id ? " is-active" : ""}`}
+              >
+                <Icon className="ko-learn-3d is-xs" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {tab === "overview" ? (

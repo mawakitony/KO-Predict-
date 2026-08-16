@@ -1,3 +1,4 @@
+import { Icon3dCoach } from "@/components/learning/Learning3dIcons";
 import {
   interventionReasonLabelFr,
   interventionStatusLabelFr,
@@ -12,59 +13,65 @@ export function StudentCoachFollowUp({
 }) {
   return (
     <section
-      className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5"
+      className="ko-learn-panel"
       aria-labelledby="coach-followup-title"
     >
-      <h2
-        id="coach-followup-title"
-        className="ko-display text-lg font-semibold text-slate-900"
-      >
-        Suivi coach
-      </h2>
-      <p className="mt-1 text-sm text-slate-500">
-        Historique léger des cycles d’intervention.
-      </p>
+      <div className="ko-learn-panel-head">
+        <div className="ko-learn-panel-title-row">
+          <span className="ko-learn-card-icon" aria-hidden>
+            <Icon3dCoach className="ko-learn-3d is-sm" />
+          </span>
+          <div>
+            <h2 id="coach-followup-title" className="ko-learn-panel-title">
+              Suivi coach
+            </h2>
+            <p className="ko-learn-panel-sub">
+              Historique léger des cycles d’intervention.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {interventions.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-500">
+        <p className="ko-learn-empty">
           Aucun suivi coach enregistré pour cet apprenant.
         </p>
       ) : (
-        <ol className="mt-4 space-y-3">
+        <ol className="ko-learn-list">
           {interventions.map((item) => (
-            <li
-              key={item.id}
-              className="rounded-xl border border-slate-100 bg-slate-50/80 px-3.5 py-3"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-semibold text-slate-900">
+            <li key={item.id} className="ko-learn-card">
+              <div className="ko-learn-card-icon">
+                <Icon3dCoach />
+              </div>
+              <div className="ko-learn-card-body">
+                <p className="ko-learn-card-title">
                   {interventionStatusLabelFr(item.status)}
                   {item.riskLevel ? ` · ${item.riskLevel}` : ""}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="ko-learn-card-meta">
                   Ouvert le {formatDateFr(item.createdAt.slice(0, 10))}
+                  {" · "}
+                  {item.reasons.map(interventionReasonLabelFr).join(" · ") ||
+                    "Motif non précisé"}
                 </p>
+                <ul className="mt-2 space-y-1 text-xs font-semibold text-slate-600">
+                  <li>
+                    {formatDateTimeFr(item.createdAt)} — Risque détecté / cycle
+                    ouvert
+                  </li>
+                  {item.contactedAt ? (
+                    <li>
+                      {formatDateTimeFr(item.contactedAt)} — Contacté / suivi
+                    </li>
+                  ) : null}
+                  {item.resolvedAt ? (
+                    <li>
+                      {formatDateTimeFr(item.resolvedAt)} — Intervention
+                      terminée
+                    </li>
+                  ) : null}
+                </ul>
               </div>
-              <p className="mt-1 text-xs text-slate-500">
-                {item.reasons.map(interventionReasonLabelFr).join(" · ") ||
-                  "Motif non précisé"}
-              </p>
-              <ul className="mt-2 space-y-1 text-xs text-slate-600">
-                <li>
-                  {formatDateTimeFr(item.createdAt)} — Risque détecté / cycle
-                  ouvert
-                </li>
-                {item.contactedAt ? (
-                  <li>
-                    {formatDateTimeFr(item.contactedAt)} — Contacté / suivi
-                  </li>
-                ) : null}
-                {item.resolvedAt ? (
-                  <li>
-                    {formatDateTimeFr(item.resolvedAt)} — Intervention terminée
-                  </li>
-                ) : null}
-              </ul>
             </li>
           ))}
         </ol>

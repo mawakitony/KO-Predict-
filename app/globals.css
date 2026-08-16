@@ -8527,6 +8527,9 @@ body {
 }
 
 .ko-learn-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   border: 0;
   border-radius: 9999px;
   background: transparent;
@@ -8542,6 +8545,43 @@ body {
   background: #fff;
   color: #0f172a;
   box-shadow: 0 6px 16px -10px rgba(15, 23, 42, 0.35);
+}
+
+.ko-learn-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.ko-learn-panel-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.ko-learn-panel-title {
+  font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.ko-learn-panel-sub {
+  margin-top: 0.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.ko-learn-kpi-icon {
+  display: inline-flex;
+  margin-bottom: 0.35rem;
 }
 
 .ko-learn-refresh {
@@ -8724,6 +8764,11 @@ body {
 .ko-learn-status.is-todo {
   background: rgba(245, 158, 11, 0.14);
   color: #b45309;
+}
+
+.ko-learn-status.is-fail {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
 }
 
 .ko-learn-status.is-unknown {

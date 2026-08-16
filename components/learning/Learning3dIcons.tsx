@@ -217,3 +217,104 @@ export function learningTypeIcon(type: LearningActivityType) {
       return Icon3dLink;
   }
 }
+
+/** Vue d’ensemble / tableau de bord 3D. */
+export function Icon3dOverview({ className = "ko-learn-3d", ...rest }: Props) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden {...rest}>
+      <defs>
+        <linearGradient id="ko3d-ov-b1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#93c5fd" />
+          <stop offset="100%" stopColor="#1d4ed8" />
+        </linearGradient>
+        <linearGradient id="ko3d-ov-b2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#6ee7b7" />
+          <stop offset="100%" stopColor="#059669" />
+        </linearGradient>
+        <linearGradient id="ko3d-ov-b3" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#fcd34d" />
+          <stop offset="100%" stopColor="#d97706" />
+        </linearGradient>
+        <filter id="ko3d-ov-shadow" x="-25%" y="-15%" width="150%" height="150%">
+          <feDropShadow dx="0" dy="2.8" stdDeviation="2" floodColor="#1e3a8a" floodOpacity="0.3" />
+        </filter>
+      </defs>
+      <ellipse cx="32" cy="54" rx="16" ry="4" fill="#1e3a8a" opacity="0.14" />
+      <g filter="url(#ko3d-ov-shadow)">
+        <rect x="10" y="28" width="12" height="18" rx="3" fill="url(#ko3d-ov-b1)" />
+        <rect x="26" y="18" width="12" height="28" rx="3" fill="url(#ko3d-ov-b2)" />
+        <rect x="42" y="24" width="12" height="22" rx="3" fill="url(#ko3d-ov-b3)" />
+      </g>
+    </svg>
+  );
+}
+
+/** Coach / suivi 3D. */
+export function Icon3dCoach({ className = "ko-learn-3d", ...rest }: Props) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden {...rest}>
+      <defs>
+        <radialGradient id="ko3d-coach-ball" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#c4b5fd" />
+          <stop offset="55%" stopColor="#7c3aed" />
+          <stop offset="100%" stopColor="#5b21b6" />
+        </radialGradient>
+        <linearGradient id="ko3d-coach-shine" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#fff" stopOpacity="0.85" />
+          <stop offset="55%" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
+        <filter id="ko3d-coach-shadow" x="-30%" y="-20%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="3" stdDeviation="2.2" floodColor="#4c1d95" floodOpacity="0.35" />
+        </filter>
+      </defs>
+      <ellipse cx="32" cy="54" rx="15" ry="4.2" fill="#4c1d95" opacity="0.16" />
+      <circle
+        cx="32"
+        cy="30"
+        r="19"
+        fill="url(#ko3d-coach-ball)"
+        filter="url(#ko3d-coach-shadow)"
+      />
+      <ellipse cx="24" cy="22" rx="8" ry="5" fill="url(#ko3d-coach-shine)" />
+      <circle cx="32" cy="24" r="6.5" fill="#fff" opacity="0.95" />
+      <path
+        d="M20.5 40.5c2.2-6.2 6.4-9 11.5-9s9.3 2.8 11.5 9"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** Activités (barres) — alias compact pour onglets admin. */
+export function Icon3dActivities({ className = "ko-learn-3d", ...rest }: Props) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden {...rest}>
+      <defs>
+        <linearGradient id="ko3d-acts-1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#93c5fd" />
+          <stop offset="100%" stopColor="#1d4ed8" />
+        </linearGradient>
+        <linearGradient id="ko3d-acts-2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#60a5fa" />
+          <stop offset="100%" stopColor="#1e40af" />
+        </linearGradient>
+        <linearGradient id="ko3d-acts-3" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#bfdbfe" />
+          <stop offset="100%" stopColor="#2563eb" />
+        </linearGradient>
+        <filter id="ko3d-acts-shadow" x="-25%" y="-15%" width="150%" height="150%">
+          <feDropShadow dx="0" dy="2.8" stdDeviation="2" floodColor="#1e3a8a" floodOpacity="0.3" />
+        </filter>
+      </defs>
+      <ellipse cx="32" cy="54" rx="16" ry="4" fill="#1e3a8a" opacity="0.14" />
+      <g filter="url(#ko3d-acts-shadow)">
+        <rect x="12" y="30" width="11" height="16" rx="3" fill="url(#ko3d-acts-1)" />
+        <rect x="26.5" y="18" width="11" height="28" rx="3" fill="url(#ko3d-acts-2)" />
+        <rect x="41" y="24" width="11" height="22" rx="3" fill="url(#ko3d-acts-3)" />
+      </g>
+    </svg>
+  );
+}
