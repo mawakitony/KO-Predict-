@@ -4,12 +4,15 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
+  assertFactorReadyForChallenge,
   isValidTotpCode,
+  MFA_FACTOR_STALE_MESSAGE,
   mapMfaSetupError,
   mapTotpEnrollForDisplay,
   resolveTotpMountPrep,
   resolveTotpRestartCleanupIds,
   resolveTotpVerifyOutcome,
+  throwMfaStepError,
 } from "@/lib/auth/mfa-setup";
 import { recordMfaSecurityAuditAction } from "@/lib/auth/mfa-security-actions";
 
@@ -40,7 +43,13 @@ export function MfaSetupForm() {
       factorType: "totp",
       friendlyName,
     });
-    if (enrolled.error || !enrolled.data) throw enrolled.error ?? new Error("enroll");
+    if (enrolled.error) throwMfaStepError("enroll", enrolled.error);
+    if (!enrolled.data) {
+      throwMfaStepError("enroll", {
+        message: "enroll_empty",
+        code: "enroll_empty",
+      });
+    }
     return mapTotpEnrollForDisplay(enrolled.data);
   }
 
@@ -52,7 +61,7 @@ export function MfaSetupForm() {
       try {
         const supabase = createClient();
         const listed = await supabase.auth.mfa.listFactors();
-        if (listed.error) throw listed.error;
+        if (listed.error) throwMfaStepError("listFactors", listed.error);
 
         const totp = listed.data?.totp ?? [];
         const prep = resolveTotpMountPrep(totp);
@@ -61,7 +70,6 @@ export function MfaSetupForm() {
           return;
         }
 
-        // Pas de cleanup automatique au mount/remount.
         const display = await enrollFresh(
           supabase,
           `KO Predict Authenticator ${Date.now()}`,
@@ -86,7 +94,7 @@ export function MfaSetupForm() {
       return;
     }
     if (!factorId) {
-      setError("Configuration incomplète. Utilisez « Recommencer la configuration ».");
+      setError(MFA_FACTOR_STALE_MESSAGE);
       return;
     }
 
@@ -94,9 +102,31 @@ export function MfaSetupForm() {
       setPhase("submitting");
       try {
         const supabase = createClient();
+
+        const listed = await supabase.auth.mfa.listFactors();
+        if (listed.error) throwMfaStepError("listFactors", listed.error);
+
+        const factorCheck = assertFactorReadyForChallenge(
+          listed.data?.totp,
+          factorId,
+        );
+        if (!factorCheck.ok) {
+          throwMfaStepError("challenge", {
+            message: MFA_FACTOR_STALE_MESSAGE,
+            code:
+              factorCheck.reason === "missing"
+                ? "factor_missing"
+                : "factor_not_unverified",
+          });
+        }
+
         const challenge = await supabase.auth.mfa.challenge({ factorId });
-        if (challenge.error || !challenge.data) {
-          throw challenge.error ?? new Error("challenge");
+        if (challenge.error) throwMfaStepError("challenge", challenge.error);
+        if (!challenge.data) {
+          throwMfaStepError("challenge", {
+            message: "challenge_empty",
+            code: "challenge_empty",
+          });
         }
 
         const verified = await supabase.auth.mfa.verify({
@@ -104,7 +134,7 @@ export function MfaSetupForm() {
           challengeId: challenge.data.id,
           code: trimmed,
         });
-        if (verified.error) throw verified.error;
+        if (verified.error) throwMfaStepError("verify", verified.error);
 
         await supabase.auth.refreshSession();
         const aal = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
@@ -143,10 +173,9 @@ export function MfaSetupForm() {
       try {
         const supabase = createClient();
         const listed = await supabase.auth.mfa.listFactors();
-        if (listed.error) throw listed.error;
+        if (listed.error) throwMfaStepError("listFactors", listed.error);
 
         const totp = listed.data?.totp ?? [];
-        // Recommencer : nettoie les unverified (dont le courant), puis nouvel enroll.
         const toRemove = resolveTotpRestartCleanupIds(totp);
         for (const id of toRemove) {
           const removed = await supabase.auth.mfa.unenroll({ factorId: id });

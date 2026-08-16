@@ -158,17 +158,40 @@ export function resolveTotpRestartCleanupIds(
   return listUnverifiedTotpFactorIds(factors);
 }
 
+/**
+ * Normalise une data URL SVG TOTP pour affichage <img>.
+ * supabase-js préfixe parfois `data:image/svg+xml;utf-8,` + SVG brut (non encodé) :
+ * il faut toujours encodeURIComponent le payload SVG.
+ */
+export function normalizeTotpQrDataUrl(qr: string): string {
+  const trimmed = qr.trim();
+  if (!trimmed) return trimmed;
+
+  const dataMatch = /^data:image\/svg\+xml([^,]*),([\s\S]*)$/i.exec(trimmed);
+  if (dataMatch) {
+    const payload = dataMatch[2];
+    const alreadyEncoded =
+      /%3Csvg/i.test(payload) ||
+      (!payload.includes("<") && /%[0-9A-Fa-f]{2}/.test(payload));
+    const encoded = alreadyEncoded ? payload : encodeURIComponent(payload);
+    return `data:image/svg+xml;charset=utf-8,${encoded}`;
+  }
+
+  if (trimmed.startsWith("<")) {
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(trimmed)}`;
+  }
+
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(trimmed)}`;
+}
+
 /** Mappe la réponse enroll → champs UI mémoire uniquement (pas de persistence). */
 export function mapTotpEnrollForDisplay(enrolled: {
   id: string;
   totp: { qr_code: string; secret: string };
 }): { factorId: string; qrDataUrl: string; manualSecret: string } {
-  const qr = enrolled.totp.qr_code;
   return {
     factorId: enrolled.id,
-    qrDataUrl: qr.startsWith("data:")
-      ? qr
-      : `data:image/svg+xml;utf8,${encodeURIComponent(qr)}`,
+    qrDataUrl: normalizeTotpQrDataUrl(enrolled.totp.qr_code),
     manualSecret: enrolled.totp.secret,
   };
 }
@@ -184,12 +207,70 @@ export function shouldPreserveEnrollmentUiOnSubmitError(): boolean {
   return true;
 }
 
+export const MFA_FACTOR_STALE_MESSAGE =
+  "Configuration MFA invalide ou expirée. Utilisez « Recommencer la configuration ».";
+
+/** Avant challenge : le factorId UI doit exister et être unverified. */
+export function assertFactorReadyForChallenge(
+  factors: MfaTotpFactorLite[] | null | undefined,
+  factorId: string,
+): { ok: true } | { ok: false; reason: "missing" | "not_unverified" } {
+  const match = factors?.find((f) => f.id === factorId);
+  if (!match) return { ok: false, reason: "missing" };
+  if (match.status !== "unverified") {
+    return { ok: false, reason: "not_unverified" };
+  }
+  return { ok: true };
+}
+
 export function extractAuthErrorCode(error: unknown): string | null {
   if (!error || typeof error !== "object") return null;
   if ("code" in error && typeof (error as { code: unknown }).code === "string") {
     return (error as { code: string }).code;
   }
   return null;
+}
+
+export function extractAuthErrorStatus(error: unknown): number | null {
+  if (!error || typeof error !== "object") return null;
+  if ("status" in error) {
+    const status = Number((error as { status: unknown }).status);
+    return Number.isFinite(status) ? status : null;
+  }
+  return null;
+}
+
+/**
+ * Diagnostic MFA — uniquement étape / code / status.
+ * Jamais OTP, secret, QR, URI, token.
+ */
+export function logMfaSetupDiagnostic(
+  step: "enroll" | "listFactors" | "challenge" | "verify",
+  error: unknown,
+): void {
+  console.info("[mfa-setup]", {
+    step,
+    code: extractAuthErrorCode(error),
+    status: extractAuthErrorStatus(error),
+  });
+}
+
+/**
+ * Propage l’AuthError Supabase réel ; fallback structuré sans masquer le code.
+ */
+export function throwMfaStepError(
+  step: "enroll" | "listFactors" | "challenge" | "verify",
+  error: unknown,
+): never {
+  logMfaSetupDiagnostic(step, error);
+  if (error && typeof error === "object") {
+    throw error;
+  }
+  throw {
+    name: "MfaStepError",
+    message: `${step}_failed`,
+    code: `${step}_failed`,
+  };
 }
 
 export function mapMfaSetupError(error: unknown): string {
@@ -205,6 +286,9 @@ export function mapMfaSetupError(error: unknown): string {
   }
   if (code === "mfa_ip_address_mismatch") {
     return "Adresse réseau incohérente. Réessayez depuis la même connexion, ou recommencez la configuration.";
+  }
+  if (code === "factor_missing" || code === "factor_not_unverified") {
+    return MFA_FACTOR_STALE_MESSAGE;
   }
 
   const message =

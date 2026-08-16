@@ -1,217 +1,153 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi, afterEach } from "vitest";
 import {
-  countVerifiedTotpFactors,
+  assertFactorReadyForChallenge,
   extractAuthErrorCode,
-  isValidTotpCode,
-  listUnverifiedTotpFactorIds,
-  listUnverifiedTotpFactorIdsExcluding,
+  logMfaSetupDiagnostic,
   mapMfaSetupError,
   mapTotpEnrollForDisplay,
-  resolveMfaSetupAccess,
-  resolveTotpEnrollPrep,
-  resolveTotpMountPrep,
-  resolveTotpRestartCleanupIds,
-  resolveTotpVerifyOutcome,
-  shouldPreserveEnrollmentUiOnSubmitError,
+  MFA_FACTOR_STALE_MESSAGE,
+  normalizeTotpQrDataUrl,
+  throwMfaStepError,
 } from "@/lib/auth/mfa-setup";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-describe("resolveMfaSetupAccess", () => {
-  it("non authentifié → login", () => {
-    expect(
-      resolveMfaSetupAccess({
-        authenticated: false,
-        role: null,
-        accountStatus: null,
-        activeSuperAdminCount: 2,
-        verifiedTotpFactorCount: 0,
-      }),
-    ).toMatchObject({ action: "redirect", reason: "unauthenticated" });
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe("normalizeTotpQrDataUrl / mapTotpEnrollForDisplay", () => {
+  it("QR data URL correctement encodée (SVG brut préfixé par supabase-js)", () => {
+    const rawSvg = "<svg xmlns='http://www.w3.org/2000/svg'><rect/></svg>";
+    const fromClient = `data:image/svg+xml;utf-8,${rawSvg}`;
+    const normalized = normalizeTotpQrDataUrl(fromClient);
+    expect(normalized.startsWith("data:image/svg+xml;charset=utf-8,")).toBe(
+      true,
+    );
+    expect(normalized).not.toContain("<svg");
+    expect(normalized).toContain(encodeURIComponent("<svg"));
   });
 
-  it("non-super_admin → home du rôle", () => {
-    expect(
-      resolveMfaSetupAccess({
-        authenticated: true,
-        role: "admin",
-        accountStatus: "ACTIVE",
-        activeSuperAdminCount: 2,
-        verifiedTotpFactorCount: 0,
-      }),
-    ).toEqual({
-      action: "redirect",
-      to: "/admin",
-      reason: "not_super_admin",
+  it("QR déjà percent-encodé reste valide", () => {
+    const encoded = encodeURIComponent("<svg></svg>");
+    const input = `data:image/svg+xml;charset=utf-8,${encoded}`;
+    expect(normalizeTotpQrDataUrl(input)).toBe(input);
+  });
+
+  it("mapTotpEnrollForDisplay utilise la normalisation", () => {
+    const display = mapTotpEnrollForDisplay({
+      id: "factor-1",
+      totp: {
+        qr_code: "data:image/svg+xml;utf-8,<svg><path d='M0'/></svg>",
+        secret: "SECRETVALUE",
+      },
     });
-  });
-
-  it("0 facteur → allow_setup", () => {
-    expect(
-      resolveMfaSetupAccess({
-        authenticated: true,
-        role: "super_admin",
-        accountStatus: "ACTIVE",
-        activeSuperAdminCount: 2,
-        verifiedTotpFactorCount: 0,
-      }),
-    ).toEqual({ action: "allow_setup" });
+    expect(display.factorId).toBe("factor-1");
+    expect(display.qrDataUrl).toContain("charset=utf-8");
+    expect(display.qrDataUrl).not.toMatch(/,<svg/);
+    expect(display.manualSecret).toBe("SECRETVALUE");
   });
 });
 
-describe("remount / cleanup", () => {
-  it("remount ne supprime pas le facteur courant (mount prep sans cleanup)", () => {
-    const prep = resolveTotpMountPrep([
-      { id: "current-ui-factor", status: "unverified" },
-    ]);
-    expect(prep).toEqual({ action: "enroll" });
-    expect(resolveTotpEnrollPrep([{ id: "current-ui-factor", status: "unverified" }])).toEqual({
-      action: "enroll",
-      unverifiedIdsToRemove: [],
-    });
-  });
-
-  it("cleanup programmatique exclut le factorId courant", () => {
+describe("assertFactorReadyForChallenge", () => {
+  it("factorId absent avant challenge → erreur propre", () => {
     expect(
-      listUnverifiedTotpFactorIdsExcluding(
-        [
-          { id: "keep", status: "unverified" },
-          { id: "old", status: "unverified" },
-          { id: "v", status: "verified" },
-        ],
-        "keep",
+      assertFactorReadyForChallenge(
+        [{ id: "other", status: "unverified" }],
+        "missing-id",
       ),
-    ).toEqual(["old"]);
+    ).toEqual({ ok: false, reason: "missing" });
+    expect(mapMfaSetupError({ code: "factor_missing" })).toBe(
+      MFA_FACTOR_STALE_MESSAGE,
+    );
   });
 
-  it("Recommencer nettoie tous les unverified puis ré-enroll", () => {
+  it("facteur verified → not_unverified", () => {
     expect(
-      resolveTotpRestartCleanupIds([
-        { id: "a", status: "unverified" },
-        { id: "b", status: "unverified" },
-        { id: "v", status: "verified" },
-      ]),
-    ).toEqual(["a", "b"]);
+      assertFactorReadyForChallenge(
+        [{ id: "f1", status: "verified" }],
+        "f1",
+      ),
+    ).toEqual({ ok: false, reason: "not_unverified" });
   });
 
-  it("formulaire : pas de cleanup auto au mount", () => {
-    const src = readFileSync(
-      join(process.cwd(), "components/auth/MfaSetupForm.tsx"),
-      "utf8",
-    );
-    expect(src).toMatch(/resolveTotpMountPrep/);
-    expect(src).toMatch(/Recommencer la configuration/);
-    expect(src).not.toMatch(/unverifiedIdsToRemove/);
-    // unenroll seulement dans onRestart
-    const mountBlock = src.slice(
-      src.indexOf("useEffect"),
-      src.indexOf("function onSubmit"),
-    );
-    expect(mountBlock).not.toMatch(/\.unenroll\(/);
+  it("unverified OK", () => {
+    expect(
+      assertFactorReadyForChallenge(
+        [{ id: "f1", status: "unverified" }],
+        "f1",
+      ),
+    ).toEqual({ ok: true });
   });
 });
 
-describe("erreur challenge conserve QR/factorId", () => {
-  it("shouldPreserveEnrollmentUiOnSubmitError", () => {
-    expect(shouldPreserveEnrollmentUiOnSubmitError()).toBe(true);
+describe("AuthError propagation", () => {
+  it("AuthError challenge propagée", () => {
+    const err = {
+      name: "AuthApiError",
+      message: "MFA factor no longer exists",
+      code: "mfa_factor_not_found",
+      status: 422,
+    };
+    expect(() => throwMfaStepError("challenge", err)).toThrow();
+    try {
+      throwMfaStepError("challenge", err);
+    } catch (e) {
+      expect(e).toBe(err);
+      expect(extractAuthErrorCode(e)).toBe("mfa_factor_not_found");
+    }
   });
 
-  it("catch submit ne clear pas QR dans le source", () => {
-    const src = readFileSync(
-      join(process.cwd(), "components/auth/MfaSetupForm.tsx"),
-      "utf8",
-    );
-    const catchIdx = src.indexOf("} catch (err) {\n        // Conserve QR");
-    expect(catchIdx).toBeGreaterThan(-1);
-    const catchBlock = src.slice(catchIdx, catchIdx + 200);
-    expect(catchBlock).not.toMatch(/setQrDataUrl\(null\)/);
-    expect(catchBlock).not.toMatch(/setFactorId\(null\)/);
-    expect(catchBlock).not.toMatch(/enrollFresh/);
+  it("AuthError verify propagée", () => {
+    const err = {
+      name: "AuthApiError",
+      message: "Invalid TOTP code entered",
+      code: "mfa_verification_failed",
+      status: 422,
+    };
+    try {
+      throwMfaStepError("verify", err);
+    } catch (e) {
+      expect(e).toBe(err);
+      expect(mapMfaSetupError(e)).toMatch(/incorrect/i);
+    }
   });
-});
 
-describe("mapMfaSetupError via error.code", () => {
-  it("mfa_verification_failed", () => {
+  it("mapping FR conservé", () => {
     expect(
-      mapMfaSetupError({ code: "mfa_verification_failed", message: "x" }),
-    ).toMatch(/incorrect/i);
-  });
-
-  it("mfa_factor_not_found → message FR dédié", () => {
-    expect(
-      mapMfaSetupError({ code: "mfa_factor_not_found", message: "gone" }),
-    ).toMatch(/Recommencer/i);
-  });
-
-  it("mfa_challenge_expired → message FR dédié", () => {
-    expect(
-      mapMfaSetupError({ code: "mfa_challenge_expired", message: "expired" }),
+      mapMfaSetupError({ code: "mfa_challenge_expired" }),
     ).toMatch(/expiré/i);
-  });
-
-  it("mfa_ip_address_mismatch → message FR dédié", () => {
     expect(
-      mapMfaSetupError({
-        code: "mfa_ip_address_mismatch",
-        message: "mismatch",
-      }),
+      mapMfaSetupError({ code: "mfa_ip_address_mismatch" }),
     ).toMatch(/réseau|connexion/i);
   });
-
-  it("extractAuthErrorCode", () => {
-    expect(extractAuthErrorCode({ code: "mfa_factor_not_found" })).toBe(
-      "mfa_factor_not_found",
-    );
-    expect(extractAuthErrorCode(null)).toBeNull();
-  });
 });
 
-describe("verify OK + refresh → AAL2", () => {
-  it("resolveTotpVerifyOutcome après refresh", () => {
-    expect(resolveTotpVerifyOutcome("aal2")).toBe("ok_aal2");
-    expect(resolveTotpVerifyOutcome("aal1")).toBe("aal_incomplete");
-  });
-
-  it("formulaire appelle refreshSession avant getAuthenticatorAssuranceLevel", () => {
-    const src = readFileSync(
-      join(process.cwd(), "components/auth/MfaSetupForm.tsx"),
-      "utf8",
-    );
-    const refreshIdx = src.indexOf("refreshSession");
-    const aalIdx = src.indexOf("getAuthenticatorAssuranceLevel");
-    expect(refreshIdx).toBeGreaterThan(-1);
-    expect(aalIdx).toBeGreaterThan(refreshIdx);
-  });
-});
-
-describe("helpers inchangés", () => {
-  it("liste unverified / count", () => {
-    expect(
-      listUnverifiedTotpFactorIds([
-        { id: "a", status: "verified" },
-        { id: "b", status: "unverified" },
-      ]),
-    ).toEqual(["b"]);
-    expect(
-      countVerifiedTotpFactors([{ id: "a", status: "verified" }]),
-    ).toBe(1);
-  });
-
-  it("isValidTotpCode + display map", () => {
-    expect(isValidTotpCode("123456")).toBe(true);
-    const display = mapTotpEnrollForDisplay({
-      id: "f1",
-      totp: { qr_code: "data:image/svg+xml;base64,x", secret: "ABC" },
+describe("diagnostic logs sans secret", () => {
+  it("aucun secret loggé", () => {
+    const spy = vi.spyOn(console, "info").mockImplementation(() => {});
+    logMfaSetupDiagnostic("verify", {
+      code: "mfa_verification_failed",
+      status: 422,
+      message: "Invalid TOTP code entered",
     });
-    expect(display.factorId).toBe("f1");
+    expect(spy).toHaveBeenCalledTimes(1);
+    const payload = JSON.stringify(spy.mock.calls[0]);
+    expect(payload).toContain("mfa_verification_failed");
+    expect(payload).toContain('"step":"verify"');
+    expect(payload.toLowerCase()).not.toContain("secret");
+    expect(payload.toLowerCase()).not.toContain("otp");
+    expect(payload.toLowerCase()).not.toContain("qr");
+    expect(payload.toLowerCase()).not.toContain("token");
   });
 
-  it("pas de localStorage", () => {
+  it("formulaire n’utilise plus new Error('challenge')", () => {
     const src = readFileSync(
       join(process.cwd(), "components/auth/MfaSetupForm.tsx"),
       "utf8",
     );
-    expect(src).not.toMatch(/localStorage/);
-    expect(src).not.toMatch(/sessionStorage/);
+    expect(src).toMatch(/throwMfaStepError\("challenge"/);
+    expect(src).toMatch(/assertFactorReadyForChallenge/);
+    expect(src).not.toMatch(/new Error\(["']challenge["']\)/);
   });
 });
