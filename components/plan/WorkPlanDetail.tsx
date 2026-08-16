@@ -12,6 +12,7 @@ import {
   Icon3dSpark,
   Icon3dTarget,
 } from "@/components/plan/Plan3dIcons";
+import { SegmentedProgressBar } from "@/components/plan/SegmentedProgressBar";
 import { formatDateShortFr } from "@/lib/dashboard/format";
 import type { PersistedWorkPlan } from "@/lib/planning/work-plan/memory-store";
 import { countMeasurableTasks } from "@/lib/planning/work-plan/progress";
@@ -336,36 +337,18 @@ export function WorkPlanDetail({
             <ol className="ko-plan-breakdown-list">
               {active.tasks.map((task, index) => {
                 const progress = workPlanTaskProgressView(task);
-                const color = DONUT_COLORS[index % DONUT_COLORS.length];
                 return (
-                  <li key={task.id} className="ko-plan-breakdown-item">
-                    <span
-                      className="ko-plan-breakdown-dot"
-                      style={{ background: color }}
-                    />
+                  <li key={task.id} className="ko-plan-breakdown-item is-seg">
                     <span className="ko-plan-breakdown-rank">{index + 1}</span>
                     <div className="ko-plan-breakdown-copy">
                       <span className="ko-plan-breakdown-name">{task.title}</span>
-                      {progress.showGauge && progress.percent != null ? (
-                        <span className="ko-plan-breakdown-bar">
-                          <span
-                            style={{
-                              width: `${progress.percent}%`,
-                              background: color,
-                            }}
-                          />
-                        </span>
-                      ) : (
-                        <span className="ko-plan-breakdown-qual">
-                          {progress.label}
-                        </span>
-                      )}
+                      <SegmentedProgressBar
+                        percent={
+                          progress.showGauge ? progress.percent : null
+                        }
+                        label={progress.label.replace(/\s*%$/, "%")}
+                      />
                     </div>
-                    <span className="ko-plan-breakdown-value">
-                      {progress.showGauge && progress.percent != null
-                        ? `${progress.percent}%`
-                        : "—"}
-                    </span>
                   </li>
                 );
               })}
@@ -461,12 +444,17 @@ export function WorkPlanDetail({
                     </td>
                     <td>
                       <div className="ko-plan-table-progress">
-                        <span>{activitiesLabel ?? progress.label}</span>
-                        {progress.showGauge && progress.percent != null ? (
-                          <span className="ko-plan-table-bar">
-                            <span style={{ width: `${progress.percent}%` }} />
+                        {activitiesLabel ? (
+                          <span className="ko-plan-table-progress-meta">
+                            {activitiesLabel}
                           </span>
                         ) : null}
+                        <SegmentedProgressBar
+                          percent={
+                            progress.showGauge ? progress.percent : null
+                          }
+                          label={progress.label.replace(/\s*%$/, "%")}
+                        />
                       </div>
                     </td>
                     <td className="text-slate-500">{task.reason}</td>

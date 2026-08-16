@@ -1,12 +1,12 @@
-import { resolveInitials, type ProfileDisplayInput } from "@/lib/profile/display";
+import type { ProfileDisplayInput } from "@/lib/profile/display";
 
 type AvatarSize = "sm" | "md" | "lg" | "xl";
 
 const SIZE_CLASS: Record<AvatarSize, string> = {
-  sm: "h-9 w-9 text-xs",
-  md: "h-11 w-11 text-sm",
-  lg: "h-20 w-20 text-xl",
-  xl: "h-28 w-28 text-2xl sm:h-32 sm:w-32 sm:text-3xl",
+  sm: "h-9 w-9",
+  md: "h-11 w-11",
+  lg: "h-20 w-20",
+  xl: "h-28 w-28 sm:h-32 sm:w-32",
 };
 
 interface UserAvatarProps extends ProfileDisplayInput {
@@ -15,33 +15,54 @@ interface UserAvatarProps extends ProfileDisplayInput {
   className?: string;
 }
 
-/** Avatar global KO Predict™ — photo ou initiales. */
+/**
+ * Silhouette par défaut — buste collé au bord bas du cercle.
+ */
+function DefaultAvatarGlyph({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 80 80"
+      className={className}
+      aria-hidden
+      focusable="false"
+    >
+      <circle cx="40" cy="40" r="40" fill="#c4c8cd" />
+      <circle cx="40" cy="28" r="13" fill="#ffffff" />
+      <path
+        d="M2 80c1.5-18 14.5-28 38-28s36.5 10 38 28H2Z"
+        fill="#ffffff"
+      />
+    </svg>
+  );
+}
+
+/** Avatar global KO Predict™ — photo ou silhouette, avec bordure double. */
 export function UserAvatar({
   imageUrl,
   size = "md",
   className = "",
-  ...identity
 }: UserAvatarProps) {
   const dim = SIZE_CLASS[size];
-  const initials = resolveInitials(identity);
+  const hasPhoto = Boolean(imageUrl?.trim());
+  const frame = `ko-user-avatar ${dim}${className ? ` ${className}` : ""}`;
 
-  if (imageUrl) {
+  if (hasPhoto) {
     return (
       // eslint-disable-next-line @next/next/no-img-element -- URL Storage dynamique + cache-bust
       <img
-        src={imageUrl}
+        src={imageUrl!}
         alt=""
-        className={`inline-block shrink-0 rounded-full object-cover ring-2 ring-white ${dim} ${className}`}
+        width={128}
+        height={128}
+        decoding="async"
+        className={`${frame} object-cover object-center`}
       />
     );
   }
 
   return (
-    <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-[var(--admin-blue-soft,#dbeafe)] font-semibold text-[var(--admin-blue-hover,#1d4ed8)] ring-2 ring-white ${dim} ${className}`}
-      aria-hidden
-    >
-      {initials}
+    <span className={`${frame} ko-user-avatar-default`} aria-hidden>
+      <DefaultAvatarGlyph className="block h-full w-full" />
     </span>
   );
 }

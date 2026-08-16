@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   activityStatusLabelFr,
@@ -19,6 +19,11 @@ import {
   LEARNER_HISTORY_TEMPORARY_MESSAGE,
   shouldAutoFetchOnMount,
 } from "@/lib/learning/lw-id";
+import {
+  Icon3dQuiz,
+  Icon3dRefresh,
+  learningTypeIcon,
+} from "@/components/learning/Learning3dIcons";
 import type {
   LearningActivityFilter,
   LearningAssessmentAttempt,
@@ -48,6 +53,17 @@ type AttemptState =
       lastGrade: number | null;
     }
   | { status: "unavailable" | "error"; message: string };
+
+function statusTone(status: LearningHistoryActivity["status"]) {
+  switch (status) {
+    case "completed":
+      return "is-done";
+    case "not_completed":
+      return "is-todo";
+    default:
+      return "is-unknown";
+  }
+}
 
 export function LearnerLearningPanel({
   qcmAverage,
@@ -137,6 +153,14 @@ export function LearnerLearningPanel({
     });
   }, [activities, filter, query]);
 
+  const completedCount = useMemo(
+    () => activities.filter((a) => a.status === "completed").length,
+    [activities],
+  );
+  const totalCount = activities.length;
+  const progressPct =
+    totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
   const scored = useMemo(() => scoredAssessments(assessments), [assessments]);
   const best = useMemo(() => bestAssessmentScore(assessments), [assessments]);
 
@@ -219,113 +243,156 @@ export function LearnerLearningPanel({
   }, [attemptById]);
 
   return (
-    <div className="space-y-4">
-      <div
-        role="tablist"
-        className="flex flex-wrap gap-1 rounded-full bg-slate-100/90 p-1"
-      >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "activities"}
-          onClick={() => selectTab("activities")}
-          className={`rounded-full px-4 py-2 text-sm font-semibold ${
-            tab === "activities"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600"
-          }`}
+    <div className="ko-learn-board ko-dash-stagger">
+      <section className="ko-learn-hero">
+        <div className="ko-learn-hero-main">
+          <p className="ko-learn-kicker">Parcours LearnWorlds</p>
+          <h2 className="ko-learn-hero-title">Ma progression pédagogique</h2>
+          <p className="ko-learn-hero-sub">
+            Activités et quiz chargés à la demande — sans inventer de date ni de
+            score.
+          </p>
+          <div className="ko-learn-hero-stats">
+            <div>
+              <p>{totalCount > 0 ? `${completedCount}/${totalCount}` : "—"}</p>
+              <span>Terminées</span>
+            </div>
+            <div>
+              <p>{formatPercentOrDash(qcmAverage)}</p>
+              <span>Moyenne QCM</span>
+            </div>
+            <div>
+              <p>{scored.length}</p>
+              <span>Quiz scorés</span>
+            </div>
+          </div>
+        </div>
+        <div
+          className="ko-learn-hero-ring"
+          aria-label={
+            totalCount > 0
+              ? `Progression ${progressPct}%`
+              : "Progression indisponible"
+          }
         >
-          Mes activités
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "quizzes"}
-          onClick={() => selectTab("quizzes")}
-          className={`rounded-full px-4 py-2 text-sm font-semibold ${
-            tab === "quizzes"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600"
-          }`}
-        >
-          Mes quiz &amp; examens
-        </button>
+          <div
+            className="ko-learn-hero-ring-viz"
+            style={{
+              background: `conic-gradient(#2563eb 0 ${progressPct}%, #e2e8f0 ${progressPct}% 100%)`,
+            }}
+          >
+            <div className="ko-learn-hero-ring-hole">
+              <p className="ko-learn-hero-ring-value">
+                {totalCount > 0 ? `${progressPct}%` : "—"}
+              </p>
+              <p className="ko-learn-hero-ring-label">réalisé</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="ko-learn-toolbar" role="tablist">
+        <div className="ko-learn-tabs">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "activities"}
+            onClick={() => selectTab("activities")}
+            className={`ko-learn-tab${tab === "activities" ? " is-active" : ""}`}
+          >
+            Mes activités
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "quizzes"}
+            onClick={() => selectTab("quizzes")}
+            className={`ko-learn-tab${tab === "quizzes" ? " is-active" : ""}`}
+          >
+            Mes quiz &amp; examens
+          </button>
+        </div>
         <button
           type="button"
           onClick={() => void load(true)}
-          className="ml-auto rounded-full px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-white"
+          className="ko-learn-refresh"
         >
+          <Icon3dRefresh className="ko-learn-3d is-xs" />
           Actualiser
         </button>
       </div>
 
       {loading ? (
-        <p className="text-sm text-slate-500">Chargement de votre parcours…</p>
+        <p className="ko-learn-loading">Chargement de votre parcours…</p>
       ) : null}
       {error && !loading ? (
-        <div className="rounded-2xl bg-rose-50 px-4 py-4 text-sm text-rose-800">
+        <div className="ko-learn-error">
           <p>{error}</p>
-          <button
-            type="button"
-            onClick={() => void load(true)}
-            className="mt-3 inline-flex rounded-full bg-rose-700 px-4 py-2 text-xs font-semibold text-white transition hover:bg-rose-800"
-          >
+          <button type="button" onClick={() => void load(true)}>
             Réessayer
           </button>
         </div>
       ) : null}
 
       {!loading && !error && tab === "activities" ? (
-        <section className="ko-dash-card p-4 sm:p-5">
-          <div className="flex flex-wrap gap-1.5">
+        <section className="ko-learn-panel">
+          <div className="ko-learn-filters" role="group" aria-label="Filtres">
             {FILTERS.map((f) => (
               <button
                 key={f.id}
                 type="button"
                 onClick={() => setFilter(f.id)}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                  filter === f.id
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-100 text-slate-600"
-                }`}
+                className={`ko-learn-filter${filter === f.id ? " is-active" : ""}`}
               >
                 {f.label}
               </button>
             ))}
           </div>
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher une activité…"
-            className="mt-3 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500"
-          />
-          <ul className="mt-4 space-y-3">
-            {filtered.map((a) => (
-              <li
-                key={`${a.courseId}-${a.id}`}
-                className="rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 px-4 py-3"
-              >
-                <p className="font-semibold text-slate-900">{a.name}</p>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  {a.section ?? "Sans section"} · {activityTypeLabelFr(a.type)}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-600">
-                  <span>{activityStatusLabelFr(a.status)}</span>
-                  <span>
-                    Score :{" "}
-                    {a.type === "assessmentV2"
-                      ? formatScorePercent(a.score)
-                      : "—"}
-                  </span>
-                  <span>
-                    Temps : {formatDurationSeconds(a.timeOnUnitSeconds)}
-                  </span>
-                </div>
-              </li>
-            ))}
+          <label className="ko-learn-search">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher une activité…"
+              aria-label="Rechercher une activité"
+            />
+          </label>
+          <ul className="ko-learn-list">
+            {filtered.map((a) => {
+              const Icon = learningTypeIcon(a.type);
+              return (
+                <li key={`${a.courseId}-${a.id}`} className="ko-learn-card">
+                  <div className="ko-learn-card-icon">
+                    <Icon />
+                  </div>
+                  <div className="ko-learn-card-body">
+                    <p className="ko-learn-card-title">{a.name}</p>
+                    <p className="ko-learn-card-meta">
+                      {a.section ?? "Sans section"} ·{" "}
+                      {activityTypeLabelFr(a.type)}
+                    </p>
+                    <div className="ko-learn-card-foot">
+                      <span
+                        className={`ko-learn-status ${statusTone(a.status)}`}
+                      >
+                        {activityStatusLabelFr(a.status)}
+                      </span>
+                      <span>
+                        Score :{" "}
+                        {a.type === "assessmentV2"
+                          ? formatScorePercent(a.score)
+                          : "—"}
+                      </span>
+                      <span>
+                        Temps : {formatDurationSeconds(a.timeOnUnitSeconds)}
+                      </span>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
             {filtered.length === 0 ? (
-              <li className="text-sm text-slate-500">
+              <li className="ko-learn-empty">
                 Aucune activité pour ce filtre.
               </li>
             ) : null}
@@ -334,8 +401,8 @@ export function LearnerLearningPanel({
       ) : null}
 
       {!loading && !error && tab === "quizzes" ? (
-        <section className="ko-dash-card space-y-4 p-4 sm:p-5">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="ko-learn-panel space-y-4">
+          <div className="ko-learn-kpi-row">
             <MiniStat
               label="Moyenne globale"
               value={
@@ -343,10 +410,12 @@ export function LearnerLearningPanel({
                   ? "Pas encore de résultat"
                   : formatPercentOrDash(qcmAverage)
               }
+              icon={<Icon3dQuiz className="ko-learn-3d is-sm" />}
             />
             <MiniStat
               label="Moyenne récente"
               value={formatPercentOrDash(recentQcmAverage)}
+              icon={<Icon3dQuiz className="ko-learn-3d is-sm" />}
             />
             <MiniStat
               label="Évaluations scorées"
@@ -359,76 +428,74 @@ export function LearnerLearningPanel({
           </div>
 
           {trendPoints.length >= 2 ? (
-            <div className="rounded-2xl bg-slate-50 px-4 py-3">
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                Évolution de mes résultats
-              </p>
-              <p className="mt-2 text-sm font-medium text-slate-800">
+            <div className="ko-learn-trend">
+              <p className="ko-learn-trend-label">Évolution de mes résultats</p>
+              <p className="ko-learn-trend-value">
                 {trendPoints.map((p) => Math.round(p.grade)).join(" → ")}
               </p>
             </div>
           ) : scored.length > 0 ? (
-            <p className="text-sm text-slate-500">
+            <p className="ko-learn-hint">
               Pas encore assez de résultats datés pour afficher une tendance.
               Ouvrez quelques tentatives ci-dessous.
             </p>
           ) : null}
 
-          <ul className="space-y-3">
+          <ul className="ko-learn-list">
             {scored.map((a) => {
               const state = attemptById[a.id] ?? { status: "idle" as const };
               const open = expandedId === a.id;
               return (
-                <li
-                  key={a.id}
-                  className="rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-slate-900">{a.name}</p>
-                      <p className="text-xs text-slate-500">
-                        {a.section ?? "Sans section"}
-                      </p>
-                      <p className="mt-2 text-sm text-slate-700">
-                        Score :{" "}
-                        <span className="font-semibold">
-                          {formatScorePercent(a.score)}
-                        </span>
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (open) {
-                          setExpandedId(null);
-                          return;
-                        }
-                        void loadAttempts(a.id);
-                      }}
-                      className="rounded-full bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white"
-                    >
-                      {open ? "Masquer" : "Voir mes tentatives"}
-                    </button>
+                <li key={a.id} className="ko-learn-card">
+                  <div className="ko-learn-card-icon">
+                    <Icon3dQuiz />
                   </div>
-                  {open ? (
-                    <div className="mt-3 border-t border-slate-100 pt-3">
-                      {state.status === "loading" ? (
-                        <p className="text-sm text-slate-500">Chargement…</p>
-                      ) : null}
-                      {state.status === "unavailable" ||
-                      state.status === "error" ? (
-                        <p className="text-sm text-amber-800">{state.message}</p>
-                      ) : null}
-                      {state.status === "ok" ? (
-                        <AttemptsList state={state} />
-                      ) : null}
+                  <div className="ko-learn-card-body">
+                    <div className="ko-learn-card-row">
+                      <div>
+                        <p className="ko-learn-card-title">{a.name}</p>
+                        <p className="ko-learn-card-meta">
+                          {a.section ?? "Sans section"}
+                        </p>
+                        <p className="ko-learn-card-score">
+                          Score :{" "}
+                          <strong>{formatScorePercent(a.score)}</strong>
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (open) {
+                            setExpandedId(null);
+                            return;
+                          }
+                          void loadAttempts(a.id);
+                        }}
+                        className="ko-learn-cta"
+                      >
+                        {open ? "Masquer" : "Voir mes tentatives"}
+                      </button>
                     </div>
-                  ) : null}
+                    {open ? (
+                      <div className="ko-learn-attempts">
+                        {state.status === "loading" ? (
+                          <p className="ko-learn-hint">Chargement…</p>
+                        ) : null}
+                        {state.status === "unavailable" ||
+                        state.status === "error" ? (
+                          <p className="ko-learn-warn">{state.message}</p>
+                        ) : null}
+                        {state.status === "ok" ? (
+                          <AttemptsList state={state} />
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
                 </li>
               );
             })}
             {scored.length === 0 ? (
-              <li className="rounded-2xl bg-slate-50 px-4 py-5 text-sm text-slate-600">
+              <li className="ko-learn-empty">
                 Pas encore de résultat QCM. Vos scores apparaîtront après vos
                 premiers quiz LearnWorlds.
               </li>
@@ -440,14 +507,23 @@ export function LearnerLearningPanel({
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: string }) {
+function MiniStat({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string;
+  icon?: ReactNode;
+}) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3.5 py-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-        {label}
-      </p>
-      <p className="mt-1 text-base font-semibold text-slate-900">{value}</p>
-    </div>
+    <article className="ko-learn-kpi">
+      <div className="ko-learn-kpi-top">
+        <p className="ko-learn-kpi-label">{label}</p>
+        {icon}
+      </div>
+      <p className="ko-learn-kpi-value">{value}</p>
+    </article>
   );
 }
 
@@ -462,28 +538,25 @@ function AttemptsList({
     return ta - tb;
   });
   return (
-    <div className="space-y-2">
+    <div className="ko-learn-attempt-list">
       {chronological.map((attempt, i) => (
-        <div
-          key={attempt.id}
-          className="rounded-xl bg-slate-50 px-3 py-2 text-sm"
-        >
-          <p className="font-semibold text-slate-900">Tentative {i + 1}</p>
+        <div key={attempt.id} className="ko-learn-attempt">
+          <p className="ko-learn-attempt-title">Tentative {i + 1}</p>
           <p>{formatScorePercent(attempt.grade)}</p>
-          <p className="text-xs text-slate-500">
+          <p className="ko-learn-attempt-date">
             {attempt.submittedAt
               ? formatDateTimeFr(attempt.submittedAt)
               : "Date indisponible"}
           </p>
           {attempt.passed != null ? (
-            <p className="text-xs text-slate-600">
+            <p className="ko-learn-attempt-pass">
               {attempt.passed ? "Réussi" : "Non réussi"}
             </p>
           ) : null}
         </div>
       ))}
       {chronological.length > 1 ? (
-        <p className="text-xs text-slate-600">
+        <p className="ko-learn-hint">
           Meilleur score {formatScorePercent(state.bestGrade)} · Dernier score{" "}
           {formatScorePercent(state.lastGrade)}
         </p>

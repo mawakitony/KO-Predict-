@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   useActionState,
@@ -9,7 +8,6 @@ import {
   useState,
   useTransition,
 } from "react";
-import { BrandMark } from "@/components/ui/BrandMark";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import {
   removeAvatarAction,
@@ -17,7 +15,7 @@ import {
   uploadAvatarAction,
   type ProfileActionState,
 } from "@/lib/auth/profile-actions";
-import { homePathForRole, roleLabelFr } from "@/lib/auth/roles";
+import { roleLabelFr } from "@/lib/auth/roles";
 import { resolveDisplayName } from "@/lib/profile/display";
 import type { UserRole } from "@/types/student";
 
@@ -75,7 +73,6 @@ export function ProfileEditor({
     lastName: liveLastName,
     email,
   });
-  const backHref = homePathForRole(role);
   const roleLabel = roleLabelFr(role);
 
   useEffect(() => {
@@ -115,34 +112,7 @@ export function ProfileEditor({
   ]);
 
   return (
-    <div className="ko-profile-shell ko-dash-stagger">
-      <header className="ko-profile-hero">
-        <div className="ko-profile-hero-top">
-          <BrandMark href={backHref} tone="dark" size="sm" />
-          <Link href={backHref} className="ko-profile-back">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
-            >
-              <path d="m15 18-6-6 6-6" />
-            </svg>
-            Retour
-          </Link>
-        </div>
-
-        <p className="ko-profile-kicker">Mon compte</p>
-        <h1 className="ko-display ko-profile-title">Mon profil</h1>
-        <p className="ko-profile-lead">
-          Préférences KO Predict™ — indépendantes de LearnWorlds.
-        </p>
-      </header>
-
+    <div className="ko-profile-shell">
       <section className="ko-profile-identity" aria-labelledby="photo-title">
         <div className="ko-profile-identity-glow" aria-hidden />
 
@@ -191,10 +161,7 @@ export function ProfileEditor({
               JPG, JPEG, PNG ou WebP · max 5 Mo
             </p>
 
-            <form
-              action={avatarAction}
-              className="ko-profile-photo-actions"
-            >
+            <form action={avatarAction} className="ko-profile-photo-actions">
               <input
                 ref={fileRef}
                 type="file"

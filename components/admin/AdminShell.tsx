@@ -45,10 +45,10 @@ export function AdminShell({
   const koCount = useMemo(() => rows.length, [rows]);
 
   return (
-    <section className="overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white shadow-[0_16px_48px_-28px_rgba(15,23,42,0.28)]">
+    <section className="ko-admin-panel">
       <AdminLearnersKoCountSync count={koCount} />
 
-      <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <div className="ko-admin-panel-head">
         <p className="text-xs text-slate-400">
           Source :{" "}
           {tab === "learnworlds"
@@ -69,7 +69,7 @@ export function AdminShell({
         </button>
       </div>
 
-      <div className="p-4 sm:p-6">
+      <div className="ko-admin-panel-body">
         {tab === "learnworlds" ? (
           <LearnWorldsRoster
             canManageStudents={permissions.canManageStudents}

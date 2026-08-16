@@ -6,7 +6,7 @@ interface CollectionExamCardProps {
   certification: string;
 }
 
-/** Examen / J-n en mode collecte — compact, sans cartes « En attente ». */
+/** Examen / J-n en mode collecte — compact, professionnel. */
 export function CollectionExamCard({
   targetExamDate,
   certification,
@@ -21,22 +21,13 @@ export function CollectionExamCard({
   }
 
   return (
-    <section
-      className="ko-collect-exam"
-      aria-labelledby="exam-collect-title"
-    >
-      <div className="ko-collect-exam-head">
-        <p
-          id="exam-collect-title"
-          className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400"
-        >
-          Votre examen
-        </p>
-        <p className="text-sm font-semibold text-slate-600">{certification}</p>
-      </div>
+    <section className="ko-collect-exam" aria-labelledby="exam-collect-title">
+      <p id="exam-collect-title" className="ko-collect-exam-kicker">
+        Votre examen {certification}
+      </p>
 
       {!targetExamDate ? (
-        <p className="ko-display mt-2 text-lg font-bold text-amber-800">
+        <p className="ko-collect-exam-missing">
           Date d&apos;examen non renseignée
         </p>
       ) : (

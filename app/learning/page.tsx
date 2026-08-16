@@ -50,10 +50,6 @@ export default async function LearningPage() {
       subtitle={formatSyncRelativeFr(recordedAt)}
       showAdminLink={showAdmin}
     >
-      <p className="text-sm text-slate-500">
-        Activités et quiz LearnWorlds — chargés à la demande, sans inventer de
-        date ni de score.
-      </p>
       <Suspense
         fallback={
           <p className="text-sm text-slate-500">Chargement du parcours…</p>

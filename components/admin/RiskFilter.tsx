@@ -30,18 +30,18 @@ export function RiskFilter({
   onSearchChange,
 }: RiskFilterProps) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+    <div className="ko-admin-filters">
       <input
         type="search"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder="Rechercher un apprenant…"
-        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-[var(--admin-blue)] focus:bg-white focus:ring-2 focus:ring-[var(--admin-blue-ring)]"
+        className="ko-admin-filter-search"
       />
       <select
         value={certification}
         onChange={(e) => onCertificationChange(e.target.value)}
-        className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+        className="ko-admin-filter-select"
       >
         <option value="ALL">Toutes certifications</option>
         {certifications.map((c) => (
@@ -53,7 +53,7 @@ export function RiskFilter({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as RiskLevel | "ALL")}
-        className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+        className="ko-admin-filter-select"
       >
         {RISK_OPTIONS.map((opt) => (
           <option key={opt} value={opt}>

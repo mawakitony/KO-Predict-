@@ -8,23 +8,18 @@ import {
 function EmptyWorkPlanCard({ compact }: { compact?: boolean }) {
   return (
     <section
-      className={`ko-dash-card overflow-hidden p-5 sm:p-6${compact ? " is-compact" : ""}`}
+      className={`ko-plan-summary-card${compact ? " is-compact" : ""}`}
       aria-labelledby="work-plan-title"
     >
-      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-        Mon plan de progression
-      </p>
-      <h2
-        id="work-plan-title"
-        className="ko-display mt-1 text-xl font-semibold text-slate-900"
-      >
+      <p className="ko-plan-summary-kicker">Mon plan de progression</p>
+      <h2 id="work-plan-title" className="ko-plan-summary-title">
         Votre plan arrive bientôt
       </h2>
-      <p className="mt-3 text-sm leading-relaxed text-slate-600">
+      <p className="ko-plan-summary-objective">
         Votre premier plan sera généré automatiquement après la prochaine
         synchronisation.
       </p>
-      <p className="mt-4 text-xs text-slate-500">
+      <p className="ko-plan-summary-reeval">
         KO Predict™ adapte ce plan à partir de votre progression, de vos
         résultats et de votre rythme de préparation.
       </p>
@@ -39,63 +34,52 @@ function SummaryBody({
   summary: WorkPlanSummaryView;
   compact?: boolean;
 }) {
+  const active = summary.statusLabel === "En cours";
+
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="ko-plan-summary-head">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-            Mon plan de progression
-          </p>
+          <p className="ko-plan-summary-kicker">Mon plan de progression</p>
           <h2
             id="work-plan-title"
-            className={`ko-display mt-1 font-semibold text-slate-900 ${
-              compact ? "text-lg" : "text-xl"
-            }`}
+            className={`ko-plan-summary-title${compact ? " is-compact" : ""}`}
           >
             {summary.typeLabel}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">{summary.periodLabel}</p>
+          <p className="ko-plan-summary-period">{summary.periodLabel}</p>
         </div>
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+        <span
+          className={`ko-plan-summary-badge${active ? " is-active" : ""}`}
+        >
           {summary.statusLabel}
         </span>
       </div>
 
-      <p className="mt-4 text-sm leading-relaxed text-slate-700">
-        {summary.primaryObjective}
-      </p>
+      <p className="ko-plan-summary-objective">{summary.primaryObjective}</p>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <div className="ko-plan-summary-stats">
         {summary.activitiesLabel ? (
-          <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-              Activités
-            </p>
-            <p className="mt-1 text-lg font-semibold text-slate-900">
-              {summary.activitiesLabel}
-            </p>
+          <div className="ko-plan-summary-stat">
+            <p>Activités</p>
+            <strong>{summary.activitiesLabel}</strong>
           </div>
         ) : null}
         {summary.measurableTotal > 0 ? (
-          <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-              Tâches mesurables
-            </p>
-            <p className="mt-1 text-lg font-semibold text-slate-900">
+          <div className="ko-plan-summary-stat">
+            <p>Tâches mesurables</p>
+            <strong>
               {summary.measurableCompleted} / {summary.measurableTotal}
-            </p>
+            </strong>
           </div>
         ) : null}
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Link
-          href="/plan"
-          className="inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-        >
+      <div className="ko-plan-summary-footer">
+        <Link href="/plan" className="ko-plan-summary-cta">
           Voir mon plan
         </Link>
-        <p className="text-xs text-slate-500">
+        <p className="ko-plan-summary-reeval">
           Réévaluation le {summary.reevaluationLabel}
         </p>
       </div>
@@ -119,7 +103,7 @@ export function WorkPlanSummaryCard({
 
   return (
     <section
-      className={`ko-dash-card overflow-hidden p-5 sm:p-6${compact ? " is-compact" : ""}`}
+      className={`ko-plan-summary-card${compact ? " is-compact" : ""}`}
       aria-labelledby="work-plan-title"
     >
       <SummaryBody summary={summary} compact={compact} />

@@ -10,15 +10,8 @@ import {
   riskLabel,
   riskToneClasses,
 } from "@/lib/dashboard/format";
-import {
-  AccountStatusBadge,
-  AdminAvatar,
-} from "@/components/admin/AdminUi";
-import {
-  IconBan,
-  IconCheck,
-  IconEye,
-} from "@/components/admin/AdminIcons";
+import { AccountStatusBadge, AdminAvatar } from "@/components/admin/AdminUi";
+import { IconBan, IconCheck, IconEye } from "@/components/admin/AdminIcons";
 
 interface StudentsTableProps {
   rows: AdminStudentRow[];
@@ -72,7 +65,7 @@ export function StudentsTable({
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-10 text-center text-sm text-slate-500">
+      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-8 text-center text-sm text-slate-500 sm:p-10">
         Aucun apprenant ne correspond à ces filtres.
       </div>
     );
@@ -85,17 +78,117 @@ export function StudentsTable({
           {error}
         </p>
       ) : null}
-      <div className="overflow-x-auto">
+
+      {/* Mobile / tablette : cartes */}
+      <ul className="grid gap-3 md:hidden">
+        {rows.map((row) => {
+          const tone = riskToneClasses(row.prediction.riskLevel);
+          const access = row.accountStatus ?? "ACTIVE";
+          const targetLabel = row.student.targetExamDate
+            ? formatDateShortFr(row.student.targetExamDate)
+            : "Date non renseignée";
+          return (
+            <li key={row.student.studentId} className="ko-admin-student-card">
+              <div className="flex items-start gap-3">
+                <AdminAvatar name={row.student.fullName} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/admin/students/${row.student.studentId}`}
+                    className="font-semibold text-slate-900 hover:text-[var(--accent-hover)]"
+                  >
+                    {row.student.fullName}
+                  </Link>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    {row.student.certification}
+                  </p>
+                </div>
+                <span
+                  className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${tone.badge}`}
+                  title={riskLabel(row.prediction.riskLevel)}
+                >
+                  {row.prediction.riskLevel ?? "—"}
+                </span>
+              </div>
+
+              <dl className="ko-admin-student-meta">
+                <div>
+                  <dt>Readiness</dt>
+                  <dd>
+                    {formatScore(row.prediction.readinessScore)}
+                    {row.prediction.readinessScore != null ? " / 100" : ""}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Progression</dt>
+                  <dd>{formatPercent(row.prediction.progressPercent)}</dd>
+                </div>
+                <div>
+                  <dt>Date cible</dt>
+                  <dd>{targetLabel}</dd>
+                </div>
+                <div>
+                  <dt>Accès</dt>
+                  <dd>
+                    <AccountStatusBadge
+                      status={access}
+                      label={access === "DISABLED" ? "Désactivé" : "Actif"}
+                    />
+                  </dd>
+                </div>
+              </dl>
+
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href={`/admin/students/${row.student.studentId}`}
+                  className="ko-btn-blue-soft"
+                >
+                  <IconEye className="ko-icon-sm" />
+                  Voir
+                </Link>
+                {canManageStudents && access === "ACTIVE" ? (
+                  <button
+                    type="button"
+                    disabled={busyId === row.student.studentId}
+                    onClick={() =>
+                      toggleAccess(row.student.studentId, "disable")
+                    }
+                    className="ko-btn-ghost"
+                  >
+                    <IconBan className="ko-icon-sm" />
+                    Désactiver
+                  </button>
+                ) : null}
+                {canManageStudents && access === "DISABLED" ? (
+                  <button
+                    type="button"
+                    disabled={busyId === row.student.studentId}
+                    onClick={() =>
+                      toggleAccess(row.student.studentId, "enable")
+                    }
+                    className="ko-btn-blue"
+                  >
+                    <IconCheck className="ko-icon-sm" />
+                    Réactiver
+                  </button>
+                ) : null}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Desktop : tableau */}
+      <div className="ko-admin-table-wrap hidden md:block">
         <table className="min-w-full text-left text-sm">
           <thead>
             <tr className="border-b border-slate-100 text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">
               <th className="px-2 py-3 font-semibold sm:px-3">Apprenant</th>
               <th className="px-2 py-3 font-semibold sm:px-3">Certification</th>
               <th className="px-2 py-3 font-semibold sm:px-3">Readiness</th>
-              <th className="hidden px-3 py-3 font-semibold md:table-cell">
+              <th className="hidden px-3 py-3 font-semibold lg:table-cell">
                 Progression
               </th>
-              <th className="hidden px-3 py-3 font-semibold lg:table-cell">
+              <th className="hidden px-3 py-3 font-semibold xl:table-cell">
                 Date cible
               </th>
               <th className="px-2 py-3 font-semibold sm:px-3">Risque</th>
@@ -133,10 +226,10 @@ export function StudentsTable({
                     {formatScore(row.prediction.readinessScore)}
                     {row.prediction.readinessScore != null ? " / 100" : ""}
                   </td>
-                  <td className="hidden px-3 py-3.5 text-slate-700 md:table-cell">
+                  <td className="hidden px-3 py-3.5 text-slate-700 lg:table-cell">
                     {formatPercent(row.prediction.progressPercent)}
                   </td>
-                  <td className="hidden whitespace-nowrap px-3 py-3.5 text-slate-700 lg:table-cell">
+                  <td className="hidden whitespace-nowrap px-3 py-3.5 text-slate-700 xl:table-cell">
                     {targetLabel}
                   </td>
                   <td className="px-2 py-3.5 sm:px-3">
@@ -196,10 +289,6 @@ export function StudentsTable({
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-slate-400">
-        Colonne Date cible : <code>students.target_exam_date</code> (sync
-        LearnWorlds).
-      </p>
     </div>
   );
 }

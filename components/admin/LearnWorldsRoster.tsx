@@ -538,9 +538,9 @@ export function LearnWorldsRoster({
         </p>
       ) : null}
 
-      <div className="-mx-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:mx-0">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[56rem] table-fixed border-collapse text-left text-sm">
+      <div className="ko-admin-table-scroll -mx-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:mx-0">
+        <div className="overflow-x-auto overscroll-x-contain">
+          <table className="w-full min-w-[40rem] table-fixed border-collapse text-left text-sm md:min-w-[56rem]">
             <colgroup>
               <col className="w-[28%]" />
               <col className="w-[22%]" />
