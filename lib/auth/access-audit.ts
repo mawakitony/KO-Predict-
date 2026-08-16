@@ -21,7 +21,9 @@ export type AccessAuditEventType =
   | "INTERVENTION_FOLLOW_UP"
   | "INTERVENTION_RESOLVED"
   | "SUPER_ADMIN_ROLE_CHANGE_BLOCKED"
-  | "STAFF_ROLE_CHANGE_BLOCKED";
+  | "STAFF_ROLE_CHANGE_BLOCKED"
+  | "SUPER_ADMIN_PROMOTED"
+  | "SUPER_ADMIN_PROMOTION_BLOCKED";
 
 /** Audit minimal — jamais de mot de passe, code clair, hash, ni secrets. */
 export async function recordAccessAudit(options: {

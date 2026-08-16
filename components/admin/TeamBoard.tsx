@@ -58,6 +58,11 @@ export function TeamBoard({ initialMembers, currentUserId }: TeamBoardProps) {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"coach" | "admin">("coach");
+  const [promoteTarget, setPromoteTarget] = useState<TeamMemberRow | null>(
+    null,
+  );
+  const [promoteEmail, setPromoteEmail] = useState("");
+  const [promoteAck, setPromoteAck] = useState(false);
 
   const sorted = useMemo(
     () => [...members].sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
@@ -137,6 +142,50 @@ export function TeamBoard({ initialMembers, currentUserId }: TeamBoardProps) {
     } finally {
       setBusyId(null);
     }
+  }
+
+  function openPromoteModal(member: TeamMemberRow) {
+    setError(null);
+    setPromoteTarget(member);
+    setPromoteEmail("");
+    setPromoteAck(false);
+  }
+
+  function closePromoteModal() {
+    setPromoteTarget(null);
+    setPromoteEmail("");
+    setPromoteAck(false);
+  }
+
+  function submitPromote(e: React.FormEvent) {
+    e.preventDefault();
+    if (!promoteTarget) return;
+    setError(null);
+    startTransition(async () => {
+      setBusyId(promoteTarget.id);
+      try {
+        const res = await fetch("/api/admin/team/promote-super-admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            profileId: promoteTarget.id,
+            confirmEmail: promoteEmail,
+            confirmAcknowledged: promoteAck === true ? true : undefined,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.ok) {
+          setError(json.error ?? "Promotion impossible.");
+          return;
+        }
+        closePromoteModal();
+        await refresh();
+      } catch {
+        setError("Erreur réseau.");
+      } finally {
+        setBusyId(null);
+      }
+    });
   }
 
   return (
@@ -449,6 +498,18 @@ export function TeamBoard({ initialMembers, currentUserId }: TeamBoardProps) {
                                 Coach
                               </button>
                             ) : null}
+                            {m.role === "admin" &&
+                            m.accountStatus === "ACTIVE" ? (
+                              <button
+                                type="button"
+                                disabled={busyId === m.id}
+                                onClick={() => openPromoteModal(m)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-semibold text-violet-900 hover:bg-violet-100 disabled:opacity-50"
+                              >
+                                <IconTeam className="ko-icon-sm" />
+                                Super admin
+                              </button>
+                            ) : null}
                           </div>
                         )}
                       </td>
@@ -468,6 +529,73 @@ export function TeamBoard({ initialMembers, currentUserId }: TeamBoardProps) {
           title="Code d’activation équipe"
           hint="Communiquez ce code une seule fois. Le membre finalise sur /first-access."
         />
+      ) : null}
+
+      {promoteTarget ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 sm:items-center">
+          <form
+            onSubmit={submitPromote}
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl"
+          >
+            <h2 className="ko-display text-lg font-semibold text-slate-900">
+              Promouvoir en super administrateur
+            </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Cette action est irréversible via l’interface V1. Le compte{" "}
+              <span className="font-semibold text-slate-900">
+                {[promoteTarget.firstName, promoteTarget.lastName]
+                  .filter(Boolean)
+                  .join(" ") || "cible"}
+              </span>{" "}
+              passera de admin à super_admin.
+            </p>
+            <label className="mt-4 block text-sm font-medium text-slate-700">
+              Recopiez l’email exact
+              <input
+                type="email"
+                required
+                autoComplete="off"
+                value={promoteEmail}
+                onChange={(e) => setPromoteEmail(e.target.value)}
+                placeholder={promoteTarget.email ?? "email@exemple.com"}
+                className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-base outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+              />
+            </label>
+            <label className="mt-4 flex items-start gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={promoteAck}
+                onChange={(e) => setPromoteAck(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-slate-300"
+              />
+              <span>
+                Je confirme promouvoir ce compte admin ACTIVE en super_admin KO
+                Predict™. Je comprends que LearnWorlds n’intervient pas.
+              </span>
+            </label>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={closePromoteModal}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={
+                  pending ||
+                  busyId === promoteTarget.id ||
+                  !promoteAck ||
+                  !promoteEmail.trim()
+                }
+                className="rounded-xl bg-violet-700 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-800 disabled:opacity-50"
+              >
+                Confirmer la promotion
+              </button>
+            </div>
+          </form>
+        </div>
       ) : null}
     </div>
   );
