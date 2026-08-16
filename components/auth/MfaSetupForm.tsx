@@ -7,16 +7,18 @@ import {
   isValidTotpCode,
   mapMfaSetupError,
   mapTotpEnrollForDisplay,
-  resolveTotpEnrollPrep,
+  resolveTotpMountPrep,
+  resolveTotpRestartCleanupIds,
   resolveTotpVerifyOutcome,
 } from "@/lib/auth/mfa-setup";
 import { recordMfaSecurityAuditAction } from "@/lib/auth/mfa-security-actions";
 
-type SetupPhase = "preparing" | "ready" | "submitting" | "done";
+type SetupPhase = "preparing" | "ready" | "submitting" | "restarting" | "done";
 
 /**
  * Enroll TOTP côté navigateur uniquement.
  * QR / secret / URI restent en mémoire React — jamais loggés ni persistés.
+ * Pas de cleanup agressif au mount : unenroll seulement via « Recommencer ».
  */
 export function MfaSetupForm() {
   const router = useRouter();
@@ -30,6 +32,18 @@ export function MfaSetupForm() {
   const [pending, startTransition] = useTransition();
   const started = useRef(false);
 
+  async function enrollFresh(
+    supabase: ReturnType<typeof createClient>,
+    friendlyName: string,
+  ) {
+    const enrolled = await supabase.auth.mfa.enroll({
+      factorType: "totp",
+      friendlyName,
+    });
+    if (enrolled.error || !enrolled.data) throw enrolled.error ?? new Error("enroll");
+    return mapTotpEnrollForDisplay(enrolled.data);
+  }
+
   useEffect(() => {
     if (started.current) return;
     started.current = true;
@@ -41,25 +55,17 @@ export function MfaSetupForm() {
         if (listed.error) throw listed.error;
 
         const totp = listed.data?.totp ?? [];
-        const prep = resolveTotpEnrollPrep(totp);
+        const prep = resolveTotpMountPrep(totp);
         if (prep.action === "already_verified") {
           router.replace("/admin");
           return;
         }
 
-        // Évite l’accumulation de facteurs unverified (reload / retry).
-        for (const id of prep.unverifiedIdsToRemove) {
-          const removed = await supabase.auth.mfa.unenroll({ factorId: id });
-          if (removed.error) throw removed.error;
-        }
-
-        const enrolled = await supabase.auth.mfa.enroll({
-          factorType: "totp",
-          friendlyName: "KO Predict Authenticator",
-        });
-        if (enrolled.error || !enrolled.data) throw enrolled.error;
-
-        const display = mapTotpEnrollForDisplay(enrolled.data);
+        // Pas de cleanup automatique au mount/remount.
+        const display = await enrollFresh(
+          supabase,
+          `KO Predict Authenticator ${Date.now()}`,
+        );
         setFactorId(display.factorId);
         setQrDataUrl(display.qrDataUrl);
         setManualSecret(display.manualSecret);
@@ -80,7 +86,7 @@ export function MfaSetupForm() {
       return;
     }
     if (!factorId) {
-      setError("Configuration incomplète. Rechargez la page.");
+      setError("Configuration incomplète. Utilisez « Recommencer la configuration ».");
       return;
     }
 
@@ -89,7 +95,9 @@ export function MfaSetupForm() {
       try {
         const supabase = createClient();
         const challenge = await supabase.auth.mfa.challenge({ factorId });
-        if (challenge.error || !challenge.data) throw challenge.error;
+        if (challenge.error || !challenge.data) {
+          throw challenge.error ?? new Error("challenge");
+        }
 
         const verified = await supabase.auth.mfa.verify({
           factorId,
@@ -98,6 +106,7 @@ export function MfaSetupForm() {
         });
         if (verified.error) throw verified.error;
 
+        await supabase.auth.refreshSession();
         const aal = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (resolveTotpVerifyOutcome(aal.data?.currentLevel) !== "ok_aal2") {
           setError(
@@ -112,7 +121,6 @@ export function MfaSetupForm() {
           factorId,
         });
 
-        // Efface immédiatement les données sensibles de l’UI.
         setQrDataUrl(null);
         setManualSecret(null);
         setCode("");
@@ -120,16 +128,56 @@ export function MfaSetupForm() {
         router.replace("/admin");
         router.refresh();
       } catch (err) {
+        // Conserve QR + factorId ; pas de nouvel enroll auto.
         setError(mapMfaSetupError(err));
         setPhase("ready");
       }
     });
   }
 
-  if (phase === "preparing") {
+  function onRestart() {
+    startTransition(async () => {
+      setError(null);
+      setPhase("restarting");
+      setCode("");
+      try {
+        const supabase = createClient();
+        const listed = await supabase.auth.mfa.listFactors();
+        if (listed.error) throw listed.error;
+
+        const totp = listed.data?.totp ?? [];
+        // Recommencer : nettoie les unverified (dont le courant), puis nouvel enroll.
+        const toRemove = resolveTotpRestartCleanupIds(totp);
+        for (const id of toRemove) {
+          const removed = await supabase.auth.mfa.unenroll({ factorId: id });
+          if (removed.error) throw removed.error;
+        }
+
+        setFactorId(null);
+        setQrDataUrl(null);
+        setManualSecret(null);
+
+        const display = await enrollFresh(
+          supabase,
+          `KO Predict Authenticator ${Date.now()}`,
+        );
+        setFactorId(display.factorId);
+        setQrDataUrl(display.qrDataUrl);
+        setManualSecret(display.manualSecret);
+        setPhase("ready");
+      } catch (err) {
+        setError(mapMfaSetupError(err));
+        setPhase("ready");
+      }
+    });
+  }
+
+  if (phase === "preparing" || phase === "restarting") {
     return (
       <p className="text-center text-sm text-white/70">
-        Préparation de la vérification…
+        {phase === "restarting"
+          ? "Nouvelle configuration…"
+          : "Préparation de la vérification…"}
       </p>
     );
   }
@@ -202,6 +250,17 @@ export function MfaSetupForm() {
           ? "Activation…"
           : "Activer la vérification"}
       </button>
+
+      {error || factorId ? (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={onRestart}
+          className="w-full text-center text-sm font-semibold text-white/75 underline underline-offset-2 disabled:opacity-50"
+        >
+          Recommencer la configuration
+        </button>
+      ) : null}
     </form>
   );
 }
