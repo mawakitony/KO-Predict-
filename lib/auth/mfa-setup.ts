@@ -221,20 +221,26 @@ export function resolveSetupChallengeFactorId(
   return { ok: true, factorId: enrolledFactorId };
 }
 
-/**
- * @deprecated Ne plus utiliser pour le setup (totp = verified only).
- * Conservé pour d’éventuels flux hors enroll courant.
- */
-export function assertFactorReadyForChallenge(
-  factors: MfaTotpFactorLite[] | null | undefined,
-  factorId: string,
-): { ok: true } | { ok: false; reason: "missing" | "not_unverified" } {
-  const match = factors?.find((f) => f.id === factorId);
-  if (!match) return { ok: false, reason: "missing" };
-  if (match.status !== "unverified") {
-    return { ok: false, reason: "not_unverified" };
+/** Messages FR pour refus d’action setup (sans secrets). */
+export function mapMfaSetupAccessDenial(
+  reason: Exclude<MfaSetupAccessDecision, { action: "allow_setup" }>["reason"],
+): string {
+  switch (reason) {
+    case "unauthenticated":
+      return "Session expirée. Reconnectez-vous puis recommencez.";
+    case "disabled":
+      return "Votre accès KO Predict™ a été désactivé.";
+    case "pending":
+      return "Compte non finalisé. Utilisez Première connexion.";
+    case "not_super_admin":
+      return "Accès réservé aux super administrateurs.";
+    case "enforcement_disabled":
+      return "La vérification en deux étapes n’est pas requise pour le moment.";
+    case "already_verified":
+      return "Un facteur MFA est déjà actif.";
+    default:
+      return "Impossible d’activer la vérification. Réessayez.";
   }
-  return { ok: true };
 }
 
 /** Activation setup : challenge → verify → refresh → AAL2 (même factorId enroll). */
@@ -254,20 +260,23 @@ export async function runMfaSetupActivation(options: {
 }): Promise<"ok_aal2"> {
   const resolved = resolveSetupChallengeFactorId(options.factorId);
   if (!resolved.ok) {
-    throwMfaStepError("challenge", {
+    const err = {
+      name: "MfaStepError",
       message: MFA_FACTOR_STALE_MESSAGE,
       code: resolved.code,
-    });
+    };
+    throw err;
   }
 
   const { factorId } = resolved;
   const challenge = await options.challenge({ factorId });
-  if (challenge.error) throwMfaStepError("challenge", challenge.error);
+  if (challenge.error) throw challenge.error;
   if (!challenge.data?.id) {
-    throwMfaStepError("challenge", {
+    throw {
+      name: "MfaStepError",
       message: "challenge_empty",
       code: "challenge_empty",
-    });
+    };
   }
 
   const verified = await options.verify({
@@ -275,7 +284,7 @@ export async function runMfaSetupActivation(options: {
     challengeId: challenge.data.id,
     code: options.code,
   });
-  if (verified.error) throwMfaStepError("verify", verified.error);
+  if (verified.error) throw verified.error;
 
   await options.refreshSession();
   const level = await options.getCurrentAal();
@@ -307,36 +316,18 @@ export function extractAuthErrorStatus(error: unknown): number | null {
 }
 
 /**
- * Diagnostic MFA — uniquement étape / code / status.
+ * Diagnostic MFA serveur — step / code / status uniquement.
  * Jamais OTP, secret, QR, URI, token.
  */
 export function logMfaSetupDiagnostic(
-  step: "enroll" | "listFactors" | "challenge" | "verify",
-  error: unknown,
+  step: "enroll" | "challenge" | "verify" | "restart" | "listFactors",
+  error?: unknown,
 ): void {
   console.info("[mfa-setup]", {
     step,
-    code: extractAuthErrorCode(error),
-    status: extractAuthErrorStatus(error),
+    code: extractAuthErrorCode(error ?? null),
+    status: extractAuthErrorStatus(error ?? null),
   });
-}
-
-/**
- * Propage l’AuthError Supabase réel ; fallback structuré sans masquer le code.
- */
-export function throwMfaStepError(
-  step: "enroll" | "listFactors" | "challenge" | "verify",
-  error: unknown,
-): never {
-  logMfaSetupDiagnostic(step, error);
-  if (error && typeof error === "object") {
-    throw error;
-  }
-  throw {
-    name: "MfaStepError",
-    message: `${step}_failed`,
-    code: `${step}_failed`,
-  };
 }
 
 export function mapMfaSetupError(error: unknown): string {
@@ -355,6 +346,9 @@ export function mapMfaSetupError(error: unknown): string {
   }
   if (code === "factor_missing" || code === "factor_not_unverified") {
     return MFA_FACTOR_STALE_MESSAGE;
+  }
+  if (code === "aal_incomplete") {
+    return "Vérification enregistrée, mais le niveau de sécurité n’est pas encore AAL2. Reconnectez-vous.";
   }
 
   const message =
