@@ -354,6 +354,13 @@ export type ChangeTeamRoleResult =
   | { ok: true; profileId: string; from: UserRole; to: UserRole }
   | { ok: false; error: string };
 
+const CHANGE_ROLE_STALE_STATE_ERROR =
+  "L’état du membre a changé. Actualisez la page puis réessayez.";
+
+/**
+ * Coach ↔ admin uniquement. Cible ACTIVE obligatoire pour toute mutation réelle.
+ * Pas de touch students / auth password / first-access / LearnWorlds.
+ */
 export async function changeTeamRole(options: {
   profileId: string;
   newRole: TeamCreatableRole;
@@ -382,9 +389,6 @@ export async function changeTeamRole(options: {
   if (from !== "coach" && from !== "admin") {
     return { ok: false, error: "Ce compte n’est pas coach/admin." };
   }
-  if (from === options.newRole) {
-    return { ok: true, profileId: options.profileId, from, to: from };
-  }
   if (options.profileId === options.actorId) {
     return {
       ok: false,
@@ -392,17 +396,48 @@ export async function changeTeamRole(options: {
     };
   }
 
-  // service_role bypass trigger auth.uid() — trigger still fires with auth.uid() null for service?
-  // prevent_profile_role_escalation checks auth.uid() is not null — service_role typically has null auth.uid()
-  const { error } = await admin
+  // No-op avant garde statut : aucune écriture, aucun audit.
+  if (from === options.newRole) {
+    return { ok: true, profileId: options.profileId, from, to: from };
+  }
+
+  if (profile.account_status === "PENDING_ACTIVATION") {
+    return {
+      ok: false,
+      error:
+        "Finalisez d’abord la première connexion de ce membre avant de modifier son rôle.",
+    };
+  }
+  if (profile.account_status === "DISABLED") {
+    return {
+      ok: false,
+      error: "Réactivez d’abord ce compte avant de modifier son rôle.",
+    };
+  }
+  if (profile.account_status !== "ACTIVE") {
+    return {
+      ok: false,
+      error: "Seuls les comptes ACTIVE peuvent changer de rôle.",
+    };
+  }
+
+  // Update conditionnel : id + rôle lu + ACTIVE — refuse si état obsolète.
+  const { data: updated, error } = await admin
     .from("profiles")
     .update({
       role: options.newRole,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", options.profileId);
+    .eq("id", options.profileId)
+    .eq("role", from)
+    .eq("account_status", "ACTIVE")
+    .select("id, role")
+    .maybeSingle();
 
   if (error) return { ok: false, error: error.message };
+  if (!updated || parseUserRole(updated.role) !== options.newRole) {
+    return { ok: false, error: CHANGE_ROLE_STALE_STATE_ERROR };
+  }
 
   await recordAccessAudit({
     eventType: "TEAM_ROLE_CHANGED",

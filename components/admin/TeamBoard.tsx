@@ -9,6 +9,7 @@ import {
   type ActivationCodeModalData,
 } from "@/components/admin/ActivationCodeModal";
 import { AddLearnWorldsCoachModal } from "@/components/admin/AddLearnWorldsCoachModal";
+import { ChangeTeamRoleModal } from "@/components/admin/ChangeTeamRoleModal";
 import {
   IconBan,
   IconCheck,
@@ -18,6 +19,7 @@ import {
   IconUser,
 } from "@/components/admin/AdminIcons";
 import { AdminAvatar } from "@/components/admin/AdminUi";
+import { canShowChangeTeamRoleAction } from "@/lib/admin/team-role-ui";
 
 const STATUS_LABEL: Record<string, string> = {
   ACTIVE: "Actif",
@@ -65,6 +67,8 @@ export function TeamBoard({ initialMembers, currentUserId }: TeamBoardProps) {
   const [promoteEmail, setPromoteEmail] = useState("");
   const [promoteAck, setPromoteAck] = useState(false);
   const [showLwCoachModal, setShowLwCoachModal] = useState(false);
+  const [roleChangeTarget, setRoleChangeTarget] =
+    useState<TeamMemberRow | null>(null);
 
   const sorted = useMemo(
     () => [...members].sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
@@ -482,38 +486,22 @@ export function TeamBoard({ initialMembers, currentUserId }: TeamBoardProps) {
                                 Réactiver
                               </button>
                             ) : null}
-                            {m.role === "coach" ? (
+                            {canShowChangeTeamRoleAction({
+                              role: m.role,
+                              accountStatus: m.accountStatus,
+                              isSelf,
+                            }) ? (
                               <button
                                 type="button"
                                 disabled={busyId === m.id}
-                                onClick={() =>
-                                  void runAction(
-                                    m.id,
-                                    "/api/admin/team/change-role",
-                                    { profileId: m.id, newRole: "admin" },
-                                  )
-                                }
+                                onClick={() => {
+                                  setError(null);
+                                  setRoleChangeTarget(m);
+                                }}
                                 className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-800 hover:bg-blue-100 disabled:opacity-50"
                               >
-                                <IconTeam className="ko-icon-sm" />
-                                Admin
-                              </button>
-                            ) : null}
-                            {m.role === "admin" ? (
-                              <button
-                                type="button"
-                                disabled={busyId === m.id}
-                                onClick={() =>
-                                  void runAction(
-                                    m.id,
-                                    "/api/admin/team/change-role",
-                                    { profileId: m.id, newRole: "coach" },
-                                  )
-                                }
-                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                              >
                                 <IconUser className="ko-icon-sm" />
-                                Coach
+                                Modifier le rôle
                               </button>
                             ) : null}
                             {m.role === "admin" &&
@@ -561,6 +549,16 @@ export function TeamBoard({ initialMembers, currentUserId }: TeamBoardProps) {
               expiresAt: payload.expiresAt,
             });
             void refresh();
+          }}
+        />
+      ) : null}
+
+      {roleChangeTarget ? (
+        <ChangeTeamRoleModal
+          member={roleChangeTarget}
+          onClose={() => setRoleChangeTarget(null)}
+          onChanged={async () => {
+            await refresh();
           }}
         />
       ) : null}
