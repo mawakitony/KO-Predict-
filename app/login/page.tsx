@@ -38,7 +38,10 @@ export default async function LoginPage({ searchParams }: PageProps) {
               </Link>
             </p>
             <p className="text-center text-xs ko-auth-muted italic">
-              Mot de passe oublié : contactez WOLOYEM.
+              Mot de passe oublié : contactez WOLOYEM.{" "}
+              <Link href="/auth/reset-access" className="ko-auth-link not-italic">
+                J’ai un code
+              </Link>
             </p>
             <p className="text-center text-xs">
               <Link href="/" className="ko-auth-link">

@@ -75,7 +75,9 @@ export function LearnWorldsRoster({
   const [successFlash, setSuccessFlash] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const [modal, setModal] = useState<ActivationCodeModalData | null>(null);
+  const [modal, setModal] = useState<
+    (ActivationCodeModalData & { title?: string; hint?: string }) | null
+  >(null);
   const [openMenu, setOpenMenu] = useState<MenuId>(null);
   const [menuNote, setMenuNote] = useState<string | null>(null);
   const toolbarRef = useRef<HTMLDivElement | null>(null);
@@ -159,12 +161,15 @@ export function LearnWorldsRoster({
     row: { fullName: string; email: string | null },
     activationCode: string,
     expiresAt: string,
+    options?: { title?: string; hint?: string },
   ) {
     setModal({
       fullName: row.fullName,
       email: row.email ?? "—",
       activationCode,
       expiresAt,
+      title: options?.title,
+      hint: options?.hint,
     });
   }
 
@@ -225,6 +230,52 @@ export function LearnWorldsRoster({
         );
       }
       load(undefined, true);
+    } catch {
+      setError("Erreur réseau.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function runIssuePasswordReset(row: {
+    studentId: string;
+    fullName: string;
+    email: string | null;
+  }) {
+    const ok = window.confirm(
+      "Générer un code de réinitialisation valable 60 minutes ? Communiquez-le à l’apprenant hors plateforme. Un éventuel code PENDING précédent sera révoqué.",
+    );
+    if (!ok) return;
+
+    setBusyId(row.studentId);
+    setError(null);
+    setSuccessFlash(null);
+    try {
+      const res = await fetch(
+        "/api/admin/students/issue-password-reset-code",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ studentId: row.studentId }),
+        },
+      );
+      const json = await res.json();
+      if (!json.ok) {
+        setError(json.error ?? "Émission du code échouée.");
+      } else if (json.resetCode && json.resetExpiresAt) {
+        openCodeModal(
+          {
+            fullName: json.fullName ?? row.fullName,
+            email: json.email ?? row.email,
+          },
+          json.resetCode,
+          json.resetExpiresAt,
+          {
+            title: "Code de réinitialisation",
+            hint: "Communiquez ce code à l’apprenant hors plateforme. Il expire dans 60 minutes et ne pourra plus être relu.",
+          },
+        );
+      }
     } catch {
       setError("Erreur réseau.");
     } finally {
@@ -306,7 +357,12 @@ export function LearnWorldsRoster({
   return (
     <div className="space-y-5">
       {modal ? (
-        <ActivationCodeModal data={modal} onClose={() => setModal(null)} />
+        <ActivationCodeModal
+          data={modal}
+          onClose={() => setModal(null)}
+          title={modal.title}
+          hint={modal.hint}
+        />
       ) : null}
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -699,6 +755,21 @@ export function LearnWorldsRoster({
                               type="button"
                               disabled={busyId === row.studentId}
                               onClick={() =>
+                                runIssuePasswordReset({
+                                  studentId: row.studentId!,
+                                  fullName: row.fullName,
+                                  email: row.email,
+                                })
+                              }
+                              className="ko-btn-blue-soft !px-2.5 !py-1.5 text-xs"
+                            >
+                              <IconRefresh className="ko-icon-sm" />
+                              Réinitialiser l’accès
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busyId === row.studentId}
+                              onClick={() =>
                                 runPasswordRecovery({
                                   studentId: row.studentId!,
                                   email: row.email,
@@ -707,7 +778,7 @@ export function LearnWorldsRoster({
                               className="ko-btn-ghost !px-2.5 !py-1.5 text-xs"
                             >
                               <IconMail className="ko-icon-sm" />
-                              Réinit. MDP
+                              Lien email
                             </button>
                             <button
                               type="button"

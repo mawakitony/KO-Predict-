@@ -58,6 +58,13 @@ export function canSendStudentPasswordRecovery(
   return isAdminOrAbove(role);
 }
 
+/** Émettre un code temporaire de réinitialisation (apprenant ACTIVE). */
+export function canIssueStudentPasswordResetCode(
+  role: UserRole | null | undefined,
+): boolean {
+  return isAdminOrAbove(role);
+}
+
 export function canSyncStudents(role: UserRole | null | undefined): boolean {
   return isAdminOrAbove(role);
 }
@@ -100,6 +107,7 @@ export function staffPermissions(role: UserRole | null | undefined) {
     canDisableStudents: canDisableStudents(role),
     canRegenerateActivationCode: canRegenerateActivationCode(role),
     canSendStudentPasswordRecovery: canSendStudentPasswordRecovery(role),
+    canIssueStudentPasswordResetCode: canIssueStudentPasswordResetCode(role),
     canSyncStudents: canSyncStudents(role),
     canManageTeam: canManageTeam(role),
     canChangeTeamRoles: canChangeTeamRoles(role),

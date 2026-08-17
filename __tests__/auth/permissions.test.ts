@@ -4,6 +4,7 @@ import {
   canActivateStudents,
   canChangeTeamRoles,
   canDisableStudents,
+  canIssueStudentPasswordResetCode,
   canManageInterventions,
   canManageStudents,
   canManageTeam,
@@ -25,6 +26,7 @@ describe("permissions matrix", () => {
     expect(canViewStudents("student")).toBe(false);
     expect(canActivateStudents("student")).toBe(false);
     expect(canManageTeam("student")).toBe(false);
+    expect(canIssueStudentPasswordResetCode("student")).toBe(false);
   });
 
   it("coach : admin lecture, pas de gestion comptes, oui interventions", () => {
@@ -36,6 +38,7 @@ describe("permissions matrix", () => {
     expect(canDisableStudents("coach")).toBe(false);
     expect(canRegenerateActivationCode("coach")).toBe(false);
     expect(canSendStudentPasswordRecovery("coach")).toBe(false);
+    expect(canIssueStudentPasswordResetCode("coach")).toBe(false);
     expect(canSyncStudents("coach")).toBe(false);
     expect(canManageTeam("coach")).toBe(false);
     expect(canChangeTeamRoles("coach")).toBe(false);
@@ -50,6 +53,7 @@ describe("permissions matrix", () => {
     expect(canActivateStudents("admin")).toBe(true);
     expect(canDisableStudents("admin")).toBe(true);
     expect(canSendStudentPasswordRecovery("admin")).toBe(true);
+    expect(canIssueStudentPasswordResetCode("admin")).toBe(true);
     expect(canSyncStudents("admin")).toBe(true);
     expect(canManageTeam("admin")).toBe(false);
     expect(canChangeTeamRoles("admin")).toBe(false);
@@ -61,6 +65,7 @@ describe("permissions matrix", () => {
     expect(canAccessAdmin("super_admin")).toBe(true);
     expect(canManageStudents("super_admin")).toBe(true);
     expect(canSendStudentPasswordRecovery("super_admin")).toBe(true);
+    expect(canIssueStudentPasswordResetCode("super_admin")).toBe(true);
     expect(canManageTeam("super_admin")).toBe(true);
     expect(canChangeTeamRoles("super_admin")).toBe(true);
     expect(canViewStudentAudit("super_admin")).toBe(true);
@@ -71,6 +76,7 @@ describe("permissions matrix", () => {
     for (const role of roles) {
       const p = staffPermissions(role);
       expect(typeof p.canAccessAdmin).toBe("boolean");
+      expect(typeof p.canIssueStudentPasswordResetCode).toBe("boolean");
     }
   });
 });

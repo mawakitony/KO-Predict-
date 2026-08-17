@@ -158,6 +158,7 @@ export function StudentProfileBoard({
                   <StudentPasswordRecoveryAction
                     studentId={student.studentId}
                     email={email}
+                    fullName={student.fullName}
                     accountStatus={accountStatus}
                     canManage={canManageStudents}
                   />
