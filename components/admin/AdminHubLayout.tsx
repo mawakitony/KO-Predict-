@@ -17,6 +17,7 @@ import {
   useAdminLearnersChrome,
 } from "@/components/admin/AdminLearnersHeaderTabs";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { ClientInspectionDeterrent } from "@/components/security/ClientInspectionDeterrent";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { resolveDisplayName } from "@/lib/profile/display";
@@ -340,6 +341,7 @@ export function AdminHubLayout({
 
   return (
     <AdminLearnersChromeProvider>
+      <ClientInspectionDeterrent />
       <div className="ko-admin-shell min-h-full flex-1">
         <div className="flex min-h-full w-full">
           <aside className="ko-admin-sidebar hidden lg:flex">

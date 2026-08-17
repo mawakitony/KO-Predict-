@@ -17,6 +17,7 @@ import {
 } from "@/components/dashboard/LearnerHeaderIcons";
 import { LearnerAutoPopups } from "@/components/learner/LearnerAutoPopups";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { ClientInspectionDeterrent } from "@/components/security/ClientInspectionDeterrent";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { resolveDisplayName } from "@/lib/profile/display";
@@ -255,6 +256,7 @@ export function LearnerHubLayout({
 
   return (
     <div className="ko-dash-bg ko-dash-shell min-h-full flex-1">
+      <ClientInspectionDeterrent />
       <div aria-hidden className="ko-dash-aurora" />
       <div className="relative mx-auto w-full lg:pl-0">
         <aside className="ko-dash-sidebar ko-dash-sidebar-pin hidden lg:flex">
