@@ -21,7 +21,11 @@ export function CollectionExamCard({
   }
 
   return (
-    <section className="ko-collect-exam" aria-labelledby="exam-collect-title">
+    <section
+      id="learner-dates"
+      className="ko-collect-exam"
+      aria-labelledby="exam-collect-title"
+    >
       <p id="exam-collect-title" className="ko-collect-exam-kicker">
         Votre examen {certification}
       </p>

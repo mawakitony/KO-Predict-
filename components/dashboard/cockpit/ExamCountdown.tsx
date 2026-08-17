@@ -1,3 +1,4 @@
+import { LEARNER_COPY } from "@/lib/learner/copy";
 import {
   cockpitCountdownInterpretation,
   cockpitDaysUntil,
@@ -43,8 +44,7 @@ export function ExamCountdown({
             Date d&apos;examen non renseignée
           </p>
           <p className="ko-cockpit-muted mt-2">
-            Renseignez votre date cible dans LearnWorlds pour activer le compte
-            à rebours et la trajectoire.
+            {LEARNER_COPY.examCountdownMissing}
           </p>
         </>
       ) : (

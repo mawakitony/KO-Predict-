@@ -63,7 +63,7 @@ describe("learner presentation — données insuffisantes", () => {
       "INSUFFICIENT_DATA",
     );
     expect(resolveLearnerRecommendedAction(prediction)).toBe(
-      "Renseignez votre date cible d'examen dans votre profil LearnWorlds.",
+      "Renseignez votre date cible d'examen dans votre espace de formation WOLOYEM.",
     );
   });
 

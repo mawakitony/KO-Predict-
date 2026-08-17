@@ -4,6 +4,7 @@ import {
   learningHistoryErrorResponse,
   requireSessionStudentApi,
 } from "@/lib/learning/require-session-student";
+import { LEARNER_HISTORY_TEMPORARY_MESSAGE } from "@/lib/learning/lw-id";
 import { isLearnWorldsConfigured } from "@/lib/learnworlds/config";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export async function GET(
     return NextResponse.json(
       {
         ok: false,
-        error: "Vos données LearnWorlds sont temporairement indisponibles.",
+        error: LEARNER_HISTORY_TEMPORARY_MESSAGE,
       },
       { status: 503 },
     );

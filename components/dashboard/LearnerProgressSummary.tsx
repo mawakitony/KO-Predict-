@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LEARNER_COPY } from "@/lib/learner/copy";
 import {
   formatPercentOrDash,
   formatSyncRelativeFr,
@@ -35,7 +36,7 @@ export function LearnerProgressSummary({
       className="ko-lw-progress"
       aria-labelledby="learner-progress-title"
     >
-      <p className="ko-lw-progress-kicker">Parcours LearnWorlds</p>
+      <p className="ko-lw-progress-kicker">{LEARNER_COPY.progressKicker}</p>
       <h2 id="learner-progress-title" className="ko-lw-progress-title">
         Ma progression pédagogique
       </h2>
@@ -48,8 +49,7 @@ export function LearnerProgressSummary({
             progression.
           </p>
           <p>
-            Continuez votre formation sur LearnWorlds : activités et quiz
-            s&apos;afficheront automatiquement après synchronisation.
+            {LEARNER_COPY.progressContinue}
           </p>
         </div>
       ) : (

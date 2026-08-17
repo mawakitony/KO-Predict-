@@ -14,6 +14,7 @@ import {
 } from "@/components/plan/Plan3dIcons";
 import { SegmentedProgressBar } from "@/components/plan/SegmentedProgressBar";
 import { formatDateShortFr } from "@/lib/dashboard/format";
+import { LEARNER_COPY } from "@/lib/learner/copy";
 import type { PersistedWorkPlan } from "@/lib/planning/work-plan/memory-store";
 import { countMeasurableTasks } from "@/lib/planning/work-plan/progress";
 import { workPlanTypeLabelFr } from "@/lib/planning/work-plan/map-type";
@@ -211,8 +212,7 @@ export function WorkPlanDetail({
             Aucun plan actif
           </h2>
           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-600">
-            Votre premier plan sera généré automatiquement après la prochaine
-            synchronisation LearnWorlds.
+            {LEARNER_COPY.planEmptySync}
           </p>
           <Link href="/dashboard" className="ko-plan-primary-btn">
             Retour au tableau de bord

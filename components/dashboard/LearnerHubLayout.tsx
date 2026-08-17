@@ -15,7 +15,7 @@ import {
   Icon3dBell,
   Icon3dSearch,
 } from "@/components/dashboard/LearnerHeaderIcons";
-import { LearnerEstimationPopup } from "@/components/dashboard/LearnerEstimationPopup";
+import { LearnerAutoPopups } from "@/components/learner/LearnerAutoPopups";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { resolveDisplayName } from "@/lib/profile/display";
@@ -436,7 +436,7 @@ export function LearnerHubLayout({
         </div>
       </div>
 
-      <LearnerEstimationPopup initialContent={estimationPopup} />
+      <LearnerAutoPopups initialEstimation={estimationPopup} />
 
       <nav
         className="ko-mobile-nav"

@@ -1,3 +1,4 @@
+import { LEARNER_COPY } from "@/lib/learner/copy";
 import type {
   PredictionDataIssue,
   PredictionResult,
@@ -39,10 +40,8 @@ export const ISSUE_LEARNER_MESSAGES: Record<PredictionDataIssue, string> = {
     "Certaines données de formation sont encore incomplètes.",
   MISSING_TARGET_DATE:
     "Définissez votre date cible d'examen pour permettre à KO Predict™ de calculer votre trajectoire.",
-  TARGET_DATE_PASSED:
-    "Votre date cible d'examen est dépassée. Mettez-la à jour dans LearnWorlds pour recalculer votre trajectoire.",
-  NO_REMAINING_WORK:
-    "Le parcours semble terminé côté activités. Vérifiez votre progression dans LearnWorlds.",
+  TARGET_DATE_PASSED: LEARNER_COPY.issueTargetDatePassed,
+  NO_REMAINING_WORK: LEARNER_COPY.issueNoRemainingWork,
 };
 
 export function resolveLearnerPredictionUiState(
@@ -118,11 +117,11 @@ export function resolveLearnerRecommendedAction(
   const issues = new Set(prediction.issues);
 
   if (issues.has("MISSING_TARGET_DATE")) {
-    return "Renseignez votre date cible d'examen dans votre profil LearnWorlds.";
+    return LEARNER_COPY.actionMissingDate;
   }
 
   if (issues.has("TARGET_DATE_PASSED")) {
-    return "Mettez à jour votre date cible d'examen dans LearnWorlds pour recalculer votre trajectoire.";
+    return LEARNER_COPY.actionTargetDatePassed;
   }
 
   if (issues.has("INSUFFICIENT_QCM") && issues.has("ZERO_CURRENT_PACE")) {

@@ -1,7 +1,4 @@
-/**
- * Hero mode collecte — design validé (DataCollectionBanner).
- * Orbite, badges, barre de collecte, manques, prochaine étape.
- */
+import { LEARNER_COPY } from "@/lib/learner/copy";
 
 function IconPulse({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -178,8 +175,7 @@ export function CollectionHero({ explanations }: CollectionHeroProps) {
               Prochaine étape
             </p>
             <p className="mt-1 text-sm font-semibold leading-snug text-slate-800">
-              Suivez votre formation LearnWorlds : KO Predict™ mettra à jour
-              votre tableau de bord dès que possible.
+              {LEARNER_COPY.collectionNextStep}
             </p>
           </div>
         </li>

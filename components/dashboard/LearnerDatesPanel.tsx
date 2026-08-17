@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { LEARNER_COPY } from "@/lib/learner/copy";
 import { formatDateFr, formatDateTimeFr } from "@/lib/dashboard/format";
 
 interface LearnerDatesPanelProps {
@@ -111,7 +112,10 @@ export function LearnerDatesPanel({
   ];
 
   return (
-    <section className="ko-dates-panel ko-dash-card h-full">
+    <section
+      id="learner-dates"
+      className="ko-dates-panel ko-dash-card h-full"
+    >
       <div className="ko-dates-head">
         <div>
           <h2 className="ko-display text-lg font-bold text-slate-900">
@@ -185,7 +189,7 @@ export function LearnerDatesPanel({
 
       <p className="ko-dates-footer">
         {dataSource === "database"
-          ? `Dernière synchronisation LearnWorlds : ${formatDateTimeFr(updatedAt)}`
+          ? `${LEARNER_COPY.datesSyncPrefix} : ${formatDateTimeFr(updatedAt)}`
           : `MAJ ${formatDateTimeFr(updatedAt)} · Démo`}
       </p>
     </section>

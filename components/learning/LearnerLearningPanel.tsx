@@ -13,6 +13,7 @@ import {
   summarizeAttempts,
 } from "@/lib/admin/learning-history/parse";
 import { formatDateTimeFr } from "@/lib/dashboard/format";
+import { LEARNER_COPY } from "@/lib/learner/copy";
 import { formatPercentOrDash } from "@/lib/learning/format";
 import {
   interpretActivitiesResponse,
@@ -186,8 +187,7 @@ export function LearnerLearningPanel({
           [assessmentId]: {
             status: "error",
             message:
-              body?.error ??
-              "Vos données LearnWorlds sont temporairement indisponibles.",
+              body?.error ?? LEARNER_HISTORY_TEMPORARY_MESSAGE,
           },
         }));
         return;
@@ -220,8 +220,7 @@ export function LearnerLearningPanel({
         ...p,
         [assessmentId]: {
           status: "error",
-          message:
-            "Vos données LearnWorlds sont temporairement indisponibles.",
+          message: LEARNER_HISTORY_TEMPORARY_MESSAGE,
         },
       }));
     }
@@ -246,7 +245,7 @@ export function LearnerLearningPanel({
     <div className="ko-learn-board ko-dash-stagger">
       <section className="ko-learn-hero">
         <div className="ko-learn-hero-main">
-          <p className="ko-learn-kicker">Parcours LearnWorlds</p>
+          <p className="ko-learn-kicker">{LEARNER_COPY.learningKicker}</p>
           <h2 className="ko-learn-hero-title">Ma progression pédagogique</h2>
           <p className="ko-learn-hero-sub">
             Activités et quiz chargés à la demande — sans inventer de date ni de
@@ -496,8 +495,7 @@ export function LearnerLearningPanel({
             })}
             {scored.length === 0 ? (
               <li className="ko-learn-empty">
-                Pas encore de résultat QCM. Vos scores apparaîtront après vos
-                premiers quiz LearnWorlds.
+                {LEARNER_COPY.learningEmptyQuizzes}
               </li>
             ) : null}
           </ul>

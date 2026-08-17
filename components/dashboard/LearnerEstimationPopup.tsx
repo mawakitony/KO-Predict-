@@ -72,8 +72,11 @@ function remainingDelayMs(): number {
  */
 export function LearnerEstimationPopup({
   initialContent = null,
+  enabled = true,
 }: {
   initialContent?: EstimationPopupContent | null;
+  /** Désactivé tant qu’un guide prioritaire occupe la file auto. */
+  enabled?: boolean;
 }) {
   const titleId = useId();
   const [popup, setPopup] = useState<EstimationPopupContent | null>(
@@ -82,6 +85,10 @@ export function LearnerEstimationPopup({
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    if (!enabled) {
+      setOpen(false);
+      return;
+    }
     if (readSeen()) return;
 
     let cancelled = false;
@@ -126,7 +133,7 @@ export function LearnerEstimationPopup({
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [initialContent]);
+  }, [initialContent, enabled]);
 
   function dismiss() {
     setOpen(false);

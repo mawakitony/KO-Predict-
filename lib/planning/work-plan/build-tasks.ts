@@ -1,3 +1,4 @@
+import { LEARNER_COPY } from "@/lib/learner/copy";
 import type { WeeklyPlan } from "@/lib/planning/weekly-plan";
 import type {
   WorkPlanBuildInput,
@@ -40,8 +41,7 @@ export function buildWorkPlanTasks(options: {
     pushUnique(tasks, {
       type: "ACTIVITIES",
       title: "Continuer votre progression",
-      description:
-        "Avancez dans vos activités LearnWorlds afin que KO Predict™ puisse mesurer votre trajectoire.",
+      description: LEARNER_COPY.taskActivitiesStartup,
       target: null,
       progress: 0,
       status: "TODO",
@@ -67,8 +67,7 @@ export function buildWorkPlanTasks(options: {
       pushUnique(tasks, {
         type: "TARGET_DATE",
         title: "Renseigner votre date d’examen",
-        description:
-          "Indiquez votre date cible d’examen dans LearnWorlds pour activer le calcul de trajectoire.",
+        description: LEARNER_COPY.taskTargetDate,
         target: null,
         progress: null,
         status: "TODO",
@@ -142,8 +141,7 @@ export function buildWorkPlanTasks(options: {
       pushUnique(tasks, {
         type: "ACTIVITIES",
         title: "Continuer votre progression",
-        description:
-          "Avancez régulièrement dans vos activités LearnWorlds.",
+        description: LEARNER_COPY.taskActivitiesCatchUp,
         target: null,
         progress: 0,
         status: "TODO",

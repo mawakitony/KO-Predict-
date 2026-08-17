@@ -1,3 +1,4 @@
+import { LEARNER_COPY } from "@/lib/learner/copy";
 import { AdminHubLayout } from "@/components/admin/AdminHubLayout";
 import { LearnerHubLayout } from "@/components/dashboard/LearnerHubLayout";
 import { ProfileEditor } from "@/components/profile/ProfileEditor";
@@ -70,7 +71,7 @@ export default async function ProfilePage() {
       displayName={profile.displayName}
       avatarUrl={profile.avatarUrl}
       title="Mon profil"
-      subtitle="Préférences KO Predict™ — indépendantes de LearnWorlds"
+      subtitle={LEARNER_COPY.profileSubtitle}
       showAdminLink={false}
     >
       {editor}

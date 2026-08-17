@@ -1,3 +1,5 @@
+import { LEARNER_DATA_UNAVAILABLE_MESSAGE } from "@/lib/learner/copy";
+
 /**
  * Heuristique locale : IDs LearnWorlds réels observés = 24 hex (ObjectId-like).
  * Les placeholders seed (ex. lw_tony_test_demo) sont rejetés avant l’appel LW.
@@ -14,7 +16,7 @@ export const LEARNER_HISTORY_UNAVAILABLE_MESSAGE =
   "Historique pédagogique indisponible pour ce compte.";
 
 export const LEARNER_HISTORY_TEMPORARY_MESSAGE =
-  "Vos données LearnWorlds sont temporairement indisponibles.";
+  LEARNER_DATA_UNAVAILABLE_MESSAGE;
 
 /** Interprète une réponse activities pour l’UI apprenant. */
 export function interpretActivitiesResponse(input: {
