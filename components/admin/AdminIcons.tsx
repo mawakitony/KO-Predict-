@@ -264,3 +264,172 @@ export function IconBell(props: IconProps) {
     </svg>
   );
 }
+
+/** Icônes duotone — pastilles de détail (interventions). */
+export function IconTargetDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.18" />
+      <circle cx="12" cy="12" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.9" />
+      <circle cx="12" cy="12" r="2.6" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function IconPulseDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <rect x="2" y="2" width="20" height="20" rx="6" fill="currentColor" opacity="0.16" />
+      <path
+        d="M3.5 12.5H7l2-5.5 3.2 11 2.4-7.2H20.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconClockDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.16" />
+      <circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M12 7.2V12l3.4 2" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="1.35" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function IconCalendarDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <rect x="3" y="5" width="18" height="16" rx="3" fill="currentColor" opacity="0.16" />
+      <rect x="3" y="5" width="18" height="5.2" rx="2.4" fill="currentColor" opacity="0.88" />
+      <rect x="3" y="5" width="18" height="16" rx="3" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8 3.5v3.4M16 3.5v3.4" stroke="#fff" strokeWidth="1.9" strokeLinecap="round" />
+      <circle cx="8.2" cy="14.4" r="1.05" fill="currentColor" />
+      <circle cx="12" cy="14.4" r="1.05" fill="currentColor" />
+      <circle cx="15.8" cy="14.4" r="1.05" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function IconBookDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <path d="M5 4.4c0-.8.7-1.4 1.5-1.4H19v16.2H6.5c-.8 0-1.5-.6-1.5-1.4V4.4Z" fill="currentColor" opacity="0.16" />
+      <path d="M6.5 3H20v18H6.5A2.5 2.5 0 0 1 4 18.5v-13A2.5 2.5 0 0 1 6.5 3Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M4 18.6c.4-.7 1.2-1.1 2.1-1.1H20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M8.2 7.4h8.2M8.2 11h6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconPhoneDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <path d="M8.2 2.8h7.6A2.4 2.4 0 0 1 18.2 5.2v13.6a2.4 2.4 0 0 1-2.4 2.4H8.2A2.4 2.4 0 0 1 5.8 18.8V5.2A2.4 2.4 0 0 1 8.2 2.8Z" fill="currentColor" opacity="0.18" />
+      <path d="M8.2 2.8h7.6A2.4 2.4 0 0 1 18.2 5.2v13.6a2.4 2.4 0 0 1-2.4 2.4H8.2A2.4 2.4 0 0 1 5.8 18.8V5.2A2.4 2.4 0 0 1 8.2 2.8Z" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <rect x="9.1" y="5.4" width="5.8" height="10.2" rx="1.1" fill="currentColor" opacity="0.88" />
+      <circle cx="12" cy="18.35" r="0.85" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function IconBellDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <path d="M12 3.2a6.2 6.2 0 0 1 6.2 6.2c0 3.4.9 5.4 1.8 6.8H4c.9-1.4 1.8-3.4 1.8-6.8A6.2 6.2 0 0 1 12 3.2Z" fill="currentColor" opacity="0.2" />
+      <path d="M6.2 8.2a5.8 5.8 0 0 1 11.6 0c0 6.6 2.6 8.4 2.6 8.4H3.6s2.6-1.8 2.6-8.4Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M10.2 20.2a2 2 0 0 0 3.6 0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="17.6" cy="6.2" r="2.15" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function IconInboxDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <path d="M4.2 7.2 6.4 3.8h11.2L20 7.2v10.4A2.4 2.4 0 0 1 17.6 20H6.4A2.4 2.4 0 0 1 4 17.6V7.2Z" fill="currentColor" opacity="0.16" />
+      <path d="M4.2 7.2 6.6 3.6h10.8L19.8 7.2v10.2a2.4 2.4 0 0 1-2.4 2.4H6.6A2.4 2.4 0 0 1 4.2 17.4V7.2Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M4.2 12.2h4.2l1.5 2.4h4.2l1.5-2.4h4.2" fill="currentColor" opacity="0.22" />
+      <path d="M4.2 12.2h4.2l1.5 2.4h4.2l1.5-2.4h4.2" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconAlertDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <path d="M12 3.6 21.4 20.2H2.6L12 3.6Z" fill="currentColor" opacity="0.18" />
+      <path d="M10.3 4.6 2.3 18.6A2 2 0 0 0 4 21.5h16a2 2 0 0 0 1.7-2.9L13.7 4.6a2 2 0 0 0-3.4 0Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M12 9.2v5.1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="17.15" r="1.15" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function IconEyeDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <path d="M2.6 12S6.2 5.4 12 5.4 21.4 12 21.4 12 17.8 18.6 12 18.6 2.6 12 2.6 12Z" fill="currentColor" opacity="0.16" />
+      <path d="M2.6 12S6.2 5.4 12 5.4 21.4 12 21.4 12 17.8 18.6 12 18.6 2.6 12 2.6 12Z" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="12" cy="12" r="3.15" fill="currentColor" />
+      <circle cx="12.7" cy="11.2" r="1" fill="#fff" />
+    </svg>
+  );
+}
+
+export function IconCheckDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.18" />
+      <circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M7.6 12.3 10.4 15l6-6.4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconBanDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.16" />
+      <circle cx="12" cy="12" r="8.15" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M7.1 7.1 16.9 16.9" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconUserDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.16" />
+      <circle cx="12" cy="8.2" r="3.15" fill="currentColor" />
+      <path d="M5.6 18.6c1.5-2.7 3.8-4.1 6.4-4.1s4.9 1.4 6.4 4.1" fill="currentColor" opacity="0.92" />
+    </svg>
+  );
+}
+
+export function IconTeamDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <circle cx="9" cy="8" r="3.1" fill="currentColor" />
+      <path d="M3.4 19c1.4-2.7 3.5-4.1 5.6-4.1 2.1 0 4.2 1.4 5.6 4.1" fill="currentColor" opacity="0.92" />
+      <circle cx="16.4" cy="8.4" r="2.45" fill="currentColor" opacity="0.55" />
+      <path d="M14.2 19c.7-1.7 1.8-2.8 3.2-3.3 1.5.4 2.7 1.5 3.6 3.3" fill="currentColor" opacity="0.45" />
+    </svg>
+  );
+}
+
+export function IconMailDuo(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...base(props)}>
+      <rect x="3" y="5.2" width="18" height="13.6" rx="2.6" fill="currentColor" opacity="0.16" />
+      <rect x="3" y="5.2" width="18" height="13.6" rx="2.6" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M4.2 7.1 12 13.1 19.8 7.1" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

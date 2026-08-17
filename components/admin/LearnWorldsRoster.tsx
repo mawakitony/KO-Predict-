@@ -8,7 +8,6 @@ import {
   useState,
   useTransition,
 } from "react";
-import Link from "next/link";
 import type {
   KoPredictAccountStatus,
   LearnWorldsRosterPage,
@@ -32,6 +31,7 @@ import {
   IconSort,
 } from "@/components/admin/AdminIcons";
 import { AdminPagination } from "@/components/admin/AdminPagination";
+import { AdminRowAction, AdminRowActions } from "@/components/admin/AdminRowActions";
 
 type RosterSort = "name-asc" | "name-desc" | "date-asc" | "date-desc";
 type MenuId = "filter" | "sort" | "more" | null;
@@ -638,14 +638,14 @@ export function LearnWorldsRoster({
 
       <div className="ko-admin-table-scroll -mx-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:mx-0">
         <div className="overflow-x-auto overscroll-x-contain">
-          <table className="w-full min-w-[40rem] table-fixed border-collapse text-left text-sm md:min-w-[56rem]">
+          <table className="w-full min-w-[44rem] table-fixed border-collapse text-left text-sm md:min-w-[62rem]">
             <colgroup>
-              <col className="w-[28%]" />
               <col className="w-[22%]" />
-              <col className="w-[16%]" />
+              <col className="w-[20%]" />
+              <col className="w-[14%]" />
               <col className="w-[12%]" />
-              <col className="w-[12%]" />
-              <col className="w-[10%]" />
+              <col className="w-[14%]" />
+              <col className="w-[18%]" />
             </colgroup>
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/90">
@@ -739,128 +739,119 @@ export function LearnWorldsRoster({
                         </p>
                       ) : null}
                     </td>
-                    <td className="px-4 py-3.5 align-middle">
-                      <div className="flex flex-wrap items-center justify-end gap-1.5">
-                        {href ? (
-                          <Link href={href} className="ko-btn-blue-soft !px-2.5 !py-1.5 text-xs">
-                            <IconEye className="ko-icon-sm" />
-                            Voir
-                          </Link>
-                        ) : null}
-                        {canManageStudents &&
-                        row.accountStatus === "ACTIVE" &&
-                        row.studentId ? (
-                          <>
-                            <button
-                              type="button"
+                    <td className="px-3 py-3.5 align-middle sm:px-4">
+                      <div className="flex justify-end">
+                        <AdminRowActions>
+                          {href ? (
+                            <AdminRowAction
+                              href={href}
+                              label="Voir"
+                              tone="primary"
+                              icon={<IconEye className="ko-icon-sm" />}
+                            />
+                          ) : null}
+                          {canManageStudents &&
+                          row.accountStatus === "ACTIVE" &&
+                          row.studentId ? (
+                            <>
+                              <AdminRowAction
+                                label="Réinitialiser l’accès"
+                                disabled={busyId === row.studentId}
+                                onClick={() =>
+                                  runIssuePasswordReset({
+                                    studentId: row.studentId!,
+                                    fullName: row.fullName,
+                                    email: row.email,
+                                  })
+                                }
+                                icon={<IconRefresh className="ko-icon-sm" />}
+                              />
+                              <AdminRowAction
+                                label="Lien email"
+                                disabled={busyId === row.studentId}
+                                onClick={() =>
+                                  runPasswordRecovery({
+                                    studentId: row.studentId!,
+                                    email: row.email,
+                                  })
+                                }
+                                icon={<IconMail className="ko-icon-sm" />}
+                              />
+                              <AdminRowAction
+                                label="Désactiver"
+                                tone="danger"
+                                disabled={busyId === row.studentId}
+                                onClick={() =>
+                                  runAccessToggle(row.studentId!, "disable")
+                                }
+                                icon={<IconBan className="ko-icon-sm" />}
+                              />
+                            </>
+                          ) : null}
+                          {canManageStudents &&
+                          row.accountStatus === "DISABLED" &&
+                          row.studentId ? (
+                            <AdminRowAction
+                              labeled
+                              label="Réactiver"
+                              tone="success"
                               disabled={busyId === row.studentId}
                               onClick={() =>
-                                runIssuePasswordReset({
-                                  studentId: row.studentId!,
+                                runAccessToggle(row.studentId!, "enable")
+                              }
+                              icon={<IconCheck className="ko-icon-sm" />}
+                            />
+                          ) : null}
+                          {canManageStudents &&
+                          row.accountStatus === "PENDING_ACTIVATION" &&
+                          row.studentId ? (
+                            <>
+                              <AdminRowAction
+                                label="Régénérer"
+                                disabled={busyId === row.studentId}
+                                onClick={() =>
+                                  runRegenerate({
+                                    studentId: row.studentId!,
+                                    fullName: row.fullName,
+                                    email: row.email,
+                                  })
+                                }
+                                icon={<IconRefresh className="ko-icon-sm" />}
+                              />
+                              <AdminRowAction
+                                label="Désactiver"
+                                tone="danger"
+                                disabled={busyId === row.studentId}
+                                onClick={() =>
+                                  runAccessToggle(row.studentId!, "disable")
+                                }
+                                icon={<IconBan className="ko-icon-sm" />}
+                              />
+                            </>
+                          ) : null}
+                          {canManageStudents &&
+                          (row.accountStatus === "NOT_ACTIVATED" ||
+                            row.accountStatus === "ERROR") ? (
+                            <AdminRowAction
+                              labeled
+                              tone="success"
+                              label={
+                                row.accountStatus === "ERROR"
+                                  ? "Réessayer"
+                                  : "Activer"
+                              }
+                              disabled={busyId === row.learnworldsUserId}
+                              onClick={() =>
+                                runActivate({
+                                  learnworldsUserId: row.learnworldsUserId,
                                   fullName: row.fullName,
                                   email: row.email,
                                 })
                               }
-                              className="ko-btn-blue-soft !px-2.5 !py-1.5 text-xs"
-                            >
-                              <IconRefresh className="ko-icon-sm" />
-                              Réinitialiser l’accès
-                            </button>
-                            <button
-                              type="button"
-                              disabled={busyId === row.studentId}
-                              onClick={() =>
-                                runPasswordRecovery({
-                                  studentId: row.studentId!,
-                                  email: row.email,
-                                })
-                              }
-                              className="ko-btn-ghost !px-2.5 !py-1.5 text-xs"
-                            >
-                              <IconMail className="ko-icon-sm" />
-                              Lien email
-                            </button>
-                            <button
-                              type="button"
-                              disabled={busyId === row.studentId}
-                              onClick={() =>
-                                runAccessToggle(row.studentId!, "disable")
-                              }
-                              className="ko-btn-ghost !px-2.5 !py-1.5 text-xs"
-                            >
-                              <IconBan className="ko-icon-sm" />
-                              Désactiver
-                            </button>
-                          </>
-                        ) : null}
-                        {canManageStudents &&
-                        row.accountStatus === "DISABLED" &&
-                        row.studentId ? (
-                          <button
-                            type="button"
-                            disabled={busyId === row.studentId}
-                            onClick={() =>
-                              runAccessToggle(row.studentId!, "enable")
-                            }
-                            className="ko-btn-blue !px-2.5 !py-1.5 text-xs"
-                          >
-                            <IconCheck className="ko-icon-sm" />
-                            Réactiver
-                          </button>
-                        ) : null}
-                        {canManageStudents &&
-                        row.accountStatus === "PENDING_ACTIVATION" &&
-                        row.studentId ? (
-                          <>
-                            <button
-                              type="button"
-                              disabled={busyId === row.studentId}
-                              onClick={() =>
-                                runRegenerate({
-                                  studentId: row.studentId!,
-                                  fullName: row.fullName,
-                                  email: row.email,
-                                })
-                              }
-                              className="ko-btn-ghost !px-2.5 !py-1.5 text-xs"
-                            >
-                              <IconRefresh className="ko-icon-sm" />
-                              Régénérer
-                            </button>
-                            <button
-                              type="button"
-                              disabled={busyId === row.studentId}
-                              onClick={() =>
-                                runAccessToggle(row.studentId!, "disable")
-                              }
-                              className="ko-btn-ghost !px-2.5 !py-1.5 text-xs"
-                            >
-                              <IconBan className="ko-icon-sm" />
-                              Désactiver
-                            </button>
-                          </>
-                        ) : null}
-                        {canManageStudents &&
-                        (row.accountStatus === "NOT_ACTIVATED" ||
-                          row.accountStatus === "ERROR") ? (
-                          <button
-                            type="button"
-                            disabled={busyId === row.learnworldsUserId}
-                            onClick={() =>
-                              runActivate({
-                                learnworldsUserId: row.learnworldsUserId,
-                                fullName: row.fullName,
-                                email: row.email,
-                              })
-                            }
-                            className="ko-btn-blue !px-3 !py-1.5 text-xs"
-                          >
-                            <IconCheck className="ko-icon-sm" />
-                            {row.accountStatus === "ERROR"
-                              ? "Réessayer"
-                              : "Activer"}
-                          </button>
-                        ) : null}
+                              icon={<IconCheck className="ko-icon-sm" />}
+                            />
+                          ) : null}
+                        </AdminRowActions>
                       </div>
                     </td>
                   </tr>

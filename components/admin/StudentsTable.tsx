@@ -12,6 +12,7 @@ import {
 } from "@/lib/dashboard/format";
 import { AccountStatusBadge, AdminAvatar } from "@/components/admin/AdminUi";
 import { IconBan, IconCheck, IconEye } from "@/components/admin/AdminIcons";
+import { AdminRowAction, AdminRowActions } from "@/components/admin/AdminRowActions";
 
 interface StudentsTableProps {
   rows: AdminStudentRow[];
@@ -137,41 +138,37 @@ export function StudentsTable({
                 </div>
               </dl>
 
-              <div className="flex flex-wrap gap-2">
-                <Link
+              <AdminRowActions>
+                <AdminRowAction
                   href={`/admin/students/${row.student.studentId}`}
-                  className="ko-btn-blue-soft"
-                >
-                  <IconEye className="ko-icon-sm" />
-                  Voir
-                </Link>
+                  label="Voir"
+                  tone="primary"
+                  icon={<IconEye className="ko-icon-sm" />}
+                />
                 {canManageStudents && access === "ACTIVE" ? (
-                  <button
-                    type="button"
+                  <AdminRowAction
+                    label="Désactiver"
+                    tone="danger"
                     disabled={busyId === row.student.studentId}
                     onClick={() =>
                       toggleAccess(row.student.studentId, "disable")
                     }
-                    className="ko-btn-ghost"
-                  >
-                    <IconBan className="ko-icon-sm" />
-                    Désactiver
-                  </button>
+                    icon={<IconBan className="ko-icon-sm" />}
+                  />
                 ) : null}
                 {canManageStudents && access === "DISABLED" ? (
-                  <button
-                    type="button"
+                  <AdminRowAction
+                    labeled
+                    label="Réactiver"
+                    tone="success"
                     disabled={busyId === row.student.studentId}
                     onClick={() =>
                       toggleAccess(row.student.studentId, "enable")
                     }
-                    className="ko-btn-blue"
-                  >
-                    <IconCheck className="ko-icon-sm" />
-                    Réactiver
-                  </button>
+                    icon={<IconCheck className="ko-icon-sm" />}
+                  />
                 ) : null}
-              </div>
+              </AdminRowActions>
             </li>
           );
         })}
@@ -193,7 +190,7 @@ export function StudentsTable({
               </th>
               <th className="px-2 py-3 font-semibold sm:px-3">Risque</th>
               <th className="px-2 py-3 font-semibold sm:px-3">Accès</th>
-              <th className="px-2 py-3 font-semibold sm:px-3">Action</th>
+              <th className="px-2 py-3 text-right font-semibold sm:px-3">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -247,40 +244,38 @@ export function StudentsTable({
                     />
                   </td>
                   <td className="px-2 py-3.5 sm:px-3">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <Link
-                        href={`/admin/students/${row.student.studentId}`}
-                        className="ko-btn-blue-soft"
-                      >
-                        <IconEye className="ko-icon-sm" />
-                        Voir
-                      </Link>
-                      {canManageStudents && access === "ACTIVE" ? (
-                        <button
-                          type="button"
-                          disabled={busyId === row.student.studentId}
-                          onClick={() =>
-                            toggleAccess(row.student.studentId, "disable")
-                          }
-                          className="ko-btn-ghost"
-                        >
-                          <IconBan className="ko-icon-sm" />
-                          Désactiver
-                        </button>
-                      ) : null}
-                      {canManageStudents && access === "DISABLED" ? (
-                        <button
-                          type="button"
-                          disabled={busyId === row.student.studentId}
-                          onClick={() =>
-                            toggleAccess(row.student.studentId, "enable")
-                          }
-                          className="ko-btn-blue"
-                        >
-                          <IconCheck className="ko-icon-sm" />
-                          Réactiver
-                        </button>
-                      ) : null}
+                    <div className="flex justify-end">
+                      <AdminRowActions>
+                        <AdminRowAction
+                          href={`/admin/students/${row.student.studentId}`}
+                          label="Voir"
+                          tone="primary"
+                          icon={<IconEye className="ko-icon-sm" />}
+                        />
+                        {canManageStudents && access === "ACTIVE" ? (
+                          <AdminRowAction
+                            label="Désactiver"
+                            tone="danger"
+                            disabled={busyId === row.student.studentId}
+                            onClick={() =>
+                              toggleAccess(row.student.studentId, "disable")
+                            }
+                            icon={<IconBan className="ko-icon-sm" />}
+                          />
+                        ) : null}
+                        {canManageStudents && access === "DISABLED" ? (
+                          <AdminRowAction
+                            labeled
+                            label="Réactiver"
+                            tone="success"
+                            disabled={busyId === row.student.studentId}
+                            onClick={() =>
+                              toggleAccess(row.student.studentId, "enable")
+                            }
+                            icon={<IconCheck className="ko-icon-sm" />}
+                          />
+                        ) : null}
+                      </AdminRowActions>
                     </div>
                   </td>
                 </tr>

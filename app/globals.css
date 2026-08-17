@@ -1557,6 +1557,18 @@ html[data-theme="dark"] .ko-btn-blue:hover {
   color: #fff;
 }
 
+html[data-theme="dark"] .ko-admin-icon-action[data-tone="success"],
+html[data-theme="dark"] .ko-admin-text-action[data-tone="success"] {
+  background: #2563eb;
+  color: #fff;
+}
+
+html[data-theme="dark"] .ko-admin-icon-action[data-tone="success"]:hover,
+html[data-theme="dark"] .ko-admin-text-action[data-tone="success"]:hover {
+  background: #1d4ed8;
+  color: #fff;
+}
+
 .ko-btn-blue:active {
   transform: translateY(1px);
 }
@@ -1958,7 +1970,7 @@ html[data-theme="dark"] .ko-btn-blue:hover {
   border: 0;
   border-radius: 0.7rem;
   background: transparent;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.84rem;
   font-weight: 650;
   line-height: 1;
@@ -1986,14 +1998,14 @@ html[data-theme="dark"] .ko-btn-blue:hover {
 
 .ko-admin-icon-action:hover,
 .ko-admin-text-action:hover {
-  background: #fff;
+  background: var(--surface);
   color: var(--admin-blue-hover);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
 .ko-admin-icon-action[data-tone="primary"],
 .ko-admin-text-action[data-tone="primary"] {
-  background: #fff;
+  background: var(--surface);
   color: var(--admin-blue);
 }
 
@@ -2012,20 +2024,20 @@ html[data-theme="dark"] .ko-btn-blue:hover {
 
 .ko-admin-icon-action[data-tone="danger"]:hover,
 .ko-admin-text-action[data-tone="danger"]:hover {
-  background: #fff1f2;
-  color: #e11d48;
+  background: var(--danger-soft);
+  color: var(--danger);
   box-shadow: none;
 }
 
 .ko-admin-icon-action[data-tone="violet"],
 .ko-admin-text-action[data-tone="violet"] {
-  color: #7c3aed;
+  color: var(--violet);
 }
 
 .ko-admin-icon-action[data-tone="violet"]:hover,
 .ko-admin-text-action[data-tone="violet"]:hover {
-  background: #f5f3ff;
-  color: #6d28d9;
+  background: var(--violet-soft);
+  color: var(--violet);
   box-shadow: none;
 }
 
@@ -10647,6 +10659,106 @@ html[data-theme="dark"] .ko-admin-table-scroll::after {
 html[data-theme="dark"] .ko-admin-shell .hover\:bg-white\/60:hover,
 html[data-theme="dark"] .ko-dash-shell .hover\:bg-white\/60:hover {
   background-color: color-mix(in srgb, var(--surface-elevated) 60%, transparent);
+}
+
+html[data-theme="dark"] .ko-admin-shell .bg-slate-50\/80,
+html[data-theme="dark"] .ko-dash-shell .bg-slate-50\/80,
+html[data-theme="dark"] .ko-admin-shell .bg-slate-50\/90,
+html[data-theme="dark"] .ko-dash-shell .bg-slate-50\/90 {
+  background-color: var(--surface-muted);
+}
+
+html[data-theme="dark"] .ko-admin-shell .text-slate-300,
+html[data-theme="dark"] .ko-dash-shell .text-slate-300 {
+  color: var(--border-strong);
+}
+
+html[data-theme="dark"] .ko-admin-shell .bg-emerald-50,
+html[data-theme="dark"] .ko-dash-shell .bg-emerald-50,
+html[data-theme="dark"] .ko-admin-shell .hover\:bg-emerald-100:hover,
+html[data-theme="dark"] .ko-dash-shell .hover\:bg-emerald-100:hover {
+  background-color: color-mix(in srgb, var(--success) 16%, var(--surface));
+}
+
+html[data-theme="dark"] .ko-admin-shell .text-emerald-700,
+html[data-theme="dark"] .ko-dash-shell .text-emerald-700,
+html[data-theme="dark"] .ko-admin-shell .text-emerald-800,
+html[data-theme="dark"] .ko-dash-shell .text-emerald-800 {
+  color: var(--success);
+}
+
+html[data-theme="dark"] .ko-admin-shell .bg-amber-50,
+html[data-theme="dark"] .ko-dash-shell .bg-amber-50 {
+  background-color: color-mix(in srgb, var(--warning) 16%, var(--surface));
+}
+
+html[data-theme="dark"] .ko-admin-shell .text-amber-800,
+html[data-theme="dark"] .ko-dash-shell .text-amber-800,
+html[data-theme="dark"] .ko-admin-shell .text-amber-900,
+html[data-theme="dark"] .ko-dash-shell .text-amber-900 {
+  color: var(--warning);
+}
+
+html[data-theme="dark"] .ko-admin-shell .bg-rose-50,
+html[data-theme="dark"] .ko-dash-shell .bg-rose-50,
+html[data-theme="dark"] .ko-admin-shell .bg-orange-50,
+html[data-theme="dark"] .ko-dash-shell .bg-orange-50,
+html[data-theme="dark"] .ko-admin-shell .bg-red-50,
+html[data-theme="dark"] .ko-dash-shell .bg-red-50 {
+  background-color: color-mix(in srgb, var(--danger) 16%, var(--surface));
+}
+
+html[data-theme="dark"] .ko-admin-shell .text-rose-700,
+html[data-theme="dark"] .ko-dash-shell .text-rose-700,
+html[data-theme="dark"] .ko-admin-shell .text-rose-800,
+html[data-theme="dark"] .ko-dash-shell .text-rose-800,
+html[data-theme="dark"] .ko-admin-shell .text-orange-800,
+html[data-theme="dark"] .ko-dash-shell .text-orange-800,
+html[data-theme="dark"] .ko-admin-shell .text-red-800,
+html[data-theme="dark"] .ko-dash-shell .text-red-800 {
+  color: var(--danger);
+}
+
+html[data-theme="dark"] .ko-admin-shell .bg-violet-50,
+html[data-theme="dark"] .ko-dash-shell .bg-violet-50 {
+  background-color: var(--violet-soft);
+}
+
+html[data-theme="dark"] .ko-admin-shell .text-violet-800,
+html[data-theme="dark"] .ko-dash-shell .text-violet-800,
+html[data-theme="dark"] .ko-admin-shell .text-violet-900,
+html[data-theme="dark"] .ko-dash-shell .text-violet-900 {
+  color: var(--violet);
+}
+
+html[data-theme="dark"] .ko-admin-shell .ring-emerald-200,
+html[data-theme="dark"] .ko-dash-shell .ring-emerald-200,
+html[data-theme="dark"] .ko-admin-shell .ring-emerald-200\/80,
+html[data-theme="dark"] .ko-dash-shell .ring-emerald-200\/80,
+html[data-theme="dark"] .ko-admin-shell .ring-amber-200,
+html[data-theme="dark"] .ko-dash-shell .ring-amber-200,
+html[data-theme="dark"] .ko-admin-shell .ring-amber-200\/80,
+html[data-theme="dark"] .ko-dash-shell .ring-amber-200\/80,
+html[data-theme="dark"] .ko-admin-shell .ring-rose-200,
+html[data-theme="dark"] .ko-dash-shell .ring-rose-200,
+html[data-theme="dark"] .ko-admin-shell .ring-rose-200\/80,
+html[data-theme="dark"] .ko-dash-shell .ring-rose-200\/80,
+html[data-theme="dark"] .ko-admin-shell .ring-orange-200,
+html[data-theme="dark"] .ko-dash-shell .ring-orange-200,
+html[data-theme="dark"] .ko-admin-shell .ring-red-200,
+html[data-theme="dark"] .ko-dash-shell .ring-red-200,
+html[data-theme="dark"] .ko-admin-shell .ring-red-200\/80,
+html[data-theme="dark"] .ko-dash-shell .ring-red-200\/80,
+html[data-theme="dark"] .ko-admin-shell .ring-violet-200,
+html[data-theme="dark"] .ko-dash-shell .ring-violet-200,
+html[data-theme="dark"] .ko-admin-shell .ring-slate-200\/80,
+html[data-theme="dark"] .ko-dash-shell .ring-slate-200\/80 {
+  --tw-ring-color: var(--border);
+}
+
+html[data-theme="dark"] .ko-admin-shell .border-emerald-200,
+html[data-theme="dark"] .ko-dash-shell .border-emerald-200 {
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
 }
 
 html[data-theme="dark"] .ko-admin-shell .bg-blue-50,

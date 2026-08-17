@@ -11,14 +11,15 @@ import {
 import { AddLearnWorldsCoachModal } from "@/components/admin/AddLearnWorldsCoachModal";
 import { ChangeTeamRoleModal } from "@/components/admin/ChangeTeamRoleModal";
 import {
-  IconBan,
-  IconCheck,
-  IconMail,
+  IconBanDuo,
+  IconCheckDuo,
+  IconMailDuo,
   IconPlus,
-  IconTeam,
-  IconUser,
+  IconTeamDuo,
+  IconUserDuo,
 } from "@/components/admin/AdminIcons";
 import { AdminAvatar } from "@/components/admin/AdminUi";
+import { AdminRowAction, AdminRowActions } from "@/components/admin/AdminRowActions";
 import { canShowChangeTeamRoleAction } from "@/lib/admin/team-role-ui";
 import {
   LW_SA_AUTH_SECTION_ID,
@@ -210,7 +211,7 @@ export function TeamBoard({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-3">
             <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--admin-blue)] text-white shadow-[0_10px_20px_-12px_rgba(37,99,235,0.9)]">
-              <IconTeam className="ko-icon" />
+              <IconTeamDuo className="ko-icon" />
             </span>
             <div>
               <h1 className="ko-display text-xl font-semibold text-slate-900">
@@ -230,7 +231,7 @@ export function TeamBoard({
               }}
               className="ko-btn-blue-soft w-full min-h-11 justify-center sm:w-auto"
             >
-              <IconMail className="ko-icon-sm" />
+              <IconMailDuo className="ko-icon-sm" />
               Ajouter un coach LearnWorlds
             </button>
             <button
@@ -248,37 +249,57 @@ export function TeamBoard({
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <div className="rounded-xl border border-slate-100 bg-white px-3 py-2.5">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-              Membres
-            </p>
-            <p className="mt-0.5 text-lg font-semibold text-slate-900">
-              {stats.total}
-            </p>
+          <div className="ko-interv-metric">
+            <span className="ko-interv-metric-icon" data-tone="slate">
+              <IconTeamDuo />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                Membres
+              </p>
+              <p className="text-lg font-semibold leading-tight text-slate-900">
+                {stats.total}
+              </p>
+            </div>
           </div>
-          <div className="rounded-xl border border-slate-100 bg-white px-3 py-2.5">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-              Actifs
-            </p>
-            <p className="mt-0.5 text-lg font-semibold text-emerald-700">
-              {stats.active}
-            </p>
+          <div className="ko-interv-metric">
+            <span className="ko-interv-metric-icon" data-tone="teal">
+              <IconCheckDuo />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                Actifs
+              </p>
+              <p className="text-lg font-semibold leading-tight text-emerald-700">
+                {stats.active}
+              </p>
+            </div>
           </div>
-          <div className="rounded-xl border border-slate-100 bg-white px-3 py-2.5">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-              Coachs
-            </p>
-            <p className="mt-0.5 text-lg font-semibold text-slate-900">
-              {stats.coaches}
-            </p>
+          <div className="ko-interv-metric">
+            <span className="ko-interv-metric-icon" data-tone="blue">
+              <IconUserDuo />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                Coachs
+              </p>
+              <p className="text-lg font-semibold leading-tight text-slate-900">
+                {stats.coaches}
+              </p>
+            </div>
           </div>
-          <div className="rounded-xl border border-slate-100 bg-white px-3 py-2.5">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-              Admins
-            </p>
-            <p className="mt-0.5 text-lg font-semibold text-slate-900">
-              {stats.admins}
-            </p>
+          <div className="ko-interv-metric">
+            <span className="ko-interv-metric-icon" data-tone="amber">
+              <IconTeamDuo />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                Admins
+              </p>
+              <p className="text-lg font-semibold leading-tight text-slate-900">
+                {stats.admins}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -290,7 +311,7 @@ export function TeamBoard({
             className="space-y-4 rounded-2xl border border-blue-100 bg-blue-50/40 p-4 sm:p-5"
           >
             <div className="flex items-center gap-2">
-              <IconUser className="ko-icon text-[var(--admin-blue)]" />
+              <IconUserDuo className="ko-icon text-[var(--admin-blue)]" />
               <h2 className="text-sm font-semibold text-slate-900">
                 Nouveau membre d’équipe
               </h2>
@@ -339,7 +360,7 @@ export function TeamBoard({
               </select>
             </label>
             <button type="submit" disabled={pending} className="ko-btn-blue">
-              <IconCheck className="ko-icon-sm" />
+              <IconCheckDuo className="ko-icon-sm" />
               {pending ? "Création…" : "Créer et générer le code"}
             </button>
           </form>
@@ -353,11 +374,11 @@ export function TeamBoard({
 
         <div className="overflow-hidden rounded-2xl border border-slate-200/90">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[56rem] table-fixed border-collapse text-left text-sm">
+            <table className="w-full min-w-[64rem] table-fixed border-collapse text-left text-sm">
               <colgroup>
-                <col className="w-[22%]" />
-                <col className="w-[22%]" />
-                <col className="w-[14%]" />
+                <col className="w-[20%]" />
+                <col className="w-[20%]" />
+                <col className="w-[18%]" />
                 <col className="w-[12%]" />
                 <col className="w-[12%]" />
                 <col className="w-[18%]" />
@@ -396,6 +417,13 @@ export function TeamBoard({
                     STATUS_DOT[m.accountStatus] ?? STATUS_DOT.ACTIVE;
                   const roleClass =
                     ROLE_CLASS[m.role] ?? ROLE_CLASS.coach;
+                  const promoteState =
+                    m.role === "admin" && m.accountStatus === "ACTIVE"
+                      ? resolveAdminPromoteLwAuthUiState({
+                          memberEmail: m.email,
+                          authorizations: lwSuperAdminAuthorizations,
+                        })
+                      : null;
                   return (
                     <tr
                       key={m.id}
@@ -418,20 +446,22 @@ export function TeamBoard({
                       </td>
                       <td className="px-4 py-3.5 align-middle">
                         <p className="flex items-center gap-1.5 truncate text-slate-600">
-                          <IconMail className="ko-icon-sm shrink-0 text-slate-300" />
+                          <span className="ko-interv-chip-icon bg-slate-100 text-slate-500">
+                            <IconMailDuo />
+                          </span>
                           <span className="truncate">{m.email ?? "—"}</span>
                         </p>
                       </td>
                       <td className="px-4 py-3.5 align-middle">
                         <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${roleClass}`}
+                          className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${roleClass}`}
                         >
                           {roleLabelFr(m.role)}
                         </span>
                       </td>
                       <td className="px-4 py-3.5 align-middle">
                         <span
-                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${statusClass}`}
+                          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${statusClass}`}
                         >
                           <span
                             className={`h-1.5 w-1.5 rounded-full ${statusDot}`}
@@ -447,121 +477,102 @@ export function TeamBoard({
                             : "Jamais connecté"}
                         </p>
                       </td>
-                      <td className="px-4 py-3.5 align-middle">
+                      <td className="px-3 py-3.5 align-middle sm:px-4">
                         {isSuper || isSelf ? (
                           <p className="text-right text-xs text-slate-400">
                             {isSelf ? "Votre compte" : "Protégé"}
                           </p>
                         ) : (
-                          <div className="flex flex-wrap items-center justify-end gap-1.5">
-                            {m.accountStatus === "ACTIVE" ||
-                            m.accountStatus === "PENDING_ACTIVATION" ? (
-                              <button
-                                type="button"
-                                disabled={busyId === m.id}
-                                onClick={() => {
-                                  if (
-                                    !window.confirm(
-                                      "Désactiver ce membre d’équipe ?",
+                          <div className="flex flex-col items-end gap-1.5">
+                            <AdminRowActions>
+                              {m.accountStatus === "ACTIVE" ||
+                              m.accountStatus === "PENDING_ACTIVATION" ? (
+                                <AdminRowAction
+                                  label="Désactiver"
+                                  tone="danger"
+                                  disabled={busyId === m.id}
+                                  onClick={() => {
+                                    if (
+                                      !window.confirm(
+                                        "Désactiver ce membre d’équipe ?",
+                                      )
+                                    ) {
+                                      return;
+                                    }
+                                    void runAction(
+                                      m.id,
+                                      "/api/admin/team/disable",
+                                      { profileId: m.id },
+                                    );
+                                  }}
+                                  icon={<IconBanDuo className="ko-icon-sm" />}
+                                />
+                              ) : null}
+                              {m.accountStatus === "DISABLED" ? (
+                                <AdminRowAction
+                                  labeled
+                                  label="Réactiver"
+                                  tone="success"
+                                  disabled={busyId === m.id}
+                                  onClick={() =>
+                                    void runAction(
+                                      m.id,
+                                      "/api/admin/team/enable",
+                                      { profileId: m.id },
                                     )
-                                  ) {
-                                    return;
                                   }
-                                  void runAction(
-                                    m.id,
-                                    "/api/admin/team/disable",
-                                    { profileId: m.id },
-                                  );
-                                }}
-                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                              >
-                                <IconBan className="ko-icon-sm" />
-                                Désactiver
-                              </button>
+                                  icon={<IconCheckDuo className="ko-icon-sm" />}
+                                />
+                              ) : null}
+                              {canShowChangeTeamRoleAction({
+                                role: m.role,
+                                accountStatus: m.accountStatus,
+                                isSelf,
+                              }) ? (
+                                <AdminRowAction
+                                  label="Modifier le rôle"
+                                  tone="primary"
+                                  disabled={busyId === m.id}
+                                  onClick={() => {
+                                    setError(null);
+                                    setRoleChangeTarget(m);
+                                  }}
+                                  icon={<IconUserDuo className="ko-icon-sm" />}
+                                />
+                              ) : null}
+                              {promoteState === "can_promote" ? (
+                                <AdminRowAction
+                                  label="Super admin"
+                                  tone="violet"
+                                  disabled={busyId === m.id}
+                                  onClick={() => openPromoteModal(m)}
+                                  icon={<IconTeamDuo className="ko-icon-sm" />}
+                                />
+                              ) : null}
+                            </AdminRowActions>
+                            {promoteState === "auth_revoked" ? (
+                              <p className="max-w-[14rem] text-right text-xs text-amber-800">
+                                Autorisation LearnWorlds révoquée. Une
+                                nouvelle autorisation est requise.{" "}
+                                <a
+                                  href={`#${LW_SA_AUTH_SECTION_ID}`}
+                                  className="font-semibold underline"
+                                >
+                                  Voir les autorisations
+                                </a>
+                              </p>
                             ) : null}
-                            {m.accountStatus === "DISABLED" ? (
-                              <button
-                                type="button"
-                                disabled={busyId === m.id}
-                                onClick={() =>
-                                  void runAction(
-                                    m.id,
-                                    "/api/admin/team/enable",
-                                    { profileId: m.id },
-                                  )
-                                }
-                                className="inline-flex items-center gap-1 rounded-lg bg-[var(--admin-blue)] px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--admin-blue-hover)] disabled:opacity-50"
-                              >
-                                <IconCheck className="ko-icon-sm" />
-                                Réactiver
-                              </button>
-                            ) : null}
-                            {canShowChangeTeamRoleAction({
-                              role: m.role,
-                              accountStatus: m.accountStatus,
-                              isSelf,
-                            }) ? (
-                              <button
-                                type="button"
-                                disabled={busyId === m.id}
-                                onClick={() => {
-                                  setError(null);
-                                  setRoleChangeTarget(m);
-                                }}
-                                className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-800 hover:bg-blue-100 disabled:opacity-50"
-                              >
-                                <IconUser className="ko-icon-sm" />
-                                Modifier le rôle
-                              </button>
-                            ) : null}
-                            {m.role === "admin" &&
-                            m.accountStatus === "ACTIVE" ? (
-                              (() => {
-                                const promoteState =
-                                  resolveAdminPromoteLwAuthUiState({
-                                    memberEmail: m.email,
-                                    authorizations: lwSuperAdminAuthorizations,
-                                  });
-                                if (promoteState === "can_promote") {
-                                  return (
-                                    <button
-                                      type="button"
-                                      disabled={busyId === m.id}
-                                      onClick={() => openPromoteModal(m)}
-                                      className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-semibold text-violet-900 hover:bg-violet-100 disabled:opacity-50"
-                                    >
-                                      <IconTeam className="ko-icon-sm" />
-                                      Super admin
-                                    </button>
-                                  );
-                                }
-                                if (promoteState === "auth_revoked") {
-                                  return (
-                                    <p className="max-w-[14rem] text-right text-xs text-amber-800">
-                                      Autorisation LearnWorlds révoquée. Une
-                                      nouvelle autorisation est requise.{" "}
-                                      <a
-                                        href={`#${LW_SA_AUTH_SECTION_ID}`}
-                                        className="font-semibold underline"
-                                      >
-                                        Voir les autorisations
-                                      </a>
-                                    </p>
-                                  );
-                                }
-                                return (
-                                  <p className="max-w-[14rem] text-right text-xs text-slate-500">
-                                    Autorisation LearnWorlds requise avant la
-                                    promotion.{" "}
-                                    <a
-                                      href={`#${LW_SA_AUTH_SECTION_ID}`}
-                                      className="font-semibold text-violet-800 underline"
-                                    >
-                                      Autoriser
-                                    </a>
-                                  </p>
-                                );
-                              })()
+                            {promoteState === "auth_required" ? (
+                              <p className="max-w-[14rem] text-right text-xs text-slate-500">
+                                Autorisation LearnWorlds requise avant la
+                                promotion.{" "}
+                                <a
+                                  href={`#${LW_SA_AUTH_SECTION_ID}`}
+                                  className="font-semibold text-violet-800 underline"
+                                >
+                                  Autoriser
+                                </a>
+                              </p>
                             ) : null}
                           </div>
                         )}

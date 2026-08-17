@@ -4,17 +4,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition, type ReactNode } from "react";
 import {
-  IconActivity,
-  IconAlert,
-  IconBell,
-  IconBook,
-  IconCalendar,
-  IconCheck,
-  IconClock,
-  IconEye,
-  IconInbox,
-  IconPhone,
-  IconTarget,
+  IconAlertDuo,
+  IconBellDuo,
+  IconBookDuo,
+  IconCalendarDuo,
+  IconCheckDuo,
+  IconClockDuo,
+  IconEyeDuo,
+  IconInboxDuo,
+  IconPhoneDuo,
+  IconPulseDuo,
+  IconTargetDuo,
 } from "@/components/admin/AdminIcons";
 import { AdminAvatar } from "@/components/admin/AdminUi";
 import type { CoachInterventionCard } from "@/lib/admin/interventions/types";
@@ -46,20 +46,26 @@ function MetricTile({
   icon,
   label,
   value,
+  tone,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
+  tone: "blue" | "teal" | "amber" | "slate";
 }) {
   return (
-    <div className="rounded-xl border border-slate-100 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-      <div className="flex items-center gap-1.5 text-slate-400">
-        <span className="text-[var(--admin-blue)]">{icon}</span>
-        <p className="text-[10px] font-bold uppercase tracking-[0.08em]">
+    <div className="ko-interv-metric">
+      <span className="ko-interv-metric-icon" data-tone={tone}>
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">
           {label}
         </p>
+        <p className="truncate text-[15px] font-semibold leading-tight text-slate-900">
+          {value}
+        </p>
       </div>
-      <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
     </div>
   );
 }
@@ -140,22 +146,22 @@ export function InterventionCenter({
     label: string;
     icon: ReactNode;
   }> = [
-    { id: "ACTIVE", label: "Actives", icon: <IconInbox className="ko-icon-sm" /> },
-    { id: "OPEN", label: "Ouvert", icon: <IconAlert className="ko-icon-sm" /> },
+    { id: "ACTIVE", label: "Actives", icon: <IconInboxDuo className="ko-icon-sm" /> },
+    { id: "OPEN", label: "Ouvert", icon: <IconAlertDuo className="ko-icon-sm" /> },
     {
       id: "CONTACTED",
       label: "Contacté",
-      icon: <IconPhone className="ko-icon-sm" />,
+      icon: <IconPhoneDuo className="ko-icon-sm" />,
     },
     {
       id: "FOLLOW_UP",
       label: "À rappeler",
-      icon: <IconBell className="ko-icon-sm" />,
+      icon: <IconBellDuo className="ko-icon-sm" />,
     },
     {
       id: "RESOLVED",
       label: "Terminé",
-      icon: <IconCheck className="ko-icon-sm" />,
+      icon: <IconCheckDuo className="ko-icon-sm" />,
     },
   ];
 
@@ -168,7 +174,7 @@ export function InterventionCenter({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex items-start gap-3">
             <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--admin-blue)] text-white shadow-[0_10px_20px_-12px_rgba(37,99,235,0.9)]">
-              <IconInbox className="ko-icon" />
+              <IconInboxDuo className="ko-icon" />
             </span>
             <div>
               <h2
@@ -185,15 +191,15 @@ export function InterventionCenter({
 
           <div className="flex flex-wrap gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 ring-1 ring-rose-200">
-              <IconAlert className="ko-icon-sm" />
+              <IconAlertDuo className="ko-icon-sm" />
               {counts.critical} critiques
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-800 ring-1 ring-orange-200">
-              <IconTarget className="ko-icon-sm" />
+              <IconTargetDuo className="ko-icon-sm" />
               {counts.red} risques élevés
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 ring-1 ring-amber-200">
-              <IconBell className="ko-icon-sm" />
+              <IconBellDuo className="ko-icon-sm" />
               {counts.amber} à surveiller
             </span>
           </div>
@@ -238,7 +244,7 @@ export function InterventionCenter({
 
         {filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-10 text-center">
-            <IconInbox className="mx-auto h-8 w-8 text-slate-300" />
+            <IconInboxDuo className="mx-auto h-8 w-8 text-slate-300" />
             <p className="mt-3 text-sm font-medium text-slate-600">
               Aucune intervention dans ce filtre.
             </p>
@@ -259,96 +265,102 @@ export function InterventionCenter({
                   key={intervention.id}
                   className="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white to-slate-50/80 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:border-blue-200/80 hover:shadow-[0_12px_28px_-20px_rgba(37,99,235,0.35)] sm:p-5"
                 >
-                  <div className="flex flex-col gap-4 xl:flex-row xl:items-stretch xl:justify-between">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start gap-3">
-                        <AdminAvatar name={row.student.fullName} size="md" />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="truncate text-base font-semibold text-slate-900">
-                              {row.student.fullName}
-                            </p>
-                            <span
-                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${tone.badge}`}
-                            >
-                              <IconAlert className="h-3 w-3" />
-                              {currentRisk
-                                ? `${currentRisk} — ${riskLabel(currentRisk)}`
-                                : `Risque : ${riskLabel(null)}`}
-                            </span>
-                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                              <IconClock className="h-3 w-3" />
-                              {interventionStatusLabelFr(intervention.status)}
-                            </span>
-                          </div>
-                          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
-                            <span className="inline-flex items-center gap-1.5">
-                              <IconBook className="ko-icon-sm text-slate-400" />
-                              {row.student.certification}
-                            </span>
-                            <span className="text-slate-300">·</span>
-                            <span className="inline-flex items-center gap-1.5">
-                              <IconCalendar className="ko-icon-sm text-slate-400" />
-                              {exam ?? "Date d’examen non renseignée"}
-                            </span>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-start gap-3">
+                      <AdminAvatar name={row.student.fullName} size="md" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate text-base font-semibold text-slate-900">
+                            {row.student.fullName}
                           </p>
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${tone.badge}`}
+                          >
+                            <IconAlertDuo className="h-3.5 w-3.5" />
+                            {currentRisk
+                              ? `${currentRisk} — ${riskLabel(currentRisk)}`
+                              : `Risque : ${riskLabel(null)}`}
+                          </span>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                            <IconClockDuo className="h-3.5 w-3.5" />
+                            {interventionStatusLabelFr(intervention.status)}
+                          </span>
                         </div>
+                        <p className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="ko-interv-chip-icon bg-blue-50 text-blue-600">
+                              <IconBookDuo />
+                            </span>
+                            {row.student.certification}
+                          </span>
+                          <span className="text-slate-300">·</span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="ko-interv-chip-icon bg-slate-100 text-slate-600">
+                              <IconCalendarDuo />
+                            </span>
+                            {exam ?? "Date d’examen non renseignée"}
+                          </span>
+                        </p>
                       </div>
-
-                      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                        <MetricTile
-                          icon={<IconTarget className="ko-icon-sm" />}
-                          label="Readiness"
-                          value={`${formatScore(row.prediction.readinessScore)} / 100`}
-                        />
-                        <MetricTile
-                          icon={<IconActivity className="ko-icon-sm" />}
-                          label="Rythme"
-                          value={
-                            row.prediction.requiredPace != null
-                              ? `${row.prediction.currentPace ?? "—"} / ${row.prediction.requiredPace}`
-                              : String(row.prediction.currentPace ?? "—")
-                          }
-                        />
-                        <MetricTile
-                          icon={<IconClock className="ko-icon-sm" />}
-                          label="Inactivité"
-                          value={
-                            row.metrics.inactiveDays != null
-                              ? `${row.metrics.inactiveDays} j`
-                              : "—"
-                          }
-                        />
-                        <MetricTile
-                          icon={<IconCalendar className="ko-icon-sm" />}
-                          label="Ouvert le"
-                          value={formatDateFr(
-                            intervention.createdAt.slice(0, 10),
-                          )}
-                        />
-                      </div>
-
-                      {intervention.reasons.length > 0 ? (
-                        <ul className="mt-3 flex flex-wrap gap-1.5">
-                          {intervention.reasons.map((code) => (
-                            <li
-                              key={code}
-                              className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 ring-1 ring-slate-200"
-                            >
-                              <span className="h-1.5 w-1.5 rounded-full bg-[var(--admin-blue)]" />
-                              {interventionReasonLabelFr(code)}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null}
                     </div>
 
-                    <div className="flex shrink-0 flex-col gap-2 border-t border-slate-100 pt-3 xl:w-[12.5rem] xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      <MetricTile
+                        tone="blue"
+                        icon={<IconTargetDuo />}
+                        label="Readiness"
+                        value={`${formatScore(row.prediction.readinessScore)} / 100`}
+                      />
+                      <MetricTile
+                        tone="teal"
+                        icon={<IconPulseDuo />}
+                        label="Rythme"
+                        value={
+                          row.prediction.requiredPace != null
+                            ? `${row.prediction.currentPace ?? "—"} / ${row.prediction.requiredPace}`
+                            : String(row.prediction.currentPace ?? "—")
+                        }
+                      />
+                      <MetricTile
+                        tone="amber"
+                        icon={<IconClockDuo />}
+                        label="Inactivité"
+                        value={
+                          row.metrics.inactiveDays != null
+                            ? `${row.metrics.inactiveDays} j`
+                            : "—"
+                        }
+                      />
+                      <MetricTile
+                        tone="slate"
+                        icon={<IconCalendarDuo />}
+                        label="Ouvert le"
+                        value={formatDateFr(
+                          intervention.createdAt.slice(0, 10),
+                        )}
+                      />
+                    </div>
+
+                    {intervention.reasons.length > 0 ? (
+                      <ul className="flex flex-wrap gap-1.5">
+                        {intervention.reasons.map((code) => (
+                          <li
+                            key={code}
+                            className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 ring-1 ring-slate-200"
+                          >
+                            <span className="h-1.5 w-1.5 rounded-full bg-[var(--admin-blue)]" />
+                            {interventionReasonLabelFr(code)}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+
+                    <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
                       <Link
                         href={`/admin/students/${row.student.studentId}`}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[var(--admin-blue)] px-3 py-2.5 text-xs font-semibold text-white shadow-[0_8px_18px_-12px_rgba(37,99,235,0.9)] hover:bg-[var(--admin-blue-hover)]"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[var(--admin-blue)] px-3 py-2 text-xs font-semibold text-white shadow-[0_8px_18px_-12px_rgba(37,99,235,0.9)] hover:bg-[var(--admin-blue-hover)]"
                       >
-                        <IconEye className="ko-icon-sm" />
+                        <IconEyeDuo className="ko-icon-sm" />
                         Voir le dossier
                       </Link>
                       {canManage && intervention.status !== "RESOLVED" ? (
@@ -360,9 +372,9 @@ export function InterventionCenter({
                               onClick={() =>
                                 setStatus(intervention.id, "CONTACTED")
                               }
-                              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                             >
-                              <IconPhone className="ko-icon-sm" />
+                              <IconPhoneDuo className="ko-icon-sm" />
                               Marquer contacté
                             </button>
                           ) : null}
@@ -373,9 +385,9 @@ export function InterventionCenter({
                               onClick={() =>
                                 setStatus(intervention.id, "FOLLOW_UP")
                               }
-                              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                             >
-                              <IconBell className="ko-icon-sm" />
+                              <IconBellDuo className="ko-icon-sm" />
                               À rappeler
                             </button>
                           ) : null}
@@ -385,9 +397,9 @@ export function InterventionCenter({
                             onClick={() =>
                               setStatus(intervention.id, "RESOLVED")
                             }
-                            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-60"
+                            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-60"
                           >
-                            <IconCheck className="ko-icon-sm" />
+                            <IconCheckDuo className="ko-icon-sm" />
                             Terminer
                           </button>
                         </>
