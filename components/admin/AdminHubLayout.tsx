@@ -193,8 +193,8 @@ function AdminHeaderMeta() {
       : onSchool
         ? "Vue d'ensemble de la promotion KO Predict™"
         : onStudentDetail
-          ? studentFocus?.certification
-            ? `${studentFocus.certification} · Dossier apprenant`
+          ? studentFocus?.formationTitle
+            ? `${studentFocus.formationTitle} · Dossier apprenant`
             : "Dossier apprenant"
           : onKoPredict
             ? "Suivi et interventions des apprenants activés"

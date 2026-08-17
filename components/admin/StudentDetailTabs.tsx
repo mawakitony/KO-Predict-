@@ -130,7 +130,7 @@ export function StudentDetailTabs({
     <div className="ko-learn-board space-y-4 sm:space-y-5">
       <AdminStudentFocusSync
         fullName={detail.student.fullName}
-        certification={detail.student.certification}
+        formationTitle={detail.formation.headerTitle}
       />
       <div className="ko-learn-toolbar" role="tablist" aria-label="Sections fiche apprenant">
         <div className="ko-learn-tabs">

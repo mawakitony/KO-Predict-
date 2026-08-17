@@ -1,3 +1,4 @@
+import type { LearnerFormationView } from "@/lib/admin/learner-formation";
 import type {
   DashboardMetricsView,
   DashboardStudentView,
@@ -26,6 +27,7 @@ export interface AdminStudentDetail extends AdminStudentRow {
   history: PredictionHistory[];
   dataSource: "demo" | "database";
   email?: string | null;
+  formation: LearnerFormationView;
 }
 
 /** Statut compte côté UI liste LearnWorlds / KO Predict. */

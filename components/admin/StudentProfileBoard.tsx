@@ -129,7 +129,7 @@ export function StudentProfileBoard({
                 </p>
               ) : null}
               <p className="mt-1 text-sm text-slate-500">
-                {student.certification}
+                {detail.formation.compactLabel}
               </p>
               <span
                 className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${tone.badge}`}
@@ -141,7 +141,24 @@ export function StudentProfileBoard({
             </div>
 
             <dl className="mt-6 space-y-3 border-t border-slate-100 pt-5">
-              <ProfileRow label="Certification" value={student.certification} />
+              {detail.formation.courses.length > 1 ? (
+                <div className="text-sm">
+                  <dt className="text-slate-400">Formation</dt>
+                  <dd className="mt-1 text-right font-semibold text-slate-800">
+                    <p>{detail.formation.compactLabel}</p>
+                    <ul className="mt-2 space-y-1 text-left font-medium text-slate-700">
+                      {detail.formation.courses.map((course) => (
+                        <li key={course.courseId}>{course.title}</li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+              ) : (
+                <ProfileRow
+                  label="Formation"
+                  value={detail.formation.compactLabel}
+                />
+              )}
               <ProfileRow label="Date cible" value={targetExamLabel} />
               <ProfileRow
                 label="Accès"

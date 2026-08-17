@@ -1,5 +1,7 @@
 import "server-only";
 
+import { emptyLearnerFormation } from "@/lib/admin/learner-formation";
+import { loadAdminLearnerFormation } from "@/lib/admin/load-learner-formation";
 import { calculatePrediction } from "@/lib/prediction/engine";
 import { DEMO_STUDENT_ID } from "@/lib/dashboard/types";
 import type { DashboardMetricsView, DashboardStudentView } from "@/lib/dashboard/types";
@@ -249,6 +251,7 @@ export function getDemoStudentDetail(id: string): AdminStudentDetail | null {
     history: toHistory(seed),
     dataSource: "demo",
     email: `${seed.student.firstName.toLowerCase()}.${seed.student.lastName.toLowerCase()}@demo.kopredict.dev`,
+    formation: emptyLearnerFormation(),
   };
 }
 
@@ -366,7 +369,10 @@ export async function getAdminStudentDetail(
   id: string,
 ): Promise<AdminStudentDetail | null> {
   const fromDb = await loadAdminStudentDetailFromDatabase(id);
-  if (fromDb) return fromDb;
+  if (fromDb) {
+    fromDb.formation = await loadAdminLearnerFormation(id);
+    return fromDb;
+  }
 
   // Fallback démo uniquement pour les IDs seed (Tony / Amina / Julien)
   return getDemoStudentDetail(id);
@@ -463,6 +469,7 @@ async function loadAdminStudentDetailFromDatabase(
       history,
       dataSource: "database",
       email: profile?.email ?? null,
+      formation: emptyLearnerFormation(),
     };
   } catch {
     return null;

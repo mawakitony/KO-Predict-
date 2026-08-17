@@ -16,9 +16,9 @@ type AdminTab = "learnworlds" | "kopredict";
 const LearnersChromeContext = createContext<{
   koCount: number | null;
   setKoCount: (n: number | null) => void;
-  studentFocus: { fullName: string; certification: string | null } | null;
+  studentFocus: { fullName: string; formationTitle: string | null } | null;
   setStudentFocus: (
-    value: { fullName: string; certification: string | null } | null,
+    value: { fullName: string; formationTitle: string | null } | null,
   ) => void;
 } | null>(null);
 
@@ -30,7 +30,7 @@ export function AdminLearnersChromeProvider({
   const [koCount, setKoCount] = useState<number | null>(null);
   const [studentFocus, setStudentFocus] = useState<{
     fullName: string;
-    certification: string | null;
+    formationTitle: string | null;
   } | null>(null);
   const value = useMemo(
     () => ({ koCount, setKoCount, studentFocus, setStudentFocus }),
@@ -131,15 +131,15 @@ export function AdminLearnersKoCountSync({ count }: { count: number }) {
 /** Publie le nom de l’apprenant vers le header (fiche étudiant). */
 export function AdminStudentFocusSync({
   fullName,
-  certification,
+  formationTitle,
 }: {
   fullName: string;
-  certification: string | null;
+  formationTitle: string | null;
 }) {
   const { setStudentFocus } = useAdminLearnersChrome();
   useEffect(() => {
-    setStudentFocus({ fullName, certification });
+    setStudentFocus({ fullName, formationTitle });
     return () => setStudentFocus(null);
-  }, [fullName, certification, setStudentFocus]);
+  }, [fullName, formationTitle, setStudentFocus]);
   return null;
 }
