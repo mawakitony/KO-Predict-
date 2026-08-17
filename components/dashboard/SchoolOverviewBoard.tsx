@@ -15,6 +15,8 @@ import {
   SchoolRiskDonut,
 } from "@/components/dashboard/SchoolCharts";
 import { SchoolCurveToolbar } from "@/components/dashboard/SchoolCurveToolbar";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { LOCALE_BCP47 } from "@/lib/i18n/storage";
 import { riskToneClasses } from "@/lib/dashboard/format";
 import type { RiskLevel } from "@/types/prediction";
 
@@ -120,6 +122,7 @@ export function SchoolOverviewBoard({
   overview,
   trends,
 }: SchoolOverviewBoardProps) {
+  const { t, locale } = useLanguage();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
@@ -145,7 +148,7 @@ export function SchoolOverviewBoard({
     { key: "AMBER", label: "AMBER", count: overview.riskCounts.AMBER, color: "var(--warning)" },
     { key: "RED", label: "RED", count: overview.riskCounts.RED, color: "var(--danger)" },
     { key: "CRITICAL", label: "CRITICAL", count: overview.riskCounts.CRITICAL, color: "#fb7185" },
-    { key: "NONE", label: "Non évalué", count: overview.riskCounts.NONE, color: "var(--text-secondary)" },
+    { key: "NONE", label: t("admin.school.notEvaluated"), count: overview.riskCounts.NONE, color: "var(--text-secondary)" },
   ];
 
   const progressPoints = overview.progressProfile.map((p) => ({
@@ -161,7 +164,7 @@ export function SchoolOverviewBoard({
     const sorted = [...list];
     sorted.sort((a, b) => {
       if (sortKey === "name") {
-        return a.fullName.localeCompare(b.fullName, "fr");
+        return a.fullName.localeCompare(b.fullName, LOCALE_BCP47[locale]);
       }
       if (sortKey === "prob") {
         return (b.readinessProbability ?? -1) - (a.readinessProbability ?? -1);
@@ -169,7 +172,7 @@ export function SchoolOverviewBoard({
       return (RISK_ORDER[a.riskLevel] ?? 99) - (RISK_ORDER[b.riskLevel] ?? 99);
     });
     return sorted;
-  }, [overview.alerts, appliedQuery, riskFilter, sortKey]);
+  }, [overview.alerts, appliedQuery, riskFilter, sortKey, locale]);
 
   function runSearch() {
     setAppliedQuery(query);
@@ -190,7 +193,7 @@ export function SchoolOverviewBoard({
 
   return (
     <div className="ko-inv-board">
-      <section className="ko-curve-block" aria-label="Évolution de la promotion">
+      <section className="ko-curve-block" aria-label={t("admin.school.curveAria")}>
         <SchoolCurveToolbar
           query={query}
           onQueryChange={setQuery}
@@ -208,19 +211,19 @@ export function SchoolOverviewBoard({
           }}
           sortLabel={
             sortKey === "risk"
-              ? "Tri : risque"
+              ? t("admin.school.sortRisk")
               : sortKey === "name"
-                ? "Tri : nom"
-                : "Tri : proba"
+                ? t("admin.school.sortName")
+                : t("admin.school.sortProb")
           }
         />
 
         {showFilters ? (
-          <div className="ko-curve-filters" role="group" aria-label="Filtres alertes">
-            <p className="ko-curve-filters-label">Risque</p>
+          <div className="ko-curve-filters" role="group" aria-label={t("admin.school.alertFilters")}>
+            <p className="ko-curve-filters-label">{t("admin.school.risk")}</p>
             {(
               [
-                ["ALL", "Tous"],
+                ["ALL", t("common.all")],
                 ["CRITICAL", "CRITICAL"],
                 ["RED", "RED"],
                 ["AMBER", "AMBER"],
@@ -243,37 +246,37 @@ export function SchoolOverviewBoard({
 
         <SchoolHeroChart
           trends={trends}
-          headline="Préparation moyenne de la promotion"
+          headline={t("admin.school.headline")}
           headlineValue={heroValue}
         />
       </section>
 
-      <section aria-label="Indicateurs" className="ko-inv-metrics">
+      <section aria-label={t("admin.school.metrics")} className="ko-inv-metrics">
         <SchoolMetricCard
-          title="Taux global"
+          title={t("admin.school.globalRate")}
           value={metricPct(overview.globalSuccessRate)}
-          hint={evaluated > 0 ? `${evaluated} évalués` : "En attente de données"}
+          hint={evaluated > 0 ? t("admin.school.evaluated", { count: evaluated }) : t("admin.school.awaitingData")}
           tone="blue"
           icon={<IconTarget />}
         />
         <SchoolMetricCard
-          title="Préparation"
+          title={t("admin.school.preparation")}
           value={metricNum(overview.avgReadinessScore)}
-          hint="Score moyen"
+          hint={t("admin.school.avgScore")}
           tone="teal"
           icon={<IconTrend />}
         />
         <SchoolMetricCard
-          title="Apprenants"
+          title={t("admin.learners.colLearner")}
           value={String(overview.totalStudents)}
-          hint={`${overview.withEstimation} avec estimation`}
+          hint={t("admin.school.withEstimation", { count: overview.withEstimation })}
           tone="amber"
           icon={<IconUsers />}
         />
         <SchoolMetricCard
-          title="À alerter"
+          title={t("admin.school.toAlert")}
           value={String(overview.alertCount)}
-          hint="Révision à relancer"
+          hint={t("admin.school.relaunch")}
           tone="red"
           icon={<IconAlert />}
         />
@@ -282,26 +285,29 @@ export function SchoolOverviewBoard({
       <div className="ko-inv-bottom">
         <section className="ko-inv-card ko-inv-alerts" aria-labelledby="alerts-title">
           <div className="ko-inv-card-head">
-            <h3 id="alerts-title">À alerter</h3>
+            <h3 id="alerts-title">{t("admin.school.toAlert")}</h3>
             <span className="ko-inv-chip is-red">{filteredAlerts.length}</span>
           </div>
 
           {appliedQuery.trim() || riskFilter !== "ALL" ? (
             <p className="ko-inv-filter-hint">
-              {filteredAlerts.length} résultat
-              {filteredAlerts.length > 1 ? "s" : ""}
-              {appliedQuery.trim() ? ` pour « ${appliedQuery.trim()} »` : ""}
+              {appliedQuery.trim()
+                ? t("admin.school.resultsFor", {
+                    count: filteredAlerts.length,
+                    query: appliedQuery.trim(),
+                  })
+                : t("admin.school.results", { count: filteredAlerts.length })}
               {riskFilter !== "ALL" ? ` · ${riskFilter}` : ""}
             </p>
           ) : null}
 
           {overview.alerts.length === 0 ? (
             <p className="ko-inv-empty">
-              Aucune alerte — promotion stable.
+              {t("admin.school.noAlerts")}
             </p>
           ) : filteredAlerts.length === 0 ? (
             <p className="ko-inv-empty">
-              Aucun apprenant ne correspond à cette recherche.
+              {t("admin.school.noMatch")}
             </p>
           ) : (
             <ul className="ko-inv-alert-list">
@@ -319,8 +325,10 @@ export function SchoolOverviewBoard({
                           {alert.certification}
                           {" · "}
                           {alert.readinessProbability == null
-                            ? "Prob. —"
-                            : `Prob. ${Math.round(alert.readinessProbability)} %`}
+                            ? t("admin.school.probEmpty")
+                            : t("admin.school.prob", {
+                                value: Math.round(alert.readinessProbability),
+                              })}
                         </p>
                       </div>
                     </div>
@@ -332,7 +340,7 @@ export function SchoolOverviewBoard({
                         href={`/admin/students/${alert.studentId}`}
                         className="ko-inv-see"
                       >
-                        Voir
+                        {t("status.view")}
                       </Link>
                     </div>
                   </li>
@@ -347,10 +355,10 @@ export function SchoolOverviewBoard({
       </div>
 
       <p className="ko-inv-footnote">
-        KO Predict™ — vue école agrégée, sans garantie de réussite.
+        {t("admin.school.footnote")}
         {" "}
         {overview.collectingData > 0
-          ? `${overview.collectingData} en collecte de données.`
+          ? t("admin.school.collecting", { count: overview.collectingData })
           : null}
       </p>
     </div>

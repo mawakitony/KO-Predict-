@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
   IconBook,
   IconDashboard,
@@ -119,6 +120,7 @@ export function LearnerGlanceCards({
   currentPace,
   requiredPace,
 }: LearnerGlanceCardsProps) {
+  const { t } = useLanguage();
   const paceReady = currentPace != null && currentPace > 0;
   const paceGap =
     paceReady && requiredPace != null ? currentPace - requiredPace : null;
@@ -136,21 +138,25 @@ export function LearnerGlanceCards({
         : 0;
 
   return (
-    <section aria-label="Indicateurs clés" className="ko-dd-kpi-grid">
+    <section aria-label={t("admin.file.keyIndicators")} className="ko-dd-kpi-grid">
       <GlanceCard
         featured
         empty={readiness == null}
-        label="Préparation"
+        label={t("admin.file.preparation")}
         value={
           readinessAnim != null ? String(Math.round(readinessAnim)) : "—"
         }
         unit="/100"
         hint={
           readiness == null
-            ? "Estimation en cours de collecte"
-            : "Niveau actuel de préparation"
+            ? t("learner.glance.collectingEstimate")
+            : t("learner.glance.currentLevel")
         }
-        badge={readiness != null ? `${Math.round(readiness)} pts` : "En collecte"}
+        badge={
+          readiness != null
+            ? t("learner.glance.pts", { n: Math.round(readiness) })
+            : t("learner.glance.collecting")
+        }
         badgeTone={
           readiness == null
             ? "wait"
@@ -163,7 +169,7 @@ export function LearnerGlanceCards({
       />
       <GlanceCard
         empty={probability == null}
-        label="Probabilité"
+        label={t("admin.file.probability")}
         value={
           probabilityAnim != null
             ? String(Math.round(probabilityAnim))
@@ -172,15 +178,15 @@ export function LearnerGlanceCards({
         unit="%"
         hint={
           probability == null
-            ? "Disponible après les premiers QCM"
-            : "Chance d'être prêt à la date cible"
+            ? t("learner.glance.afterQcm")
+            : t("learner.glance.readyChance")
         }
         badge={
           probability == null
-            ? "En collecte"
+            ? t("learner.glance.collecting")
             : probability >= 60
-              ? "Favorable"
-              : "À surveiller"
+              ? t("learner.glance.favorable")
+              : t("risk.amber")
         }
         badgeTone={
           probability == null
@@ -194,18 +200,20 @@ export function LearnerGlanceCards({
       />
       <GlanceCard
         empty={progress == null}
-        label="Progression"
+        label={t("admin.file.progress")}
         value={
           progressAnim != null ? String(Math.round(progressAnim)) : "—"
         }
         unit="%"
         hint={
           progress == null
-            ? "Avancement pas encore mesuré"
-            : "Avancement dans la formation"
+            ? t("learner.glance.progressPending")
+            : t("learner.glance.progressHint")
         }
         badge={
-          progress != null ? `${Math.round(progress)}% fait` : "En collecte"
+          progress != null
+            ? t("learner.glance.donePct", { value: Math.round(progress) })
+            : t("learner.glance.collecting")
         }
         badgeTone={progress == null ? "wait" : "neutral"}
         meter={progress ?? 0}
@@ -213,23 +221,23 @@ export function LearnerGlanceCards({
       />
       <GlanceCard
         empty={!paceReady}
-        label="Rythme"
+        label={t("admin.file.activityPace")}
         value={paceAnim != null ? String(Math.round(paceAnim * 10) / 10) : "—"}
-        unit="/sem."
+        unit={t("learner.unitPerWeek")}
         hint={
           !paceReady
             ? requiredPace != null
-              ? `Objectif à viser : ${requiredPace} / semaine`
-              : "Activités par semaine"
+              ? t("learner.glance.targetWeek", { n: requiredPace })
+              : t("learner.glance.activitiesWeek")
             : requiredPace != null
-              ? `Objectif ${requiredPace} activités / semaine`
-              : "Activités par semaine"
+              ? t("learner.glance.objectiveWeek", { n: requiredPace })
+              : t("learner.glance.activitiesWeek")
         }
         badge={
           !paceReady
-            ? "En collecte"
+            ? t("learner.glance.collecting")
             : paceGap == null
-              ? "OK"
+              ? t("learner.kpi.ok")
               : paceGap >= 0
                 ? `+${Math.round(paceGap * 10) / 10}`
                 : `${Math.round(paceGap * 10) / 10}`

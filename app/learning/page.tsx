@@ -1,10 +1,10 @@
 import { Suspense } from "react";
 import { LearnerHubLayout } from "@/components/dashboard/LearnerHubLayout";
+import { TranslatedText } from "@/components/i18n/TranslatedText";
 import { LearnerLearningPanel } from "@/components/learning/LearnerLearningPanel";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { canAccessAdmin } from "@/lib/auth/permissions";
 import { getStudentDashboardData } from "@/lib/dashboard/get-student-dashboard";
-import { formatSyncRelativeFr } from "@/lib/learning/format";
 
 export const dynamic = "force-dynamic";
 
@@ -47,12 +47,16 @@ export default async function LearningPage() {
       displayName={profile?.displayName}
       avatarUrl={profile?.avatarUrl}
       title="Ma progression pédagogique"
-      subtitle={formatSyncRelativeFr(recordedAt)}
+      page="learning"
+      recordedAt={recordedAt}
       showAdminLink={showAdmin}
     >
       <Suspense
         fallback={
-          <p className="text-sm text-slate-500">Chargement du parcours…</p>
+          <TranslatedText
+            messageKey="learner.loadingPath"
+            className="text-sm text-slate-500"
+          />
         }
       >
         <LearnerLearningPanel

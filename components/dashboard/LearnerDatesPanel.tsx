@@ -1,6 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
-import { LEARNER_COPY } from "@/lib/learner/copy";
-import { formatDateFr, formatDateTimeFr } from "@/lib/dashboard/format";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { formatDate, formatDateTime } from "@/lib/i18n/format-date";
 
 interface LearnerDatesPanelProps {
   targetExamDate: string | null;
@@ -53,14 +55,6 @@ function IconTarget({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
-function statusLabel(days: number | null, hasDate: boolean): string {
-  if (!hasDate) return "En attente";
-  if (days == null) return "—";
-  if (days > 0) return `J-${days}`;
-  if (days === 0) return "Aujourd'hui";
-  return "Passé";
-}
-
 /** Panneau dates — timeline claire et premium. */
 export function LearnerDatesPanel({
   targetExamDate,
@@ -69,6 +63,16 @@ export function LearnerDatesPanel({
   updatedAt,
   dataSource,
 }: LearnerDatesPanelProps) {
+  const { t, locale } = useLanguage();
+
+  function statusLabel(days: number | null, hasDate: boolean): string {
+    if (!hasDate) return t("learner.dates.waiting");
+    if (days == null) return "—";
+    if (days > 0) return t("learner.dayMinus", { n: days });
+    if (days === 0) return t("learner.dates.today");
+    return t("learner.dates.past");
+  }
+
   const rows: Array<{
     label: string;
     date: string | null;
@@ -80,34 +84,34 @@ export function LearnerDatesPanel({
     hint: string;
   }> = [
     {
-      label: "Date cible d'examen",
+      label: t("learner.dates.examLabel"),
       date: targetExamDate,
-      empty: "Date d'examen non renseignée",
+      empty: t("learner.dates.examMissing"),
       color: "var(--brand-hover)",
       soft: "var(--brand-soft)",
       accent: "var(--brand)",
       icon: <IconCalendar />,
-      hint: "Votre échéance officielle",
+      hint: t("learner.dates.examHint"),
     },
     {
-      label: "Fin de formation prévue",
+      label: t("learner.dates.endLabel"),
       date: predictedCompletionDate,
-      empty: "En attente",
+      empty: t("learner.dates.waiting"),
       color: "var(--accent-hover)",
       soft: "var(--accent-soft)",
       accent: "var(--accent)",
       icon: <IconFlag />,
-      hint: "Estimation KO Predict™",
+      hint: t("learner.dates.koEstimate"),
     },
     {
-      label: "Prêt pour l'examen",
+      label: t("learner.dates.readyLabel"),
       date: predictedReadinessDate,
-      empty: "En attente",
+      empty: t("learner.dates.waiting"),
       color: "var(--info)",
       soft: "var(--info-soft)",
       accent: "var(--info)",
       icon: <IconTarget />,
-      hint: "Quand vous serez prêt",
+      hint: t("learner.dates.readyHint"),
     },
   ];
 
@@ -119,15 +123,15 @@ export function LearnerDatesPanel({
       <div className="ko-dates-head">
         <div>
           <h2 className="ko-display text-lg font-bold text-slate-900">
-            Dates importantes
+            {t("learner.dates.title")}
           </h2>
           <p className="mt-1 text-sm text-slate-500">
-            Jalons de votre trajectoire
+            {t("learner.dates.subtitle")}
           </p>
         </div>
         <span className="ko-dates-live">
           <span className="ko-analytics-pulse" />
-          Suivi
+          {t("learner.dates.live")}
         </span>
       </div>
 
@@ -164,7 +168,9 @@ export function LearnerDatesPanel({
                       {row.label}
                     </p>
                     <p className="ko-display mt-1 text-[1.15rem] font-extrabold tracking-tight text-slate-900">
-                      {hasDate && row.date ? formatDateFr(row.date) : row.empty}
+                      {hasDate && row.date
+                        ? formatDate(row.date, locale)
+                        : row.empty}
                     </p>
                     <p className="mt-0.5 text-xs font-medium text-slate-500">
                       {row.hint}
@@ -189,8 +195,10 @@ export function LearnerDatesPanel({
 
       <p className="ko-dates-footer">
         {dataSource === "database"
-          ? `${LEARNER_COPY.datesSyncPrefix} : ${formatDateTimeFr(updatedAt)}`
-          : `MAJ ${formatDateTimeFr(updatedAt)} · Démo`}
+          ? `${t("learner.lastSync")} : ${formatDateTime(updatedAt, locale)}`
+          : t("learner.demoSync", {
+              date: formatDateTime(updatedAt, locale),
+            })}
       </p>
     </section>
   );

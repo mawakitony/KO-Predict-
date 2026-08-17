@@ -92,7 +92,7 @@ describe("TeamBoard change-role UX", () => {
       join(process.cwd(), "components/admin/TeamBoard.tsx"),
       "utf8",
     );
-    expect(src).toMatch(/Modifier le rôle/);
+    expect(src).toMatch(/admin\.team\.changeRole/);
     expect(src).toMatch(/ChangeTeamRoleModal/);
     expect(src).toMatch(/canShowChangeTeamRoleAction/);
     expect(src).not.toMatch(/newRole: \"admin\"/);
@@ -104,7 +104,7 @@ describe("TeamBoard change-role UX", () => {
       join(process.cwd(), "components/admin/ChangeTeamRoleModal.tsx"),
       "utf8",
     );
-    expect(src).toMatch(/Confirmer le changement/);
+    expect(src).toMatch(/admin\.team\.confirmChange/);
     expect(src).not.toMatch(/super_admin/);
     expect(src).toMatch(/mapChangeTeamRoleApiError/);
     expect(src).toMatch(/\/auth\/mfa\/challenge/);

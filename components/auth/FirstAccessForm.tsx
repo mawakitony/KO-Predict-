@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
   AuthEmailIcon,
   AuthField,
@@ -9,6 +10,7 @@ import {
 } from "@/components/ui/AuthField";
 
 export function FirstAccessForm() {
+  const { t } = useLanguage();
   const [step, setStep] = useState<"verify" | "password">("verify");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -45,7 +47,7 @@ export function FirstAccessForm() {
                 error?: string;
               } | null;
               if (!res.ok || !json?.ok) {
-                setError(json?.error ?? "Email ou code d’activation incorrect.");
+                setError(json?.error ?? t("auth.verifyFail"));
                 return;
               }
               setStep("password");
@@ -54,17 +56,17 @@ export function FirstAccessForm() {
         >
           <AuthField
             icon={<AuthEmailIcon />}
-            label="Adresse email"
+            label={t("auth.emailAddress")}
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
-            placeholder="Adresse email"
+            placeholder={t("auth.emailAddress")}
           />
           <AuthField
             icon={<AuthKeyIcon />}
-            label="Code d’activation"
+            label={t("auth.activationCode")}
             type="text"
             required
             value={code}
@@ -75,7 +77,7 @@ export function FirstAccessForm() {
           />
           {errorBox}
           <button type="submit" disabled={pending} className="ko-auth-btn">
-            {pending ? "Vérification…" : "Continuer"}
+            {pending ? t("common.verifying") : t("auth.continue")}
           </button>
         </form>
       ) : (
@@ -96,7 +98,7 @@ export function FirstAccessForm() {
                 redirectTo?: string;
               } | null;
               if (!json?.ok && res.status !== 200) {
-                setError(json?.error ?? "Impossible d’activer le compte.");
+                setError(json?.error ?? t("auth.activateFail"));
                 return;
               }
               if (json?.error && json.redirectTo) {
@@ -105,7 +107,7 @@ export function FirstAccessForm() {
                 return;
               }
               if (!json?.ok) {
-                setError(json?.error ?? "Impossible d’activer le compte.");
+                setError(json?.error ?? t("auth.activateFail"));
                 return;
               }
               window.location.href = json.redirectTo ?? "/dashboard";
@@ -113,33 +115,33 @@ export function FirstAccessForm() {
           }}
         >
           <p className="text-center text-sm text-white/70">
-            Créez votre mot de passe
+            {t("auth.createPassword")}
           </p>
           <AuthField
             icon={<AuthLockIcon />}
-            label="Nouveau mot de passe"
+            label={t("auth.newPassword")}
             type="password"
             required
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
-            placeholder="Nouveau mot de passe"
+            placeholder={t("auth.newPassword")}
           />
           <AuthField
             icon={<AuthLockIcon />}
-            label="Confirmer le mot de passe"
+            label={t("auth.confirmPassword")}
             type="password"
             required
             minLength={8}
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             autoComplete="new-password"
-            placeholder="Confirmer le mot de passe"
+            placeholder={t("auth.confirmPassword")}
           />
           {errorBox}
           <button type="submit" disabled={pending} className="ko-auth-btn">
-            {pending ? "Activation…" : "Activer mon compte"}
+            {pending ? t("auth.activating") : t("auth.activate")}
           </button>
         </form>
       )}

@@ -2,13 +2,12 @@
 
 import { useState, useTransition } from "react";
 import {
-  LW_COACH_CREATE_SUCCESS_NOTE,
-  LW_COACH_PASSWORD_NOTE,
   mapLwCoachApiError,
-  mapLwCoachEligibilityUiMessage,
   type LwCoachLookupEligibilityStatus,
 } from "@/lib/admin/learnworlds-coach-ui";
 import { IconCheck, IconMail } from "@/components/admin/AdminIcons";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { lwCoachEligibilityKey } from "@/lib/i18n/labels";
 
 type LookupIdentity = {
   learnworldsUserId: string;
@@ -48,6 +47,7 @@ export function AddLearnWorldsCoachModal({
   onClose,
   onCreated,
 }: AddLearnWorldsCoachModalProps) {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [lookup, setLookup] = useState<LookupOk | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +102,7 @@ export function AddLearnWorldsCoachModal({
         }
         setLookup(json);
       } catch {
-        setError("Erreur réseau. Vérifiez votre connexion et réessayez.");
+        setError(t("common.networkError"));
       } finally {
         setPhase("idle");
       }
@@ -149,7 +149,7 @@ export function AddLearnWorldsCoachModal({
         }
 
         if ("alreadyCoach" in json && json.alreadyCoach) {
-          setError("Ce coach existe déjà dans KO Predict™.");
+          setError(t("admin.team.alreadyCoach"));
           return;
         }
 
@@ -160,7 +160,7 @@ export function AddLearnWorldsCoachModal({
               .filter(Boolean)
               .join(" ")
               .trim() || json.email;
-          setSuccessNote(LW_COACH_CREATE_SUCCESS_NOTE);
+          setSuccessNote(t("admin.team.lwCreateSuccess"));
           onCreated({
             fullName,
             email: json.email,
@@ -169,7 +169,7 @@ export function AddLearnWorldsCoachModal({
           });
         }
       } catch {
-        setError("Erreur réseau. Vérifiez votre connexion et réessayez.");
+        setError(t("common.networkError"));
       } finally {
         setPhase("idle");
       }
@@ -199,16 +199,15 @@ export function AddLearnWorldsCoachModal({
           id="lw-coach-modal-title"
           className="ko-display text-lg font-semibold text-slate-900"
         >
-          Ajouter un coach LearnWorlds
+          {t("admin.team.addLwCoach")}
         </h2>
         <p className="mt-2 text-sm text-slate-600">
-          Vérifiez d’abord l’email dans LearnWorlds. KO Predict™ décide ensuite
-          du rôle coach.
+          {t("admin.team.lwCoachHint")}
         </p>
 
         <form onSubmit={onVerify} className="mt-5 space-y-4">
           <label className="block text-sm font-medium text-slate-700">
-            Adresse email LearnWorlds
+            {t("admin.team.lwEmail")}
             <input
               type="email"
               required
@@ -228,7 +227,9 @@ export function AddLearnWorldsCoachModal({
             className="ko-btn-blue w-full min-h-11 justify-center sm:w-auto"
           >
             <IconMail className="ko-icon-sm" />
-            {phase === "lookup" && pending ? "Vérification…" : "Vérifier"}
+            {phase === "lookup" && pending
+              ? t("common.verifying")
+              : t("common.verify")}
           </button>
         </form>
 
@@ -239,21 +240,21 @@ export function AddLearnWorldsCoachModal({
                 canCreate ? "text-emerald-800" : "text-slate-800"
               }`}
             >
-              {mapLwCoachEligibilityUiMessage(lookup.eligibility.status)}
+              {t(lwCoachEligibilityKey(lookup.eligibility.status))}
             </p>
             <dl className="space-y-2 text-sm">
               <div>
-                <dt className="text-slate-500">Nom</dt>
+                <dt className="text-slate-500">{t("common.name")}</dt>
                 <dd className="font-medium text-slate-900">{displayName}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Email</dt>
+                <dt className="text-slate-500">{t("common.email")}</dt>
                 <dd className="font-medium text-slate-900">
                   {lookup.identity?.email ?? lookup.email}
                 </dd>
               </div>
               <div>
-                <dt className="text-slate-500">Rôle LearnWorlds</dt>
+                <dt className="text-slate-500">{t("admin.team.lwRole")}</dt>
                 <dd className="font-medium text-slate-900">
                   {lookup.identity
                     ? `${lookup.identity.roleLevel ?? "—"} (${lookup.identity.roleName ?? "—"})`
@@ -265,7 +266,7 @@ export function AddLearnWorldsCoachModal({
             {canCreate ? (
               <>
                 <p className="text-xs leading-relaxed text-slate-600">
-                  {LW_COACH_PASSWORD_NOTE}
+                  {t("admin.team.lwPasswordNote")}
                 </p>
                 <button
                   type="button"
@@ -275,8 +276,8 @@ export function AddLearnWorldsCoachModal({
                 >
                   <IconCheck className="ko-icon-sm" />
                   {phase === "create" && pending
-                    ? "Création…"
-                    : "Créer comme coach KO Predict™"}
+                    ? t("admin.team.creating")
+                    : t("admin.team.createAsCoach")}
                 </button>
               </>
             ) : null}
@@ -297,7 +298,7 @@ export function AddLearnWorldsCoachModal({
                 href={mfaHref}
                 className="inline-flex font-semibold text-red-900 underline"
               >
-                Ouvrir la vérification MFA
+                {t("admin.team.openMfaShort")}
               </a>
             ) : null}
           </div>
@@ -309,7 +310,7 @@ export function AddLearnWorldsCoachModal({
             onClick={onClose}
             className="min-h-11 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
           >
-            Fermer
+            {t("common.close")}
           </button>
         </div>
       </div>

@@ -2,6 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useId } from "react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import {
+  learnerGuideBodyKey,
+  learnerGuideCtaKey,
+  learnerGuideTitleKey,
+} from "@/lib/i18n/labels";
 import {
   LEARNER_DATES_ANCHOR,
   type LearnerGuideContent,
@@ -23,6 +29,7 @@ export function LearnerGuideModal({
 }) {
   const titleId = useId();
   const bodyId = useId();
+  const { t } = useLanguage();
 
   const complete = useCallback(() => {
     onAck("complete");
@@ -58,7 +65,7 @@ export function LearnerGuideModal({
       <button
         type="button"
         className="ko-guide-pop-backdrop"
-        aria-label="Fermer"
+        aria-label={t("common.close")}
         onClick={dismiss}
       />
       <div
@@ -71,16 +78,16 @@ export function LearnerGuideModal({
         <button
           type="button"
           className="ko-guide-pop-close"
-          aria-label="Fermer"
+          aria-label={t("common.close")}
           onClick={dismiss}
         >
           ×
         </button>
         <h2 id={titleId} className="ko-guide-pop-title">
-          {guide.title}
+          {t(learnerGuideTitleKey(guide.key))}
         </h2>
         <p id={bodyId} className="ko-guide-pop-body">
-          {guide.body}
+          {t(learnerGuideBodyKey(guide.key))}
         </p>
         {guide.href ? (
           <Link
@@ -99,7 +106,7 @@ export function LearnerGuideModal({
               complete();
             }}
           >
-            {guide.ctaLabel}
+            {t(learnerGuideCtaKey(guide.key))}
           </Link>
         ) : (
           <button
@@ -107,7 +114,7 @@ export function LearnerGuideModal({
             className="ko-guide-pop-primary"
             onClick={onPrimaryClick}
           >
-            {guide.ctaLabel}
+            {t(learnerGuideCtaKey(guide.key))}
           </button>
         )}
       </div>

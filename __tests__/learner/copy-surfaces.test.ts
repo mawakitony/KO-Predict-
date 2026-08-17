@@ -124,8 +124,9 @@ describe("copy apprenant — pas de LearnWorlds visible", () => {
       path.join(process.cwd(), "app/profile/page.tsx"),
       "utf8",
     );
-    expect(src).toContain("LEARNER_COPY.profileSubtitle");
+    expect(src).toContain('page="profile"');
+    expect(src).toContain("chrome.profilePrefsStaff");
     expect(LEARNER_COPY.profileSubtitle).not.toMatch(/LearnWorlds/i);
-    expect(src).toMatch(/indépendantes de LearnWorlds/);
+    expect(src).toMatch(/chrome\.profilePrefsStaff/);
   });
 });

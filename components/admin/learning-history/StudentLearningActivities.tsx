@@ -7,25 +7,26 @@ import {
   learningTypeIcon,
 } from "@/components/learning/Learning3dIcons";
 import {
-  activityStatusLabelFr,
-  activityTypeLabelFr,
   formatDurationSeconds,
   formatScorePercent,
   matchesActivityFilter,
 } from "@/lib/admin/learning-history/parse";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { activityStatusKey, activityTypeKey } from "@/lib/i18n/labels";
+import type { MessageKey } from "@/lib/i18n/translate";
 import type {
   LearningActivityFilter,
   LearningHistoryActivity,
 } from "@/types/learning-history";
 
-const FILTERS: Array<{ id: LearningActivityFilter; label: string }> = [
-  { id: "all", label: "Toutes" },
-  { id: "completed", label: "Terminées" },
-  { id: "not_completed", label: "Non terminées" },
-  { id: "quiz", label: "Quiz / examens" },
-  { id: "videos", label: "Vidéos" },
-  { id: "documents", label: "Documents" },
-  { id: "other", label: "Autres" },
+const FILTER_KEYS: Array<{ id: LearningActivityFilter; key: MessageKey }> = [
+  { id: "all", key: "admin.history.filterAll" },
+  { id: "completed", key: "admin.history.filterDone" },
+  { id: "not_completed", key: "admin.history.filterTodo" },
+  { id: "quiz", key: "admin.history.filterQuiz" },
+  { id: "videos", key: "admin.history.filterVideos" },
+  { id: "documents", key: "admin.history.filterDocs" },
+  { id: "other", key: "admin.history.filterOther" },
 ];
 
 function statusTone(status: LearningHistoryActivity["status"]) {
@@ -54,6 +55,7 @@ export function StudentLearningActivities({
   totalCount: number;
   onRefresh: () => void;
 }) {
+  const { t } = useLanguage();
   const [filter, setFilter] = useState<LearningActivityFilter>("all");
   const [query, setQuery] = useState("");
 
@@ -80,22 +82,26 @@ export function StudentLearningActivities({
             <Icon3dActivities className="ko-learn-3d is-sm" />
           </span>
           <div>
-            <h2 className="ko-learn-panel-title">Activités</h2>
+            <h2 className="ko-learn-panel-title">{t("admin.file.activities")}</h2>
             <p className="ko-learn-panel-sub">
               {totalCount > 0
-                ? `${completedCount} terminées sur ${totalCount} · ${progressPct}%`
-                : "Progression LearnWorlds de l’apprenant"}
+                ? t("admin.file.completedOf", {
+                    completed: completedCount,
+                    total: totalCount,
+                    pct: progressPct,
+                  })
+                : t("admin.file.lwProgress")}
             </p>
           </div>
         </div>
         <button type="button" onClick={onRefresh} className="ko-learn-refresh">
           <Icon3dRefresh className="ko-learn-3d is-xs" />
-          Actualiser
+          {t("common.refresh")}
         </button>
       </div>
 
       {loading ? (
-        <p className="ko-learn-loading">Chargement de l’historique…</p>
+        <p className="ko-learn-loading">{t("admin.file.loadingHistory")}</p>
       ) : null}
 
       {error ? (
@@ -106,15 +112,15 @@ export function StudentLearningActivities({
 
       {!loading && !error ? (
         <>
-          <div className="ko-learn-filters" role="group" aria-label="Filtres">
-            {FILTERS.map((f) => (
+          <div className="ko-learn-filters" role="group" aria-label={t("common.filter")}>
+            {FILTER_KEYS.map((f) => (
               <button
                 key={f.id}
                 type="button"
                 onClick={() => setFilter(f.id)}
                 className={`ko-learn-filter${filter === f.id ? " is-active" : ""}`}
               >
-                {f.label}
+                {t(f.key)}
               </button>
             ))}
           </div>
@@ -123,8 +129,8 @@ export function StudentLearningActivities({
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher une activité…"
-              aria-label="Rechercher une activité"
+              placeholder={t("admin.history.searchActivity")}
+              aria-label={t("chrome.searchActivity")}
             />
           </label>
 
@@ -142,23 +148,23 @@ export function StudentLearningActivities({
                   <div className="ko-learn-card-body">
                     <p className="ko-learn-card-title">{a.name}</p>
                     <p className="ko-learn-card-meta">
-                      {a.section ?? "Sans section"} ·{" "}
-                      {activityTypeLabelFr(a.type)}
+                      {a.section ?? t("admin.file.noSection")} ·{" "}
+                      {t(activityTypeKey(a.type))}
                     </p>
                     <div className="ko-learn-card-foot">
                       <span
                         className={`ko-learn-status ${statusTone(a.status)}`}
                       >
-                        {activityStatusLabelFr(a.status)}
+                        {t(activityStatusKey(a.status))}
                       </span>
                       <span>
-                        Score :{" "}
+                        {t("common.score")} :{" "}
                         {a.type === "assessmentV2"
                           ? formatScorePercent(a.score)
                           : "—"}
                       </span>
                       <span>
-                        Temps : {formatDurationSeconds(a.timeOnUnitSeconds)}
+                        {t("common.time")} : {formatDurationSeconds(a.timeOnUnitSeconds)}
                       </span>
                     </div>
                   </div>
@@ -167,7 +173,7 @@ export function StudentLearningActivities({
             })}
             {filtered.length === 0 ? (
               <li className="ko-learn-empty">
-                Aucune activité pour ce filtre.
+                {t("admin.learners.empty")}
               </li>
             ) : null}
           </ul>

@@ -1,58 +1,82 @@
+"use client";
+
 import Link from "next/link";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { formatDateShort } from "@/lib/i18n/format-date";
+import { planStatusKey, planTypeKey } from "@/lib/i18n/labels";
+import type { Locale } from "@/lib/i18n/storage";
 import type { PersistedWorkPlan } from "@/lib/planning/work-plan/memory-store";
 import {
   buildWorkPlanSummaryView,
   type WorkPlanSummaryView,
 } from "@/lib/planning/work-plan/presentation";
 
+function formatPlanPeriod(
+  startsAt: string,
+  endsAt: string,
+  locale: Locale,
+  unavailable: string,
+): string {
+  const start = formatDateShort(startsAt.slice(0, 10), locale);
+  const end = formatDateShort(endsAt.slice(0, 10), locale);
+  if (start === "—" || end === "—") return unavailable;
+  return `${start} → ${end}`;
+}
+
 function EmptyWorkPlanCard({ compact }: { compact?: boolean }) {
+  const { t } = useLanguage();
   return (
     <section
       className={`ko-plan-summary-card${compact ? " is-compact" : ""}`}
       aria-labelledby="work-plan-title"
     >
-      <p className="ko-plan-summary-kicker">Mon plan de progression</p>
+      <p className="ko-plan-summary-kicker">{t("learner.planTitle")}</p>
       <h2 id="work-plan-title" className="ko-plan-summary-title">
-        Votre plan arrive bientôt
+        {t("learner.plan.soonTitle")}
       </h2>
       <p className="ko-plan-summary-objective">
-        Votre premier plan sera généré automatiquement après la prochaine
-        synchronisation.
+        {t("learner.plan.soonBody")}
       </p>
-      <p className="ko-plan-summary-reeval">
-        KO Predict™ adapte ce plan à partir de votre progression, de vos
-        résultats et de votre rythme de préparation.
-      </p>
+      <p className="ko-plan-summary-reeval">{t("learner.plan.soonHint")}</p>
     </section>
   );
 }
 
 function SummaryBody({
+  plan,
   summary,
   compact,
 }: {
+  plan: PersistedWorkPlan;
   summary: WorkPlanSummaryView;
   compact?: boolean;
 }) {
-  const active = summary.statusLabel === "En cours";
+  const { t, locale } = useLanguage();
+  const active = plan.status === "ACTIVE" || summary.status === "ACTIVE";
+  const period = formatPlanPeriod(
+    plan.startsAt,
+    plan.endsAt,
+    locale,
+    t("learner.plan.periodUnavailable"),
+  );
 
   return (
     <>
       <div className="ko-plan-summary-head">
         <div className="min-w-0">
-          <p className="ko-plan-summary-kicker">Mon plan de progression</p>
+          <p className="ko-plan-summary-kicker">{t("learner.planTitle")}</p>
           <h2
             id="work-plan-title"
             className={`ko-plan-summary-title${compact ? " is-compact" : ""}`}
           >
-            {summary.typeLabel}
+            {t(planTypeKey(summary.planType))}
           </h2>
-          <p className="ko-plan-summary-period">{summary.periodLabel}</p>
+          <p className="ko-plan-summary-period">{period}</p>
         </div>
         <span
           className={`ko-plan-summary-badge${active ? " is-active" : ""}`}
         >
-          {summary.statusLabel}
+          {t(planStatusKey(summary.status))}
         </span>
       </div>
 
@@ -61,13 +85,13 @@ function SummaryBody({
       <div className="ko-plan-summary-stats">
         {summary.activitiesLabel ? (
           <div className="ko-plan-summary-stat">
-            <p>Activités</p>
+            <p>{t("admin.plan.activities")}</p>
             <strong>{summary.activitiesLabel}</strong>
           </div>
         ) : null}
         {summary.measurableTotal > 0 ? (
           <div className="ko-plan-summary-stat">
-            <p>Tâches mesurables</p>
+            <p>{t("learner.plan.measurable")}</p>
             <strong>
               {summary.measurableCompleted} / {summary.measurableTotal}
             </strong>
@@ -77,10 +101,12 @@ function SummaryBody({
 
       <div className="ko-plan-summary-footer">
         <Link href="/plan" className="ko-plan-summary-cta">
-          Voir mon plan
+          {t("learner.seePlan")}
         </Link>
         <p className="ko-plan-summary-reeval">
-          Réévaluation le {summary.reevaluationLabel}
+          {t("learner.plan.reeval", {
+            date: formatDateShort(plan.endsAt.slice(0, 10), locale),
+          })}
         </p>
       </div>
     </>
@@ -106,7 +132,7 @@ export function WorkPlanSummaryCard({
       className={`ko-plan-summary-card${compact ? " is-compact" : ""}`}
       aria-labelledby="work-plan-title"
     >
-      <SummaryBody summary={summary} compact={compact} />
+      <SummaryBody plan={plan} summary={summary} compact={compact} />
     </section>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
   ESTIMATION_POPUP_DELAY_MS,
   ESTIMATION_POPUP_ENTER_KEY,
@@ -79,6 +80,7 @@ export function LearnerEstimationPopup({
   enabled?: boolean;
 }) {
   const titleId = useId();
+  const { t } = useLanguage();
   const [popup, setPopup] = useState<EstimationPopupContent | null>(
     initialContent?.show ? initialContent : null,
   );
@@ -147,7 +149,7 @@ export function LearnerEstimationPopup({
       <button
         type="button"
         className="ko-est-pop-backdrop"
-        aria-label="Fermer"
+        aria-label={t("common.close")}
         onClick={dismiss}
       />
       <div
@@ -158,25 +160,33 @@ export function LearnerEstimationPopup({
       >
         <QuestionIcon />
         <h2 id={titleId} className="ko-est-pop-title">
-          {popup.title}
+          {t("learner.estimationTitle")}
         </h2>
-        <p className="ko-est-pop-body">{popup.body}</p>
+        <p className="ko-est-pop-body">
+          {popup.reasons.length > 0
+            ? t("learner.estimationBody")
+            : popup.body}
+        </p>
         {popup.reasons.length > 0 ? (
           <ul className="ko-est-pop-reasons">
-            {popup.reasons.map((reason) => (
-              <li key={reason}>{reason}</li>
-            ))}
+            {popup.reasonKeys && popup.reasonKeys.length > 0
+              ? popup.reasonKeys.map((key) => <li key={key}>{t(key)}</li>)
+              : popup.reasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
           </ul>
         ) : null}
         <button type="button" className="ko-est-pop-primary" onClick={dismiss}>
-          {popup.primaryLabel}
+          {t("learner.understood")}
         </button>
         <Link
           href={popup.secondaryHref}
           className="ko-est-pop-secondary"
           onClick={dismiss}
         >
-          {popup.secondaryLabel}
+          {popup.secondaryHref.includes("/plan")
+            ? t("learner.seePlan")
+            : t("learner.seeDashboard")}
         </Link>
       </div>
     </div>

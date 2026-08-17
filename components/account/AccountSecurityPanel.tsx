@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
   removeMfaFactorAction,
   signOutAllDevicesAction,
@@ -8,7 +9,6 @@ import {
 } from "@/lib/auth/mfa-security-actions";
 import {
   canRemoveVerifiedTotpFactor,
-  mfaStatusLabel,
 } from "@/lib/auth/mfa-security";
 import type { MfaChallengeFactorOption } from "@/lib/auth/mfa-challenge";
 import { MfaAddFactorForm } from "@/components/account/MfaAddFactorForm";
@@ -22,6 +22,7 @@ interface AccountSecurityPanelProps {
 export function AccountSecurityPanel({
   verifiedFactors,
 }: AccountSecurityPanelProps) {
+  const { t } = useLanguage();
   const [adding, setAdding] = useState(false);
   const [removeState, removeAction, removePending] = useActionState(
     removeMfaFactorAction,
@@ -39,12 +40,12 @@ export function AccountSecurityPanel({
               MFA
             </dt>
             <dd className="mt-1 text-base font-semibold text-slate-900">
-              {mfaStatusLabel(verifiedCount)}
+              {verifiedCount > 0 ? t("admin.security.mfaOn") : t("admin.security.mfaOff")}
             </dd>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
             <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Facteurs configurés
+              {t("admin.security.factorsConfigured")}
             </dt>
             <dd className="mt-1 text-base font-semibold text-slate-900">
               {verifiedCount}
@@ -53,13 +54,14 @@ export function AccountSecurityPanel({
         </dl>
 
         <p className="text-sm text-slate-600">
-          Ajoutez un deuxième facteur pour éviter un blocage si vous perdez votre
-          téléphone.
+          {t("admin.security.factorsHint")}
         </p>
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-slate-900">Facteurs TOTP</h2>
+        <h2 className="text-sm font-semibold text-slate-900">
+          {t("admin.security.totpFactors")}
+        </h2>
         <ul className="space-y-2">
           {verifiedFactors.map((factor) => (
             <li
@@ -77,12 +79,12 @@ export function AccountSecurityPanel({
                     disabled={removePending}
                     className="text-sm font-semibold text-red-600 hover:text-red-700 disabled:opacity-50"
                   >
-                    Supprimer
+                    {t("admin.security.remove")}
                   </button>
                 </form>
               ) : (
                 <span className="text-xs text-slate-400">
-                  Suppression interdite (dernier facteur)
+                  {t("admin.security.lastFactor")}
                 </span>
               )}
             </li>
@@ -97,7 +99,7 @@ export function AccountSecurityPanel({
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-slate-900">
-          Ajouter un facteur
+          {t("admin.security.addFactor")}
         </h2>
         {adding ? (
           <MfaAddFactorForm onCancel={() => setAdding(false)} />
@@ -107,22 +109,24 @@ export function AccountSecurityPanel({
             className="rounded-xl bg-[var(--admin-blue)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--admin-blue-hover)]"
             onClick={() => setAdding(true)}
           >
-            Ajouter un facteur
+            {t("admin.security.addFactor")}
           </button>
         )}
       </section>
 
       <section className="space-y-3 border-t border-slate-200 pt-6">
-        <h2 className="text-sm font-semibold text-slate-900">Sessions</h2>
+        <h2 className="text-sm font-semibold text-slate-900">
+          {t("admin.security.sessions")}
+        </h2>
         <p className="text-sm text-slate-600">
-          Déconnecte ce compte sur tous les appareils et navigateurs.
+          {t("admin.security.sessionsHint")}
         </p>
         <form action={signOutAllDevicesAction}>
           <button
             type="submit"
             className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
           >
-            Déconnecter tous les appareils
+            {t("admin.security.signOutAll")}
           </button>
         </form>
       </section>

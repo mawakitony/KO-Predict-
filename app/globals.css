@@ -10547,6 +10547,67 @@ html[data-theme="dark"] .ko-theme-switch-thumb {
   gap: 0.5rem;
 }
 
+.ko-chrome-prefs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.ko-lang-toggle {
+  display: flex;
+  width: 100%;
+  align-items: stretch;
+  gap: 0.15rem;
+  padding: 0.18rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.ko-lang-toggle-option {
+  flex: 1;
+  min-height: 1.85rem;
+  padding: 0.2rem 0.7rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ko-lang-toggle-option[aria-checked="true"] {
+  background: var(--brand);
+  color: #fff;
+}
+
+.ko-lang-toggle-option:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.ko-mobile-nav-theme .ko-chrome-prefs,
+.ko-admin-mobile-nav-theme .ko-chrome-prefs {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.ko-mobile-nav-theme .ko-lang-toggle,
+.ko-admin-mobile-nav-theme .ko-lang-toggle {
+  width: auto;
+  min-width: 6.4rem;
+  flex: 0 0 auto;
+}
+
+.ko-mobile-nav-theme .ko-theme-toggle,
+.ko-admin-mobile-nav-theme .ko-theme-toggle {
+  flex: 1;
+}
+
 .ko-pace-bar {
   background: linear-gradient(180deg, var(--admin-blue-ring) 0%, var(--brand) 100%);
 }

@@ -12,6 +12,7 @@ import {
   Icon3dOverview,
   Icon3dQuiz,
 } from "@/components/learning/Learning3dIcons";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import type { CoachInterventionRecord } from "@/lib/admin/interventions/types";
 import type { AdminStudentDetail } from "@/lib/admin/types";
 import type { PersistedWorkPlan } from "@/lib/planning/work-plan/memory-store";
@@ -42,6 +43,7 @@ export function StudentDetailTabs({
   previousWorkPlan?: PersistedWorkPlan | null;
   canManageStudents?: boolean;
 }) {
+  const { t } = useLanguage();
   const [tab, setTab] = useState<DetailTab>("overview");
   const [history, setHistory] = useState<HistoryPayload | null>(null);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -68,7 +70,7 @@ export function StudentDetailTabs({
         if (!res.ok || !body?.ok) {
           setHistory(null);
           setHistoryError(
-            body?.error ?? "Historique temporairement indisponible.",
+            body?.error ?? t("admin.file.historyUnavailable"),
           );
           return;
         }
@@ -81,12 +83,12 @@ export function StudentDetailTabs({
         setHistoryLoaded(true);
       } catch {
         setHistory(null);
-        setHistoryError("Historique temporairement indisponible.");
+        setHistoryError(t("admin.file.historyUnavailable"));
       } finally {
         setLoadingHistory(false);
       }
     },
-    [detail.student.studentId],
+    [detail.student.studentId, t],
   );
 
   useEffect(() => {
@@ -104,26 +106,26 @@ export function StudentDetailTabs({
       [
         {
           id: "overview" as const,
-          label: "Vue d’ensemble",
+          label: t("admin.file.overview"),
           Icon: Icon3dOverview,
         },
         {
           id: "activities" as const,
-          label: "Activités",
+          label: t("admin.file.activities"),
           Icon: Icon3dActivities,
         },
         {
           id: "quizzes" as const,
-          label: "Quiz & examens",
+          label: t("admin.file.quizzes"),
           Icon: Icon3dQuiz,
         },
         {
           id: "coach" as const,
-          label: "Suivi coach",
+          label: t("admin.file.coachFollow"),
           Icon: Icon3dCoach,
         },
       ] as const,
-    [],
+    [t],
   );
 
   return (
@@ -132,7 +134,11 @@ export function StudentDetailTabs({
         fullName={detail.student.fullName}
         formationTitle={detail.formation.headerTitle}
       />
-      <div className="ko-learn-toolbar" role="tablist" aria-label="Sections fiche apprenant">
+      <div
+        className="ko-learn-toolbar"
+        role="tablist"
+        aria-label={t("admin.file.sections")}
+      >
         <div className="ko-learn-tabs">
           {tabs.map((item) => {
             const Icon = item.Icon;

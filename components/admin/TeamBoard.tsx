@@ -2,8 +2,9 @@
 
 import { useMemo, useState, useTransition } from "react";
 import type { TeamMemberRow } from "@/lib/admin/team-types";
-import { roleLabelFr } from "@/lib/auth/roles";
-import { formatDateFr, formatDateTimeFr } from "@/lib/dashboard/format";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { formatDate, formatDateTime } from "@/lib/i18n/format-date";
+import { accountStatusKey, roleKey } from "@/lib/i18n/labels";
 import {
   ActivationCodeModal,
   type ActivationCodeModalData,
@@ -26,12 +27,6 @@ import {
   resolveAdminPromoteLwAuthUiState,
   type LwSuperAdminAuthorizationListItem,
 } from "@/lib/admin/learnworlds-super-admin-auth-ui";
-
-const STATUS_LABEL: Record<string, string> = {
-  ACTIVE: "Actif",
-  DISABLED: "Désactivé",
-  PENDING_ACTIVATION: "En attente",
-};
 
 const STATUS_CLASS: Record<string, string> = {
   ACTIVE: "bg-emerald-50 text-emerald-800 ring-emerald-200",
@@ -62,6 +57,7 @@ export function TeamBoard({
   currentUserId,
   lwSuperAdminAuthorizations = [],
 }: TeamBoardProps) {
+  const { t, locale } = useLanguage();
   const [members, setMembers] = useState(initialMembers);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -117,7 +113,7 @@ export function TeamBoard({
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        setError(json.error ?? "Création impossible.");
+        setError(json.error ?? t("admin.team.createFail"));
         return;
       }
       setModal({
@@ -150,12 +146,12 @@ export function TeamBoard({
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        setError(json.error ?? "Action échouée.");
+        setError(json.error ?? t("common.actionFailed"));
       } else {
         await refresh();
       }
     } catch {
-      setError("Erreur réseau.");
+      setError(t("common.networkError"));
     } finally {
       setBusyId(null);
     }
@@ -192,13 +188,13 @@ export function TeamBoard({
         });
         const json = await res.json();
         if (!res.ok || !json.ok) {
-          setError(json.error ?? "Promotion impossible.");
+          setError(json.error ?? t("admin.team.promoteFail"));
           return;
         }
         closePromoteModal();
         await refresh();
       } catch {
-        setError("Erreur réseau.");
+        setError(t("common.networkError"));
       } finally {
         setBusyId(null);
       }
@@ -215,10 +211,10 @@ export function TeamBoard({
             </span>
             <div>
               <h1 className="ko-display text-xl font-semibold text-slate-900">
-                Équipe WOLOYEM
+                {t("admin.team.title")}
               </h1>
               <p className="mt-1 text-sm text-slate-500">
-                Coachs et admins — comptes séparés des apprenants LearnWorlds.
+                {t("admin.team.subtitle")}
               </p>
             </div>
           </div>
@@ -232,7 +228,7 @@ export function TeamBoard({
               className="ko-btn-blue-soft w-full min-h-11 justify-center sm:w-auto"
             >
               <IconMailDuo className="ko-icon-sm" />
-              Ajouter un coach LearnWorlds
+              {t("admin.team.addLwCoach")}
             </button>
             <button
               type="button"
@@ -243,7 +239,7 @@ export function TeamBoard({
               className="ko-btn-blue w-full min-h-11 justify-center sm:w-auto"
             >
               {!showForm ? <IconPlus className="ko-icon-sm" /> : null}
-              {showForm ? "Fermer le formulaire" : "Ajouter un membre"}
+              {showForm ? t("admin.team.closeForm") : t("admin.team.addMember")}
             </button>
           </div>
         </div>
@@ -255,7 +251,7 @@ export function TeamBoard({
             </span>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                Membres
+                {t("admin.team.members")}
               </p>
               <p className="text-lg font-semibold leading-tight text-slate-900">
                 {stats.total}
@@ -268,7 +264,7 @@ export function TeamBoard({
             </span>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                Actifs
+                {t("status.activePlural")}
               </p>
               <p className="text-lg font-semibold leading-tight text-emerald-700">
                 {stats.active}
@@ -281,7 +277,7 @@ export function TeamBoard({
             </span>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                Coachs
+                {t("role.coach")}
               </p>
               <p className="text-lg font-semibold leading-tight text-slate-900">
                 {stats.coaches}
@@ -294,7 +290,7 @@ export function TeamBoard({
             </span>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                Admins
+                {t("role.admin")}
               </p>
               <p className="text-lg font-semibold leading-tight text-slate-900">
                 {stats.admins}
@@ -313,12 +309,12 @@ export function TeamBoard({
             <div className="flex items-center gap-2">
               <IconUserDuo className="ko-icon text-[var(--admin-blue)]" />
               <h2 className="text-sm font-semibold text-slate-900">
-                Nouveau membre d’équipe
+                {t("admin.team.addMember")}
               </h2>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block text-sm font-medium text-slate-600">
-                Prénom
+                {t("admin.profile.firstName")}
                 <input
                   required
                   value={firstName}
@@ -327,7 +323,7 @@ export function TeamBoard({
                 />
               </label>
               <label className="block text-sm font-medium text-slate-600">
-                Nom
+                {t("admin.profile.lastName")}
                 <input
                   required
                   value={lastName}
@@ -337,7 +333,7 @@ export function TeamBoard({
               </label>
             </div>
             <label className="block text-sm font-medium text-slate-600">
-              Email
+              {t("common.email")}
               <input
                 type="email"
                 required
@@ -347,7 +343,7 @@ export function TeamBoard({
               />
             </label>
             <label className="block text-sm font-medium text-slate-600">
-              Rôle
+              {t("admin.team.changeRole")}
               <select
                 value={role}
                 onChange={(e) =>
@@ -355,13 +351,13 @@ export function TeamBoard({
                 }
                 className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[var(--admin-blue)] focus:ring-2 focus:ring-blue-100"
               >
-                <option value="coach">Coach</option>
-                <option value="admin">Admin</option>
+                <option value="coach">{t("role.coach")}</option>
+                <option value="admin">{t("role.admin")}</option>
               </select>
             </label>
             <button type="submit" disabled={pending} className="ko-btn-blue">
               <IconCheckDuo className="ko-icon-sm" />
-              {pending ? "Création…" : "Créer et générer le code"}
+              {pending ? t("admin.team.creating") : t("admin.team.createCode")}
             </button>
           </form>
         ) : null}
@@ -386,22 +382,22 @@ export function TeamBoard({
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/90">
                   <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                    Membre
+                    {t("admin.team.members")}
                   </th>
                   <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                    Email
+                    {t("common.email")}
                   </th>
                   <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                    Rôle
+                    {t("admin.team.changeRole")}
                   </th>
                   <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                    Statut
+                    {t("admin.learners.colAccess")}
                   </th>
                   <th className="hidden px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 lg:table-cell">
-                    Créé
+                    {t("admin.team.colCreated")}
                   </th>
                   <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                    Actions
+                    {t("admin.learners.colAction")}
                   </th>
                 </tr>
               </thead>
@@ -438,8 +434,10 @@ export function TeamBoard({
                             </p>
                             <p className="mt-0.5 truncate text-xs text-slate-400 lg:hidden">
                               {m.lastSignInAt
-                                ? `Vu ${formatDateTimeFr(m.lastSignInAt)}`
-                                : "Jamais connecté"}
+                                ? t("admin.team.seen", {
+                                    date: formatDateTime(m.lastSignInAt, locale),
+                                  })
+                                : t("admin.team.neverSignedIn")}
                             </p>
                           </div>
                         </div>
@@ -456,7 +454,7 @@ export function TeamBoard({
                         <span
                           className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${roleClass}`}
                         >
-                          {roleLabelFr(m.role)}
+                          {t(roleKey(m.role))}
                         </span>
                       </td>
                       <td className="px-4 py-3.5 align-middle">
@@ -466,21 +464,23 @@ export function TeamBoard({
                           <span
                             className={`h-1.5 w-1.5 rounded-full ${statusDot}`}
                           />
-                          {STATUS_LABEL[m.accountStatus] ?? m.accountStatus}
+                          {t(accountStatusKey(m.accountStatus))}
                         </span>
                       </td>
                       <td className="hidden px-4 py-3.5 align-middle text-slate-600 lg:table-cell">
-                        <p>{formatDateFr(m.createdAt)}</p>
+                        <p>{formatDate(m.createdAt, locale)}</p>
                         <p className="mt-0.5 text-xs text-slate-400">
                           {m.lastSignInAt
-                            ? `Connexion ${formatDateTimeFr(m.lastSignInAt)}`
-                            : "Jamais connecté"}
+                            ? t("admin.team.lastLogin", {
+                                date: formatDateTime(m.lastSignInAt, locale),
+                              })
+                            : t("admin.team.neverSignedIn")}
                         </p>
                       </td>
                       <td className="px-3 py-3.5 align-middle sm:px-4">
                         {isSuper || isSelf ? (
                           <p className="text-right text-xs text-slate-400">
-                            {isSelf ? "Votre compte" : "Protégé"}
+                            {isSelf ? t("admin.team.yourAccount") : t("admin.team.protected")}
                           </p>
                         ) : (
                           <div className="flex flex-col items-end gap-1.5">
@@ -488,13 +488,13 @@ export function TeamBoard({
                               {m.accountStatus === "ACTIVE" ||
                               m.accountStatus === "PENDING_ACTIVATION" ? (
                                 <AdminRowAction
-                                  label="Désactiver"
+                                  label={t("common.disable")}
                                   tone="danger"
                                   disabled={busyId === m.id}
                                   onClick={() => {
                                     if (
                                       !window.confirm(
-                                        "Désactiver ce membre d’équipe ?",
+                                        t("admin.team.disableMember"),
                                       )
                                     ) {
                                       return;
@@ -511,7 +511,7 @@ export function TeamBoard({
                               {m.accountStatus === "DISABLED" ? (
                                 <AdminRowAction
                                   labeled
-                                  label="Réactiver"
+                                  label={t("common.reactivate")}
                                   tone="success"
                                   disabled={busyId === m.id}
                                   onClick={() =>
@@ -530,7 +530,7 @@ export function TeamBoard({
                                 isSelf,
                               }) ? (
                                 <AdminRowAction
-                                  label="Modifier le rôle"
+                                  label={t("admin.team.changeRole")}
                                   tone="primary"
                                   disabled={busyId === m.id}
                                   onClick={() => {
@@ -542,7 +542,7 @@ export function TeamBoard({
                               ) : null}
                               {promoteState === "can_promote" ? (
                                 <AdminRowAction
-                                  label="Super admin"
+                                  label={t("admin.team.superAdmin")}
                                   tone="violet"
                                   disabled={busyId === m.id}
                                   onClick={() => openPromoteModal(m)}
@@ -551,26 +551,24 @@ export function TeamBoard({
                               ) : null}
                             </AdminRowActions>
                             {promoteState === "auth_revoked" ? (
-                              <p className="max-w-[14rem] text-right text-xs text-amber-800">
-                                Autorisation LearnWorlds révoquée. Une
-                                nouvelle autorisation est requise.{" "}
+                              <p className="max-w-[20rem] text-right text-xs leading-snug text-amber-800">
+                                {t("admin.team.lwAuthRevoked")}{" "}
                                 <a
                                   href={`#${LW_SA_AUTH_SECTION_ID}`}
                                   className="font-semibold underline"
                                 >
-                                  Voir les autorisations
+                                  {t("admin.team.lwAuthRevokedLink")}
                                 </a>
                               </p>
                             ) : null}
                             {promoteState === "auth_required" ? (
-                              <p className="max-w-[14rem] text-right text-xs text-slate-500">
-                                Autorisation LearnWorlds requise avant la
-                                promotion.{" "}
+                              <p className="max-w-[20rem] text-right text-xs leading-snug text-slate-500">
+                                {t("admin.team.lwAuthRequired")}{" "}
                                 <a
                                   href={`#${LW_SA_AUTH_SECTION_ID}`}
                                   className="font-semibold text-violet-800 underline"
                                 >
-                                  Autoriser
+                                  {t("admin.team.lwAuthRequiredLink")}
                                 </a>
                               </p>
                             ) : null}
@@ -590,8 +588,8 @@ export function TeamBoard({
         <ActivationCodeModal
           data={modal}
           onClose={() => setModal(null)}
-          title="Code d’activation équipe"
-          hint="Communiquez ce code une seule fois. Le membre finalise sur /first-access."
+          title={t("admin.team.activationTitle")}
+          hint={t("admin.team.activationHint")}
         />
       ) : null}
 
@@ -628,19 +626,18 @@ export function TeamBoard({
             className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl"
           >
             <h2 className="ko-display text-lg font-semibold text-slate-900">
-              Promouvoir en super administrateur
+              {t("admin.team.promoteTitle")}
             </h2>
             <p className="mt-2 text-sm text-slate-600">
-              Cette action est irréversible via l’interface V1. Le compte{" "}
-              <span className="font-semibold text-slate-900">
-                {[promoteTarget.firstName, promoteTarget.lastName]
-                  .filter(Boolean)
-                  .join(" ") || "cible"}
-              </span>{" "}
-              passera de admin à super_admin.
+              {t("admin.team.promoteBody", {
+                name:
+                  [promoteTarget.firstName, promoteTarget.lastName]
+                    .filter(Boolean)
+                    .join(" ") || t("admin.team.promoteTargetFallback"),
+              })}
             </p>
             <label className="mt-4 block text-sm font-medium text-slate-700">
-              Recopiez l’email exact
+              {t("admin.team.promoteEmail")}
               <input
                 type="email"
                 required
@@ -659,9 +656,7 @@ export function TeamBoard({
                 className="mt-1 h-4 w-4 rounded border-slate-300"
               />
               <span>
-                Je confirme promouvoir ce compte admin ACTIVE en super_admin KO
-                Predict™. L’autorisation LearnWorlds ACTIVE a été vérifiée ; cette
-                action ne crée pas de compte et ne contourne pas la MFA.
+                {t("admin.team.promoteAck")}
               </span>
             </label>
             <div className="mt-5 flex flex-wrap justify-end gap-2">
@@ -670,7 +665,7 @@ export function TeamBoard({
                 onClick={closePromoteModal}
                 className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
-                Annuler
+                {t("common.cancel")}
               </button>
               <button
                 type="submit"
@@ -682,7 +677,7 @@ export function TeamBoard({
                 }
                 className="rounded-xl bg-violet-700 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-800 disabled:opacity-50"
               >
-                Confirmer la promotion
+                {t("admin.team.promoteConfirm")}
               </button>
             </div>
           </form>

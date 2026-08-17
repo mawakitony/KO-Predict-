@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AvailableMetricsStrip } from "@/components/dashboard/AvailableMetricsStrip";
 import { CollectionExamCard } from "@/components/dashboard/CollectionExamCard";
@@ -15,14 +14,17 @@ import { StatusBanner } from "@/components/dashboard/StatusBanner";
 import { TrajectoryAlert } from "@/components/dashboard/TrajectoryAlert";
 import { WorkPlanSummaryCard } from "@/components/dashboard/WorkPlanSummaryCard";
 import { WhyReadinessPanel } from "@/components/dashboard/WhyReadinessPanel";
+import {
+  TranslatedLink,
+  TranslatedText,
+} from "@/components/i18n/TranslatedText";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { canAccessAdmin } from "@/lib/auth/permissions";
-import { formatDateFr } from "@/lib/dashboard/format";
 import {
-  getLearnerIssueExplanations,
   isLearnerDashboardCollecting,
   resolveLearnerPredictionUiState,
   resolveLearnerRecommendedAction,
+  resolveLearnerRecommendedActionKey,
 } from "@/lib/dashboard/learner-presentation";
 import { buildEstimationPopupContent } from "@/lib/dashboard/estimation-popup";
 import {
@@ -51,9 +53,7 @@ export default async function DashboardPage() {
     }
 
     const message =
-      error instanceof DashboardDataError
-        ? error.message
-        : "Impossible de charger le tableau de bord.";
+      error instanceof DashboardDataError ? error.message : undefined;
 
     return (
       <LearnerHubLayout
@@ -64,19 +64,20 @@ export default async function DashboardPage() {
         avatarUrl={profile?.avatarUrl}
         title="Tableau de bord indisponible"
         subtitle={message}
+        page="unavailable"
         showAdminLink={showAdmin}
       >
         <div className="ko-dash-card p-6">
-          <p className="text-slate-600">
-            Réessayez plus tard ou contactez WOLOYEM si le problème persiste.
-          </p>
+          <TranslatedText
+            messageKey="learner.retryLater"
+            className="text-slate-600"
+          />
           {showAdmin ? (
-            <Link
+            <TranslatedLink
               href="/admin"
+              messageKey="learner.goAdmin"
               className="mt-4 inline-flex font-semibold text-blue-700 hover:underline"
-            >
-              Aller à l&apos;administration
-            </Link>
+            />
           ) : null}
         </div>
       </LearnerHubLayout>
@@ -86,9 +87,8 @@ export default async function DashboardPage() {
   const { student, metrics, prediction, trajectory, dataSource } = data;
   const uiState = resolveLearnerPredictionUiState(prediction);
   const collecting = isLearnerDashboardCollecting(prediction);
-  const issueExplanations = getLearnerIssueExplanations(prediction.issues);
   const recommendedAction = resolveLearnerRecommendedAction(prediction);
-  const todayLabel = formatDateFr(new Date().toISOString().slice(0, 10));
+  const recommendedActionKey = resolveLearnerRecommendedActionKey(prediction);
   const { active: activeWorkPlan } = await loadOwnWorkPlans({
     previousLimit: 0,
   });
@@ -115,17 +115,17 @@ export default async function DashboardPage() {
       displayName={profile?.displayName}
       avatarUrl={profile?.avatarUrl}
       title="Rapport de parcours"
-      subtitle={`${student.certification}${
-        student.targetExamDate
-          ? ` · Examen le ${formatDateFr(student.targetExamDate)}`
-          : ""
-      }${collecting ? "" : ` · ${todayLabel}`}`}
+      subtitle={student.certification}
+      page="dashboard"
+      certification={student.certification}
+      examDate={student.targetExamDate}
+      collecting={collecting}
       showAdminLink={showAdmin}
       estimationPopup={buildEstimationPopupContent(prediction)}
     >
       {collecting ? (
         <div className="space-y-2.5 sm:space-y-3">
-          <CollectionHero explanations={issueExplanations} />
+          <CollectionHero issues={prediction.issues} />
 
           <WhyReadinessPanel explanation={readinessExplanation} />
 
@@ -165,10 +165,10 @@ export default async function DashboardPage() {
             collecting
           />
 
-          <p className="px-1 pb-0.5 text-center text-[11px] leading-snug text-slate-400 sm:text-xs">
-            Les analyses avancées apparaîtront automatiquement après les
-            premières données exploitables.
-          </p>
+          <TranslatedText
+            messageKey="learner.advancedLater"
+            className="px-1 pb-0.5 text-center text-[11px] leading-snug text-slate-400 sm:text-xs"
+          />
         </div>
       ) : (
         <>
@@ -249,7 +249,10 @@ export default async function DashboardPage() {
               />
             </div>
             <div className="min-w-0">
-              <RecommendationCard action={recommendedAction} />
+              <RecommendationCard
+                action={recommendedAction}
+                actionKey={recommendedActionKey}
+              />
             </div>
           </div>
 
@@ -273,8 +276,10 @@ export default async function DashboardPage() {
           />
 
           <p className="text-center text-sm text-slate-500">
-            Estimations KO Predict™ — sans garantie de réussite. Une donnée
-            manquante n&apos;est jamais un mauvais résultat.
+            <TranslatedText
+              as="span"
+              messageKey="learner.disclaimer"
+            />
           </p>
         </>
       )}

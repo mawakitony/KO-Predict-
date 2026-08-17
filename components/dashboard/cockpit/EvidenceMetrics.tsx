@@ -1,3 +1,7 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
 interface EvidenceMetricsProps {
   progressPercent: number | null;
   completedActivities: number;
@@ -6,12 +10,6 @@ interface EvidenceMetricsProps {
   recentQcmAverage: number | null;
   currentPace: number | null;
   requiredPace: number | null;
-}
-
-function formatPace(value: number | null): string {
-  if (value == null) return "Pas encore assez de données";
-  const n = Number.isInteger(value) ? String(value) : value.toFixed(1);
-  return `${n} activités / semaine`;
 }
 
 export function EvidenceMetrics({
@@ -23,40 +21,56 @@ export function EvidenceMetrics({
   currentPace,
   requiredPace,
 }: EvidenceMetricsProps) {
+  const { t } = useLanguage();
+
+  function formatPace(value: number | null): string {
+    if (value == null) return t("learner.cockpit.notEnoughData");
+    const n = Number.isInteger(value) ? String(value) : value.toFixed(1);
+    return t("learner.activitiesPerWeek", { n });
+  }
+
   return (
-    <section aria-label="Indicateurs essentiels" className="ko-cockpit-evidence">
+    <section
+      aria-label={t("learner.cockpit.evidenceAria")}
+      className="ko-cockpit-evidence"
+    >
       <article className="ko-cockpit-card ko-cockpit-metric">
-        <p className="ko-cockpit-kicker">Progression</p>
+        <p className="ko-cockpit-kicker">{t("admin.file.progress")}</p>
         <p className="ko-cockpit-metric-value">
           {progressPercent == null
-            ? "Pas encore assez de données"
+            ? t("learner.cockpit.notEnoughData")
             : `${Math.round(progressPercent)} %`}
         </p>
         <p className="ko-cockpit-muted">
-          {completedActivities} / {Math.max(totalActivities, 0)} activités
+          {t("learner.progressUi.activitiesCount", {
+            completed: completedActivities,
+            total: Math.max(totalActivities, 0),
+          })}
         </p>
       </article>
 
       <article className="ko-cockpit-card ko-cockpit-metric">
-        <p className="ko-cockpit-kicker">Performance QCM</p>
+        <p className="ko-cockpit-kicker">{t("learner.cockpit.qcmPerf")}</p>
         <p className="ko-cockpit-metric-value">
           {qcmAverage == null
-            ? "Pas encore assez de données"
+            ? t("learner.cockpit.notEnoughData")
             : `${Math.round(qcmAverage)} %`}
         </p>
         <p className="ko-cockpit-muted">
-          Moyenne récente :{" "}
-          {recentQcmAverage == null
-            ? "Pas encore assez de données"
-            : `${Math.round(recentQcmAverage)} %`}
+          {t("learner.cockpit.recentAvg", {
+            value:
+              recentQcmAverage == null
+                ? t("learner.cockpit.notEnoughData")
+                : `${Math.round(recentQcmAverage)} %`,
+          })}
         </p>
       </article>
 
       <article className="ko-cockpit-card ko-cockpit-metric">
-        <p className="ko-cockpit-kicker">Rythme</p>
+        <p className="ko-cockpit-kicker">{t("admin.file.activityPace")}</p>
         <p className="ko-cockpit-metric-value">{formatPace(currentPace)}</p>
         <p className="ko-cockpit-muted">
-          Objectif : {formatPace(requiredPace)}
+          {t("learner.cockpit.objective", { value: formatPace(requiredPace) })}
         </p>
       </article>
     </section>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import type { ReadinessExplanation } from "@/lib/prediction/explanation";
 
 export function WhyReadinessPanel({
@@ -10,16 +11,19 @@ export function WhyReadinessPanel({
 }) {
   const panelId = useId();
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
   const available = explanation.mode === "available";
   const title = available
-    ? `Pourquoi ${explanation.readinessScore} / 100 ?`
-    : "Pourquoi l’estimation n’est-elle pas encore disponible ?";
+    ? t("learner.why.scoreTitle", {
+        score: explanation.readinessScore ?? "—",
+      })
+    : t("learner.why.unavailableTitle");
   const trigger = available
-    ? "Pourquoi ce score ?"
-    : "Pourquoi l’estimation n’est pas encore disponible ?";
+    ? t("learner.why.scoreTrigger")
+    : t("learner.estimationTitle");
 
   return (
-    <section className="ko-why-panel" aria-label="Explication du score de préparation">
+    <section className="ko-why-panel" aria-label={t("learner.why.aria")}>
       <button
         type="button"
         className="ko-why-trigger"
@@ -47,17 +51,10 @@ export function WhyReadinessPanel({
 
           {available ? (
             <>
-              <p className="ko-why-lead">
-                Votre score est calculé à partir de plusieurs éléments. Les
-                contributions indiquent la part de chaque facteur dans
-                l&apos;estimation — ce ne sont pas des causes scientifiques.
-              </p>
+              <p className="ko-why-lead">{t("learner.why.scoreLead")}</p>
 
               {explanation.paceRedistributed ? (
-                <p className="ko-why-note">
-                  Le rythme n&apos;était pas calculable : son poids a été
-                  redistribué sur progression, QCM et régularité.
-                </p>
+                <p className="ko-why-note">{t("learner.why.paceRedistributed")}</p>
               ) : null}
 
               <ul className="ko-why-factors">
@@ -70,18 +67,20 @@ export function WhyReadinessPanel({
                       <span>{factor.label}</span>
                       <span>
                         {factor.excluded
-                          ? "Redistribué"
+                          ? t("learner.why.redistributed")
                           : `${factor.weightPercent} %`}
                       </span>
                     </div>
                     <p className="ko-why-factor-score">
                       {factor.factorScore == null
-                        ? "Non disponible"
+                        ? t("learner.why.unavailable")
                         : `${factor.factorScore} / 100`}
                       {factor.contributionPoints != null ? (
                         <span>
                           {" "}
-                          · Contribution : {factor.contributionPoints} pts
+                          · {t("learner.why.contribution", {
+                            pts: factor.contributionPoints,
+                          })}
                         </span>
                       ) : null}
                     </p>
@@ -92,7 +91,7 @@ export function WhyReadinessPanel({
 
               {explanation.helps.length > 0 ? (
                 <div className="ko-why-callout is-help">
-                  <p>Ce qui vous aide</p>
+                  <p>{t("learner.why.helps")}</p>
                   <ul>
                     {explanation.helps.map((item) => (
                       <li key={item}>{item}</li>
@@ -103,7 +102,7 @@ export function WhyReadinessPanel({
 
               {explanation.improve.length > 0 ? (
                 <div className="ko-why-callout is-improve">
-                  <p>À améliorer</p>
+                  <p>{t("learner.why.improve")}</p>
                   <ul>
                     {explanation.improve.map((item) => (
                       <li key={item}>{item}</li>
@@ -114,11 +113,7 @@ export function WhyReadinessPanel({
             </>
           ) : (
             <>
-              <p className="ko-why-lead">
-                KO Predict™ n&apos;affiche un score que lorsque les données
-                minimales sont présentes. Une valeur manquante n&apos;est jamais
-                un mauvais résultat.
-              </p>
+              <p className="ko-why-lead">{t("learner.why.unavailableLead")}</p>
               <ul className="ko-why-factors">
                 {explanation.unavailableReasons.map((reason) => (
                   <li key={reason} className="ko-why-factor">

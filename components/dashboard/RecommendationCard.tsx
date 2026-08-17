@@ -1,13 +1,23 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n/translate";
+
 interface RecommendationCardProps {
-  action: string | null;
+  action?: string | null;
+  actionKey?: MessageKey | null;
   /** Mode collecte : pas de texte secondaire redondant. */
   compact?: boolean;
 }
 
 export function RecommendationCard({
   action,
+  actionKey = null,
   compact = false,
 }: RecommendationCardProps) {
+  const { t } = useLanguage();
+  const title = actionKey ? t(actionKey) : (action ?? t("learner.reco.fallback"));
+
   return (
     <section
       className={`ko-action-card ko-action-reco${compact ? " is-compact" : " h-full"}`}
@@ -32,28 +42,24 @@ export function RecommendationCard({
           </svg>
         </span>
         <span id="reco-title" className="ko-action-kicker is-blue">
-          À faire maintenant
+          {t("learner.reco.kicker")}
         </span>
       </div>
 
       <p className="ko-action-title text-slate-900">
-        {action ??
-          "Continuez votre formation : KO Predict™ affinera bientôt votre estimation."}
+        {title}
       </p>
       {!compact ? (
-        <p className="ko-action-body">
-          Suivez cette action pour améliorer votre trajectoire vers
-          l&apos;examen.
-        </p>
+        <p className="ko-action-body">{t("learner.reco.body")}</p>
       ) : null}
 
       <div className="ko-action-cta-row">
         <span className="ko-dd-reco-cta">
-          Priorité du moment
+          {t("learner.reco.priority")}
           <span aria-hidden>→</span>
         </span>
         {!compact ? (
-          <span className="ko-action-hint">1 action claire</span>
+          <span className="ko-action-hint">{t("learner.reco.hint")}</span>
         ) : null}
       </div>
     </section>

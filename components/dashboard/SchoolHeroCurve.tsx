@@ -2,8 +2,16 @@
 
 import { useMemo, useState } from "react";
 import type { SchoolTrendPoint } from "@/lib/admin/school-overview";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type RangeKey = "7j" | "14j" | "30j" | "All";
+
+const RANGE_LABEL_KEY: Record<RangeKey, "admin.school.range7" | "admin.school.range14" | "admin.school.range30" | "common.all"> = {
+  "7j": "admin.school.range7",
+  "14j": "admin.school.range14",
+  "30j": "admin.school.range30",
+  All: "common.all",
+};
 
 /** Courbe monotone (sans dépassement) — plus fiable à lire qu’un Catmull-Rom. */
 function buildMonotonePath(
@@ -138,6 +146,7 @@ export function SchoolHeroChart({
   headlineValue: string;
   deltaLabel?: string | null;
 }) {
+  const { t } = useLanguage();
   const [range, setRange] = useState<RangeKey>("7j");
   const [active, setActive] = useState<number | null>(null);
 
@@ -237,7 +246,7 @@ export function SchoolHeroChart({
         </div>
 
         <div className="ko-curve-controls">
-          <div className="ko-curve-range" role="group" aria-label="Période">
+          <div className="ko-curve-range" role="group" aria-label={t("admin.school.period")}>
             {(["7j", "14j", "30j", "All"] as RangeKey[]).map((key) => (
               <button
                 key={key}
@@ -248,7 +257,7 @@ export function SchoolHeroChart({
                   setActive(null);
                 }}
               >
-                {key}
+                {t(RANGE_LABEL_KEY[key])}
               </button>
             ))}
           </div>
@@ -261,7 +270,7 @@ export function SchoolHeroChart({
           viewBox={`0 0 ${w} ${h}`}
           className="ko-curve-svg"
           role="img"
-          aria-label="Évolution de la préparation moyenne"
+          aria-label={t("admin.school.curveAriaPrep")}
         >
           {domain.ticks.map((tick) => {
             const y = yFor(tick);
@@ -385,16 +394,20 @@ export function SchoolHeroChart({
             <p className="ko-curve-tip-date">{activeMeta.label}</p>
             <p className="ko-curve-tip-value">
               {Math.round(activeMeta.value)}
-              <span> pts</span>
+              <span>{t("admin.school.pts")}</span>
             </p>
             {activeMeta.probability != null ? (
               <p className="ko-curve-tip-sub">
-                Prob. {Math.round(activeMeta.probability)} %
+                {t("admin.school.prob", {
+                  value: Math.round(activeMeta.probability),
+                })}
               </p>
             ) : null}
             {activeMeta.progress != null ? (
               <p className="ko-curve-tip-sub">
-                Progression {Math.round(activeMeta.progress)} %
+                {t("admin.school.progressTip", {
+                  value: Math.round(activeMeta.progress),
+                })}
               </p>
             ) : null}
           </div>
@@ -403,8 +416,7 @@ export function SchoolHeroChart({
 
       {!series[0]?.real ? (
         <p className="ko-curve-note">
-          Courbe illustrative — l&apos;historique réel apparaîtra après les
-          synchronisations LearnWorlds.
+          {t("admin.school.curveNote")}
         </p>
       ) : null}
     </section>

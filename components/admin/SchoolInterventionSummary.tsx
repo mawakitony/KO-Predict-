@@ -1,12 +1,17 @@
+"use client";
+
 import Link from "next/link";
 import type { CoachInterventionCard } from "@/lib/admin/interventions/types";
 import { summarizeInterventionCounts } from "@/lib/admin/interventions/summary";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { riskKey } from "@/lib/i18n/labels";
 
 export function SchoolInterventionSummary({
   cards,
 }: {
   cards: CoachInterventionCard[];
 }) {
+  const { t } = useLanguage();
   const counts = summarizeInterventionCounts(cards);
   const activeCards = cards
     .filter((c) => c.intervention.status !== "RESOLVED")
@@ -23,18 +28,17 @@ export function SchoolInterventionSummary({
             id="school-interventions-title"
             className="ko-display text-lg font-semibold text-slate-900"
           >
-            Interventions prioritaires
+            {t("admin.school.priorityTitle")}
           </h2>
           <p className="mt-1 text-sm text-slate-500">
-            Résumé coach — {counts.active} active
-            {counts.active > 1 ? "s" : ""}
+            {t("admin.school.prioritySummary", { count: counts.active })}
           </p>
         </div>
         <Link
           href="/admin?tab=kopredict"
           className="inline-flex rounded-full bg-[var(--admin-blue)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--admin-blue-hover)]"
         >
-          Voir la file complète
+          {t("admin.school.fullQueue")}
         </Link>
       </div>
 
@@ -44,13 +48,13 @@ export function SchoolInterventionSummary({
             {counts.critical}
           </p>
           <p className="text-[10px] font-bold uppercase tracking-wide text-rose-600">
-            Critiques
+            {t("admin.school.critical")}
           </p>
         </div>
         <div className="rounded-xl bg-orange-50 px-3 py-2.5 text-center ring-1 ring-orange-100">
           <p className="text-lg font-extrabold text-orange-800">{counts.red}</p>
           <p className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
-            Élevés
+            {t("admin.school.high")}
           </p>
         </div>
         <div className="rounded-xl bg-amber-50 px-3 py-2.5 text-center ring-1 ring-amber-100">
@@ -58,7 +62,7 @@ export function SchoolInterventionSummary({
             {counts.amber}
           </p>
           <p className="text-[10px] font-bold uppercase tracking-wide text-amber-800">
-            Ambre
+            {t("admin.school.amber")}
           </p>
         </div>
       </div>
@@ -74,14 +78,16 @@ export function SchoolInterventionSummary({
                 {card.row.student.fullName}
               </span>
               <span className="shrink-0 text-xs font-semibold text-slate-500">
-                {card.row.prediction.riskLevel ?? "Non évalué"}
+                {card.row.prediction.riskLevel
+                  ? card.row.prediction.riskLevel
+                  : t(riskKey(null))}
               </span>
             </li>
           ))}
         </ul>
       ) : (
         <p className="mt-4 text-sm text-slate-500">
-          Aucune intervention active pour le moment.
+          {t("admin.school.noActive")}
         </p>
       )}
     </section>

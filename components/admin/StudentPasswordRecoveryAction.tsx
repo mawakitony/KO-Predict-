@@ -6,6 +6,7 @@ import {
   type ActivationCodeModalData,
 } from "@/components/admin/ActivationCodeModal";
 import { IconMail, IconRefresh } from "@/components/admin/AdminIcons";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 /**
  * Actions d’accès pour un apprenant ACTIVE :
@@ -27,6 +28,7 @@ export function StudentPasswordRecoveryAction({
   accountStatus?: string | null;
   canManage: boolean;
 }) {
+  const { t } = useLanguage();
   const [busy, setBusy] = useState<"reset" | "email" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,9 +39,11 @@ export function StudentPasswordRecoveryAction({
   if (accountStatus === "DISABLED") {
     return (
       <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3">
-        <p className="text-sm font-semibold text-slate-800">Accès au compte</p>
+        <p className="text-sm font-semibold text-slate-800">
+          {t("admin.file.accountAccess")}
+        </p>
         <p className="mt-1 text-xs font-medium text-slate-500">
-          Réactivez d’abord le compte.
+          {t("admin.file.reactivateFirst")}
         </p>
       </div>
     );
@@ -50,9 +54,7 @@ export function StudentPasswordRecoveryAction({
   }
 
   async function issueResetCode() {
-    const ok = window.confirm(
-      "Générer un code de réinitialisation valable 60 minutes ? Communiquez-le à l’apprenant hors plateforme. Un éventuel code PENDING précédent sera révoqué.",
-    );
+    const ok = window.confirm(t("admin.learners.resetCodeConfirm"));
     if (!ok) return;
 
     setBusy("reset");
@@ -76,7 +78,7 @@ export function StudentPasswordRecoveryAction({
         email?: string;
       } | null;
       if (!res.ok || !json?.ok || !json.resetCode || !json.resetExpiresAt) {
-        setError(json?.error ?? "Émission impossible.");
+        setError(json?.error ?? t("admin.file.issueImpossible"));
         return;
       }
       setModal({
@@ -86,16 +88,16 @@ export function StudentPasswordRecoveryAction({
         expiresAt: json.resetExpiresAt,
       });
     } catch {
-      setError("Erreur réseau.");
+      setError(t("common.networkError"));
     } finally {
       setBusy(null);
     }
   }
 
   async function sendRecovery() {
-    const displayEmail = email?.trim() || "l’apprenant";
+    const displayEmail = email?.trim() || t("chrome.learnerFallback");
     const ok = window.confirm(
-      `Cette action permettra à l’apprenant de définir un nouveau mot de passe. Un email de récupération sera envoyé à ${displayEmail}.`,
+      t("admin.learners.recoveryConfirm", { email: displayEmail }),
     );
     if (!ok) return;
 
@@ -113,12 +115,12 @@ export function StudentPasswordRecoveryAction({
         error?: string;
       } | null;
       if (!res.ok || !json?.ok) {
-        setError(json?.error ?? "Envoi impossible.");
+        setError(json?.error ?? t("admin.learners.emailFail"));
         return;
       }
-      setMessage("Lien de réinitialisation envoyé.");
+      setMessage(t("admin.learners.emailSent"));
     } catch {
-      setError("Erreur réseau.");
+      setError(t("common.networkError"));
     } finally {
       setBusy(null);
     }
@@ -130,15 +132,16 @@ export function StudentPasswordRecoveryAction({
         <ActivationCodeModal
           data={modal}
           onClose={() => setModal(null)}
-          title="Code de réinitialisation"
-          hint="Communiquez ce code à l’apprenant hors plateforme. Il expire dans 60 minutes et ne pourra plus être relu."
+          title={t("admin.learners.resetCodeTitle")}
+          hint={t("admin.learners.resetCodeHint")}
         />
       ) : null}
       <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3">
-        <p className="text-sm font-semibold text-slate-800">Accès au compte</p>
+        <p className="text-sm font-semibold text-slate-800">
+          {t("admin.file.accountAccess")}
+        </p>
         <p className="mt-1 text-xs font-medium text-slate-500">
-          Mot de passe oublié : générez un code temporaire (60 min) ou envoyez
-          un lien email.
+          {t("admin.file.accessHint")}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <button
@@ -148,7 +151,9 @@ export function StudentPasswordRecoveryAction({
             className="ko-btn-blue !px-2.5 !py-1.5 text-xs"
           >
             <IconRefresh className="ko-icon-sm" />
-            {busy === "reset" ? "Génération…" : "Réinitialiser l’accès"}
+            {busy === "reset"
+              ? t("admin.file.generating")
+              : t("status.resetAccess")}
           </button>
           <button
             type="button"
@@ -157,7 +162,7 @@ export function StudentPasswordRecoveryAction({
             className="ko-btn-ghost !px-2.5 !py-1.5 text-xs"
           >
             <IconMail className="ko-icon-sm" />
-            {busy === "email" ? "Envoi…" : "Envoyer un lien"}
+            {busy === "email" ? t("common.sending") : t("admin.file.sendEmailLink")}
           </button>
         </div>
         {message ? (

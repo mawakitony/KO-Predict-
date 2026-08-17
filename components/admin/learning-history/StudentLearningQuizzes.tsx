@@ -6,13 +6,14 @@ import {
   Icon3dRefresh,
 } from "@/components/learning/Learning3dIcons";
 import {
-  activityStatusLabelFr,
   bestAssessmentScore,
   formatScorePercent,
   scoredAssessments,
   summarizeAttempts,
 } from "@/lib/admin/learning-history/parse";
-import { formatDateTimeFr } from "@/lib/dashboard/format";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { formatDateTime } from "@/lib/i18n/format-date";
+import { activityStatusKey } from "@/lib/i18n/labels";
 import type {
   LearningAssessmentAttempt,
   LearningAssessmentSummary,
@@ -48,6 +49,7 @@ export function StudentLearningQuizzes({
   recentQcmAverage: number | null;
   onRefresh: () => void;
 }) {
+  const { t, locale } = useLanguage();
   const scored = useMemo(() => scoredAssessments(assessments), [assessments]);
   const bestScore = useMemo(
     () => bestAssessmentScore(assessments),
@@ -85,7 +87,7 @@ export function StudentLearningQuizzes({
           ...prev,
           [assessmentId]: {
             status: "error",
-            message: body?.error ?? "Détail des tentatives indisponible.",
+            message: body?.error ?? t("admin.history.attemptsUnavailable"),
           },
         }));
         return;
@@ -97,8 +99,7 @@ export function StudentLearningQuizzes({
           [assessmentId]: {
             status: "unavailable",
             message:
-              body.message ??
-              "Score disponible, détail des tentatives indisponible.",
+              body.message ?? t("admin.history.scoreWithoutAttempts"),
           },
         }));
         return;
@@ -121,7 +122,7 @@ export function StudentLearningQuizzes({
         ...prev,
         [assessmentId]: {
           status: "error",
-          message: "Détail des tentatives indisponible.",
+          message: t("admin.history.attemptsUnavailable"),
         },
       }));
     }
@@ -135,19 +136,21 @@ export function StudentLearningQuizzes({
             <Icon3dQuiz className="ko-learn-3d is-sm" />
           </span>
           <div>
-            <h2 className="ko-learn-panel-title">Quiz &amp; examens</h2>
+            <h2 className="ko-learn-panel-title">{t("admin.file.quizzes")}</h2>
             <p className="ko-learn-panel-sub">
-              Scores LearnWorlds — tentatives chargées à la demande.
+              {t("admin.history.scoresHint")}
             </p>
           </div>
         </div>
         <button type="button" onClick={onRefresh} className="ko-learn-refresh">
           <Icon3dRefresh className="ko-learn-3d is-xs" />
-          Actualiser
+          {t("common.refresh")}
         </button>
       </div>
 
-      {loading ? <p className="ko-learn-loading">Chargement…</p> : null}
+      {loading ? (
+        <p className="ko-learn-loading">{t("common.loading")}</p>
+      ) : null}
       {error ? (
         <div className="ko-learn-error">
           <p>{error}</p>
@@ -158,21 +161,21 @@ export function StudentLearningQuizzes({
         <>
           <div className="ko-learn-kpi-row">
             <MiniStat
-              label="Moyenne QCM"
+              label={t("admin.file.qcmAverage")}
               value={formatScorePercent(qcmAverage)}
               icon={<Icon3dQuiz className="ko-learn-3d is-sm" />}
             />
             <MiniStat
-              label="Moyenne récente"
+              label={t("admin.file.recentQcm")}
               value={formatScorePercent(recentQcmAverage)}
               icon={<Icon3dQuiz className="ko-learn-3d is-sm" />}
             />
             <MiniStat
-              label="Évaluations scorées"
+              label={t("admin.history.scoredEvals")}
               value={String(scored.length)}
             />
             <MiniStat
-              label="Meilleur score"
+              label={t("admin.history.bestScore")}
               value={formatScorePercent(bestScore)}
             />
           </div>
@@ -191,26 +194,26 @@ export function StudentLearningQuizzes({
                       <div className="min-w-0 flex-1">
                         <p className="ko-learn-card-title">{a.name}</p>
                         <p className="ko-learn-card-meta">
-                          {a.section ?? "Sans section"} ·{" "}
-                          {activityStatusLabelFr(a.status)}
+                          {a.section ?? t("admin.file.noSection")} ·{" "}
+                          {t(activityStatusKey(a.status))}
                         </p>
                         <div className="ko-learn-card-foot">
                           <span>
-                            Score{" "}
+                            {t("common.score")}{" "}
                             <strong>{formatScorePercent(a.score)}</strong>
                           </span>
                           <span>
-                            Tentatives :{" "}
+                            {t("common.attempts")} :{" "}
                             {state.status === "ok"
                               ? String(state.attempts.length)
                               : state.status === "unavailable"
-                                ? "Indisponible"
-                                : "Non chargées"}
+                                ? t("admin.history.unavailable")
+                                : t("admin.history.notLoaded")}
                           </span>
                           <span>
-                            Date :{" "}
+                            {t("common.date")} :{" "}
                             {state.status === "ok" && state.lastSubmittedAt
-                              ? formatDateTimeFr(state.lastSubmittedAt)
+                              ? formatDateTime(state.lastSubmittedAt, locale)
                               : "—"}
                           </span>
                         </div>
@@ -226,7 +229,7 @@ export function StudentLearningQuizzes({
                         }}
                         className="ko-learn-refresh shrink-0"
                       >
-                        {open ? "Masquer" : "Voir les tentatives"}
+                        {open ? t("admin.history.hide") : t("admin.history.viewAttempts")}
                       </button>
                     </div>
 
@@ -234,7 +237,7 @@ export function StudentLearningQuizzes({
                       <div className="mt-3 border-t border-slate-200/80 pt-3">
                         {state.status === "loading" ? (
                           <p className="ko-learn-loading">
-                            Chargement des tentatives…
+                            {t("admin.history.loadingAttempts")}
                           </p>
                         ) : null}
                         {state.status === "unavailable" ||
@@ -244,7 +247,7 @@ export function StudentLearningQuizzes({
                           </p>
                         ) : null}
                         {state.status === "ok" ? (
-                          <AttemptsDetail state={state} />
+                          <AttemptsDetail state={state} locale={locale} />
                         ) : null}
                       </div>
                     ) : null}
@@ -254,7 +257,7 @@ export function StudentLearningQuizzes({
             })}
             {scored.length === 0 ? (
               <li className="ko-learn-empty">
-                Aucune évaluation scorée pour cet apprenant.
+                {t("admin.history.noScored")}
               </li>
             ) : null}
           </ul>
@@ -286,9 +289,12 @@ function MiniStat({
 
 function AttemptsDetail({
   state,
+  locale,
 }: {
   state: Extract<AttemptState, { status: "ok" }>;
+  locale: import("@/lib/i18n/storage").Locale;
 }) {
+  const { t } = useLanguage();
   const chronological = [...state.attempts].sort((a, b) => {
     const ta = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
     const tb = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
@@ -304,19 +310,21 @@ function AttemptsDetail({
             className="rounded-xl border border-slate-100 bg-white px-3 py-2.5 text-sm shadow-sm"
           >
             <p className="font-semibold text-slate-900">
-              Tentative {index + 1}
+              {t("common.attemptN", { n: index + 1 })}
             </p>
             <p className="text-slate-700">
               {formatScorePercent(attempt.grade)}
             </p>
             <p className="text-xs text-slate-500">
               {attempt.submittedAt
-                ? formatDateTimeFr(attempt.submittedAt)
-                : "Date indisponible"}
+                ? formatDateTime(attempt.submittedAt, locale)
+                : t("admin.history.dateUnavailable")}
             </p>
             {attempt.passed != null ? (
               <p className="text-xs text-slate-600">
-                {attempt.passed ? "Réussi" : "Non réussi"}
+                {attempt.passed
+                  ? t("admin.history.passed")
+                  : t("admin.history.failed")}
               </p>
             ) : null}
           </li>
@@ -324,12 +332,14 @@ function AttemptsDetail({
       </ol>
       {chronological.length > 1 ? (
         <p className="text-xs text-slate-600">
-          Meilleur score {formatScorePercent(state.bestGrade)} · Dernier score{" "}
-          {formatScorePercent(state.lastGrade)}
+          {t("admin.history.attemptBestLast", {
+            best: formatScorePercent(state.bestGrade),
+            last: formatScorePercent(state.lastGrade),
+          })}
         </p>
       ) : null}
       {chronological.length === 0 ? (
-        <p className="text-sm text-slate-500">Aucune tentative trouvée.</p>
+        <p className="text-sm text-slate-500">{t("admin.history.noAttempts")}</p>
       ) : null}
     </div>
   );

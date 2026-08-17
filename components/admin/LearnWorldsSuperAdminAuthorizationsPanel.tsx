@@ -3,12 +3,12 @@
 import { useMemo, useState, useTransition } from "react";
 import {
   LW_SA_AUTH_MFA_NEXT,
-  LW_SA_AUTH_REVOKE_NOTICE,
   LW_SA_AUTH_SECTION_ID,
   mapLwSuperAdminAuthApiError,
   type LwSuperAdminAuthorizationListItem,
 } from "@/lib/admin/learnworlds-super-admin-auth-ui";
-import { formatDateTimeFr } from "@/lib/dashboard/format";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { formatDateTime } from "@/lib/i18n/format-date";
 import { AuthorizeLearnWorldsSuperAdminModal } from "@/components/admin/AuthorizeLearnWorldsSuperAdminModal";
 import { IconBan, IconPlus, IconTeam } from "@/components/admin/AdminIcons";
 
@@ -19,6 +19,7 @@ interface LearnWorldsSuperAdminAuthorizationsPanelProps {
 export function LearnWorldsSuperAdminAuthorizationsPanel({
   initialAuthorizations,
 }: LearnWorldsSuperAdminAuthorizationsPanelProps) {
+  const { t, locale } = useLanguage();
   const [items, setItems] = useState(initialAuthorizations);
   const [error, setError] = useState<string | null>(null);
   const [mfaHref, setMfaHref] = useState<string | null>(null);
@@ -84,7 +85,7 @@ export function LearnWorldsSuperAdminAuthorizationsPanel({
         setRevokeTarget(null);
         await refresh();
       } catch {
-        setError("Erreur réseau.");
+        setError(t("common.networkError"));
       } finally {
         setBusyId(null);
       }
@@ -104,11 +105,10 @@ export function LearnWorldsSuperAdminAuthorizationsPanel({
             </span>
             <div>
               <h2 className="ko-display text-xl font-semibold text-slate-900">
-                Autorisations Super Admin LearnWorlds
+                {t("admin.team.lwAuthTitle")}
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Éligibilité explicite uniquement — jamais une promotion
-                automatique de rôle KO Predict™.
+                {t("admin.team.lwAuthSubtitle")}
               </p>
             </div>
           </div>
@@ -122,7 +122,7 @@ export function LearnWorldsSuperAdminAuthorizationsPanel({
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-violet-700 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-800 sm:w-auto"
           >
             <IconPlus className="ko-icon-sm" />
-            Autoriser un Super Admin LearnWorlds
+            {t("admin.team.lwAuthAuthorize")}
           </button>
         </div>
       </div>
@@ -135,7 +135,7 @@ export function LearnWorldsSuperAdminAuthorizationsPanel({
               href={mfaHref}
               className="mt-1 inline-flex font-semibold underline"
             >
-              Ouvrir la vérification en deux étapes
+              {t("admin.team.openMfa")}
             </a>
           ) : null}
         </div>
@@ -145,11 +145,11 @@ export function LearnWorldsSuperAdminAuthorizationsPanel({
         <table className="min-w-full text-left text-sm">
           <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-400">
             <tr>
-              <th className="px-4 py-3">Email / identité</th>
-              <th className="px-4 py-3">LearnWorlds ID</th>
-              <th className="px-4 py-3">Statut</th>
-              <th className="hidden px-4 py-3 lg:table-cell">Dates</th>
-              <th className="px-4 py-3 text-right">Actions</th>
+              <th className="px-4 py-3">{t("common.email")}</th>
+              <th className="px-4 py-3">{t("admin.team.colLwId")}</th>
+              <th className="px-4 py-3">{t("admin.learners.colAccess")}</th>
+              <th className="hidden px-4 py-3 lg:table-cell">{t("admin.team.colCreated")}</th>
+              <th className="px-4 py-3 text-right">{t("admin.learners.colAction")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -159,7 +159,7 @@ export function LearnWorldsSuperAdminAuthorizationsPanel({
                   colSpan={5}
                   className="px-4 py-8 text-center text-sm text-slate-500"
                 >
-                  Aucune autorisation pour le moment.
+                  {t("admin.team.lwAuthEmpty")}
                 </td>
               </tr>
             ) : (
@@ -177,7 +177,7 @@ export function LearnWorldsSuperAdminAuthorizationsPanel({
                         </p>
                       ) : (
                         <p className="mt-0.5 text-xs text-slate-400">
-                          Identité LW : {row.email}
+                          {t("admin.team.lwIdentity", { email: row.email })}
                         </p>
                       )}
                     </td>
@@ -198,10 +198,16 @@ export function LearnWorldsSuperAdminAuthorizationsPanel({
                       </span>
                     </td>
                     <td className="hidden px-4 py-3.5 align-middle text-slate-600 lg:table-cell">
-                      <p>Autorisé {formatDateTimeFr(row.createdAt)}</p>
+                      <p>
+                        {t("admin.team.lwAuthorizedAt", {
+                          date: formatDateTime(row.createdAt, locale),
+                        })}
+                      </p>
                       {row.revokedAt ? (
                         <p className="mt-0.5 text-xs text-slate-400">
-                          Révoqué {formatDateTimeFr(row.revokedAt)}
+                          {t("admin.team.lwRevokedAt", {
+                            date: formatDateTime(row.revokedAt, locale),
+                          })}
                         </p>
                       ) : null}
                     </td>
@@ -218,7 +224,7 @@ export function LearnWorldsSuperAdminAuthorizationsPanel({
                           className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-800 hover:bg-rose-100 disabled:opacity-50"
                         >
                           <IconBan className="ko-icon-sm" />
-                          Révoquer
+                          {t("admin.team.lwRevoke")}
                         </button>
                       ) : (
                         <span className="text-xs text-slate-400">—</span>
@@ -249,16 +255,16 @@ export function LearnWorldsSuperAdminAuthorizationsPanel({
             className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl"
           >
             <h3 className="ko-display text-lg font-semibold text-slate-900">
-              Révoquer l’autorisation
+              {t("admin.team.lwRevokeTitle")}
             </h3>
             <p className="mt-2 text-sm text-slate-600">
-              Email :{" "}
+              {t("common.email")} :{" "}
               <span className="font-semibold text-slate-900">
                 {revokeTarget.email}
               </span>
             </p>
             <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-950">
-              {LW_SA_AUTH_REVOKE_NOTICE}
+              {t("admin.team.lwRevokeNotice")}
             </p>
             <div className="mt-5 flex flex-wrap justify-end gap-2">
               <button
@@ -267,14 +273,14 @@ export function LearnWorldsSuperAdminAuthorizationsPanel({
                 disabled={pending}
                 className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
               >
-                Annuler
+                {t("common.cancel")}
               </button>
               <button
                 type="submit"
                 disabled={pending || busyId === revokeTarget.id}
                 className="min-h-11 rounded-xl bg-rose-700 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-800 disabled:opacity-50"
               >
-                Confirmer la révocation
+                {t("admin.team.lwRevokeConfirm")}
               </button>
             </div>
           </form>

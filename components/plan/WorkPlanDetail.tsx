@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
   PlanCycleCurve,
   type PlanCurvePoint,
@@ -13,20 +16,25 @@ import {
   Icon3dTarget,
 } from "@/components/plan/Plan3dIcons";
 import { SegmentedProgressBar } from "@/components/plan/SegmentedProgressBar";
-import { formatDateShortFr } from "@/lib/dashboard/format";
-import { LEARNER_COPY } from "@/lib/learner/copy";
+import { formatDateShort } from "@/lib/i18n/format-date";
+import {
+  planStatusKey,
+  planTaskStatusKey,
+  planTaskTitleKey,
+  planTypeKey,
+} from "@/lib/i18n/labels";
+import type { Locale } from "@/lib/i18n/storage";
+import type { TranslateParams, MessageKey } from "@/lib/i18n/translate";
 import type { PersistedWorkPlan } from "@/lib/planning/work-plan/memory-store";
 import { countMeasurableTasks } from "@/lib/planning/work-plan/progress";
-import { workPlanTypeLabelFr } from "@/lib/planning/work-plan/map-type";
 import {
-  buildPreviousPlanRow,
   buildWorkPlanPaceView,
   buildWorkPlanSummaryView,
   findActivitiesTask,
   formatActivitiesProgress,
   workPlanTaskProgressView,
-  workPlanTaskStatusLabelFr,
 } from "@/lib/planning/work-plan/presentation";
+import type { WorkPlanTask } from "@/lib/planning/work-plan/types";
 
 const DONUT_COLORS = [
   "#14b8a6",
@@ -36,6 +44,30 @@ const DONUT_COLORS = [
   "#ef4444",
   "#8b5cf6",
 ];
+
+function formatPlanPeriod(
+  startsAt: string,
+  endsAt: string,
+  locale: Locale,
+  unavailable: string,
+): string {
+  const start = formatDateShort(startsAt.slice(0, 10), locale);
+  const end = formatDateShort(endsAt.slice(0, 10), locale);
+  if (start === "—" || end === "—") return unavailable;
+  return `${start} → ${end}`;
+}
+
+function taskProgressLabel(
+  task: WorkPlanTask,
+  t: (key: MessageKey, params?: TranslateParams) => string,
+): string {
+  const progress = workPlanTaskProgressView(task);
+  if (task.type === "QCM_PRACTICE" || task.type === "MAINTAIN_PACE") {
+    return t("learner.planUi.qualitative");
+  }
+  if (!task.measurable) return t("admin.plan.orientation");
+  return progress.label.replace(/\s*%$/, "%");
+}
 
 function daysLeft(endsAt: string): number | null {
   const end = Date.parse(endsAt);
@@ -140,56 +172,61 @@ function buildCurveSeries(
   active: PersistedWorkPlan,
   previous: PersistedWorkPlan[],
   measurablePct: number,
+  locale: Locale,
+  t: (key: MessageKey, params?: TranslateParams) => string,
 ): { series: PlanCurvePoint[]; pace: number[]; note: string } {
   const history = [...previous]
     .slice(0, 5)
     .reverse()
     .map((plan) => ({
-      label: formatDateShortFr(plan.startsAt.slice(0, 10)),
+      label: formatDateShort(plan.startsAt.slice(0, 10), locale),
       value: measurablePctOf(plan),
-      sub: `${workPlanTypeLabelFr(plan.planType)} · ${plan.status === "COMPLETED" ? "Atteint" : "Clos"}`,
+      sub: `${t(planTypeKey(plan.planType))} · ${
+        plan.status === "COMPLETED"
+          ? t("plan.status.completed")
+          : t("learner.plan.closed")
+      }`,
       isCurrent: false,
     }));
 
-  const honestNote =
-    "État reconstruit à partir des données actuelles — aucun historique journalier n'est persisté sur les 7 jours.";
+  const honestNote = t("learner.plan.curveNote");
 
   if (history.length >= 1) {
     return {
       series: [
         ...history,
         {
-          label: "Actuel",
+          label: t("learner.plan.current"),
           value: measurablePct,
-          sub: workPlanTypeLabelFr(active.planType),
+          sub: t(planTypeKey(active.planType)),
           isCurrent: true,
         },
       ],
       pace: [],
-      note: `${honestNote} Points = plans successifs (clôture / actuel), pas une série J1–J7.`,
+      note: `${honestNote} ${t("learner.plan.curveNoteHistory")}`,
     };
   }
 
   const cycle = cycleDayIndex(active.startsAt, active.endsAt);
-  const startLabel = formatDateShortFr(active.startsAt.slice(0, 10));
-  const midLabel = `J${cycle.day}`;
+  const startLabel = formatDateShort(active.startsAt.slice(0, 10), locale);
+  const midLabel = t("learner.dayIndex", { n: cycle.day });
 
   return {
     series: [
       {
         label: startLabel,
         value: 0,
-        sub: "Début du cycle",
+        sub: t("learner.plan.cycleStart"),
       },
       {
         label: midLabel,
         value: measurablePct,
-        sub: `Jour ${cycle.day}/${cycle.total} · état actuel`,
+        sub: t("learner.plan.dayOf", { day: cycle.day, total: cycle.total }),
         isCurrent: true,
       },
     ],
     pace: [0, cycle.elapsedPct],
-    note: `${honestNote} Pointillés = rythme cible linéaire théorique.`,
+    note: `${honestNote} ${t("learner.plan.curveNotePace")}`,
   };
 }
 
@@ -200,6 +237,8 @@ export function WorkPlanDetail({
   active: PersistedWorkPlan | null;
   previous: PersistedWorkPlan[];
 }) {
+  const { t, locale } = useLanguage();
+
   if (!active) {
     return (
       <div className="ko-plan-board ko-dash-stagger">
@@ -209,13 +248,13 @@ export function WorkPlanDetail({
             style={{ width: "3.5rem", height: "3.5rem" }}
           />
           <h2 className="ko-display mt-4 text-xl font-semibold text-slate-900">
-            Aucun plan actif
+            {t("learner.plan.none")}
           </h2>
           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-600">
-            {LEARNER_COPY.planEmptySync}
+            {t("learner.planEmptySync")}
           </p>
           <Link href="/dashboard" className="ko-plan-primary-btn">
-            Retour au tableau de bord
+            {t("learner.plan.backDashboard")}
           </Link>
         </section>
       </div>
@@ -224,7 +263,6 @@ export function WorkPlanDetail({
 
   const summary = buildWorkPlanSummaryView(active);
   const paceView = buildWorkPlanPaceView(active);
-  const previousRows = previous.map(buildPreviousPlanRow);
   const activitiesTask = findActivitiesTask(active.tasks);
   const remaining = daysLeft(active.endsAt);
   const measurablePct = measurablePctOf(active);
@@ -233,12 +271,25 @@ export function WorkPlanDetail({
     active,
     previous,
     measurablePct,
+    locale,
+    t,
   );
-  const completedCount = active.tasks.filter((t) => t.status === "COMPLETED")
+  const completedCount = active.tasks.filter((task) => task.status === "COMPLETED")
     .length;
   const inProgressCount = active.tasks.filter(
-    (t) => t.status === "IN_PROGRESS",
+    (task) => task.status === "IN_PROGRESS",
   ).length;
+  const period = formatPlanPeriod(
+    active.startsAt,
+    active.endsAt,
+    locale,
+    t("learner.plan.periodUnavailable"),
+  );
+  const reevalDate = formatDateShort(active.endsAt.slice(0, 10), locale);
+  const measurableProgress = t("learner.planUi.measurableProgress", {
+    completed: summary.measurableCompleted,
+    total: summary.measurableTotal,
+  });
 
   return (
     <div className="ko-plan-board ko-dash-stagger">
@@ -246,22 +297,24 @@ export function WorkPlanDetail({
         <div className="ko-plan-hero-main">
           <p className="ko-plan-hero-kicker">
             <Icon3dSpark className="ko-plan-3d is-sm" />
-            Mon plan de progression
+            {t("learner.planTitle")}
           </p>
           <h2 className="ko-plan-hero-title">{summary.primaryObjective}</h2>
           <p className="ko-plan-hero-reason">{summary.reason}</p>
           <div className="ko-plan-hero-meta">
-            <span className="ko-plan-chip is-teal">{summary.typeLabel}</span>
-            <span className="ko-plan-chip">{summary.statusLabel}</span>
+            <span className="ko-plan-chip is-teal">
+              {t(planTypeKey(active.planType))}
+            </span>
+            <span className="ko-plan-chip">{t(planStatusKey(active.status))}</span>
             <span className="ko-plan-chip is-muted">
               <Icon3dCalendar className="ko-plan-3d is-xs" />
-              {summary.periodLabel}
+              {period}
             </span>
           </div>
         </div>
         <div
           className="ko-plan-hero-ring"
-          aria-label={`Progression ${measurablePct}%`}
+          aria-label={t("learner.planUi.ringAria", { pct: measurablePct })}
         >
           <div
             className="ko-plan-hero-ring-viz"
@@ -271,48 +324,53 @@ export function WorkPlanDetail({
           >
             <div className="ko-plan-hero-ring-hole">
               <p className="ko-plan-hero-ring-value">{measurablePct}%</p>
-              <p className="ko-plan-hero-ring-label">mesurable</p>
+              <p className="ko-plan-hero-ring-label">
+                {t("learner.planUi.measurableShort")}
+              </p>
             </div>
           </div>
           <p className="ko-plan-hero-ring-caption">
-            Jour {cycle.day}/{cycle.total} · réévaluation{" "}
-            {summary.reevaluationLabel}
+            {t("learner.planUi.dayReeval", {
+              day: cycle.day,
+              total: cycle.total,
+              date: reevalDate,
+            })}
           </p>
         </div>
       </section>
 
       <div className="ko-plan-kpi-row">
         <KpiCard
-          label="Progression plan"
+          label={t("learner.planUi.planProgress")}
           value={`${measurablePct}%`}
           icon={<Icon3dCheck />}
-          footer={summary.measurableProgressLabel}
+          footer={measurableProgress}
           footerTone={measurablePct > 0 ? "up" : "neutral"}
         />
         <KpiCard
-          label="Activités"
+          label={t("admin.plan.activities")}
           value={summary.activitiesLabel ?? "—"}
           icon={<Icon3dActivity />}
           footer={
             activitiesTask?.target != null
-              ? `Objectif ${activitiesTask.target}`
-              : "Sans cible chiffrée"
+              ? t("learner.planUi.objectiveN", { n: activitiesTask.target })
+              : t("learner.planUi.noNumericTarget")
           }
         />
         <KpiCard
-          label="Jours restants"
+          label={t("learner.planUi.daysLeft")}
           value={
             remaining == null ? "—" : remaining === 0 ? "0" : String(remaining)
           }
           icon={<Icon3dClock />}
-          footer={`Réévaluation ${summary.reevaluationLabel}`}
+          footer={t("learner.planUi.reevalShort", { date: reevalDate })}
           footerTone={remaining != null && remaining <= 2 ? "down" : "neutral"}
         />
         <KpiCard
-          label="Rythme"
-          value={paceView.valueLabel}
+          label={t("learner.planUi.pace")}
+          value={t(paceView.valueKey)}
           icon={<Icon3dTarget />}
-          footer={paceView.detailLabel}
+          footer={t(paceView.detailKey)}
           footerTone={paceView.tone}
         />
       </div>
@@ -320,19 +378,23 @@ export function WorkPlanDetail({
       <div className="ko-plan-analytics">
         <div className="ko-plan-analytics-body is-curve">
           <PlanCycleCurve
-            headline="État d'avancement du cycle"
+            headline={t("learner.planUi.curveHeadline")}
             headlineValue={`${measurablePct}%`}
-            deltaLabel={paceView.detailLabel}
+            deltaLabel={t(paceView.detailKey)}
             series={series}
             paceSeries={pace.length ? pace : undefined}
             note={note}
           />
 
           <aside className="ko-plan-breakdown">
-            <h3 className="ko-plan-breakdown-title">Répartition des tâches</h3>
+            <h3 className="ko-plan-breakdown-title">
+              {t("learner.planUi.breakdown")}
+            </h3>
             <p className="ko-plan-breakdown-hint">
-              {summary.taskCount} tâches · {summary.measurableTotal} objectifs
-              mesurables
+              {t("learner.planUi.breakdownHint", {
+                tasks: summary.taskCount,
+                measurable: summary.measurableTotal,
+              })}
             </p>
             <ol className="ko-plan-breakdown-list">
               {active.tasks.map((task, index) => {
@@ -341,12 +403,14 @@ export function WorkPlanDetail({
                   <li key={task.id} className="ko-plan-breakdown-item is-seg">
                     <span className="ko-plan-breakdown-rank">{index + 1}</span>
                     <div className="ko-plan-breakdown-copy">
-                      <span className="ko-plan-breakdown-name">{task.title}</span>
+                      <span className="ko-plan-breakdown-name">
+                        {t(planTaskTitleKey(task.type))}
+                      </span>
                       <SegmentedProgressBar
                         percent={
                           progress.showGauge ? progress.percent : null
                         }
-                        label={progress.label.replace(/\s*%$/, "%")}
+                        label={taskProgressLabel(task, t)}
                       />
                     </div>
                   </li>
@@ -356,15 +420,15 @@ export function WorkPlanDetail({
             <div className="ko-plan-breakdown-stats">
               <div>
                 <p>{completedCount}</p>
-                <span>Terminées</span>
+                <span>{t("learner.planUi.done")}</span>
               </div>
               <div>
                 <p>{inProgressCount}</p>
-                <span>En cours</span>
+                <span>{t("learner.planUi.inProgress")}</span>
               </div>
               <div>
                 <p>{active.tasks.length - completedCount - inProgressCount}</p>
-                <span>À faire</span>
+                <span>{t("learner.planUi.todo")}</span>
               </div>
             </div>
           </aside>
@@ -378,14 +442,16 @@ export function WorkPlanDetail({
           return (
             <article key={task.id} className="ko-plan-donut-card">
               <div className="min-w-0">
-                <p className="ko-plan-donut-label">{task.title}</p>
+                <p className="ko-plan-donut-label">
+                  {t(planTaskTitleKey(task.type))}
+                </p>
                 <p className="ko-plan-donut-value">
                   {progress.showGauge && progress.percent != null
                     ? `${progress.percent}%`
-                    : progress.label}
+                    : taskProgressLabel(task, t)}
                 </p>
                 <p className="ko-plan-donut-status">
-                  {workPlanTaskStatusLabelFr(task.status)}
+                  {t(planTaskStatusKey(task.status))}
                 </p>
               </div>
               <MiniDonut
@@ -401,21 +467,24 @@ export function WorkPlanDetail({
       <section className="ko-plan-table-card">
         <div className="ko-plan-table-head">
           <div>
-            <h3>Détail des tâches</h3>
+            <h3>{t("learner.planUi.detail")}</h3>
             <p className="ko-plan-table-sub">
-              {summary.taskCount} tâches · {summary.measurableProgressLabel}
+              {t("learner.planUi.detailSub", {
+                count: summary.taskCount,
+                progress: measurableProgress,
+              })}
             </p>
           </div>
-          <p>{active.tasks.length} éléments</p>
+          <p>{t("learner.planUi.items", { n: active.tasks.length })}</p>
         </div>
         <div className="overflow-x-auto">
           <table className="ko-plan-table">
             <thead>
               <tr>
-                <th>Tâche</th>
-                <th>Statut</th>
-                <th>Progression</th>
-                <th>Motif</th>
+                <th>{t("learner.planUi.colTask")}</th>
+                <th>{t("learner.planUi.colStatus")}</th>
+                <th>{t("learner.planUi.colProgress")}</th>
+                <th>{t("learner.planUi.colReason")}</th>
               </tr>
             </thead>
             <tbody>
@@ -429,7 +498,7 @@ export function WorkPlanDetail({
                   <tr key={task.id}>
                     <td>
                       <p className="font-semibold text-slate-900">
-                        {task.title}
+                        {t(planTaskTitleKey(task.type))}
                       </p>
                       <p className="mt-0.5 text-xs text-slate-500">
                         {task.description}
@@ -439,7 +508,7 @@ export function WorkPlanDetail({
                       <span
                         className={`ko-plan-status-pill is-${task.status.toLowerCase()}`}
                       >
-                        {workPlanTaskStatusLabelFr(task.status)}
+                        {t(planTaskStatusKey(task.status))}
                       </span>
                     </td>
                     <td>
@@ -453,7 +522,7 @@ export function WorkPlanDetail({
                           percent={
                             progress.showGauge ? progress.percent : null
                           }
-                          label={progress.label.replace(/\s*%$/, "%")}
+                          label={taskProgressLabel(task, t)}
                         />
                       </div>
                     </td>
@@ -466,31 +535,42 @@ export function WorkPlanDetail({
         </div>
       </section>
 
-      {previousRows.length > 0 ? (
+      {previous.length > 0 ? (
         <section className="ko-plan-table-card">
           <div className="ko-plan-table-head">
-            <h3>Historique</h3>
-            <p>{previousRows.length} plan(s)</p>
+            <h3>{t("learner.planUi.history")}</h3>
+            <p>{t("learner.planUi.plansN", { n: previous.length })}</p>
           </div>
           <div className="overflow-x-auto">
             <table className="ko-plan-table">
               <thead>
                 <tr>
-                  <th>Plan</th>
-                  <th>Période</th>
-                  <th>Statut</th>
-                  <th>Activités</th>
+                  <th>{t("learner.planUi.colPlan")}</th>
+                  <th>{t("learner.planUi.colPeriod")}</th>
+                  <th>{t("learner.planUi.colStatus")}</th>
+                  <th>{t("admin.plan.activities")}</th>
                 </tr>
               </thead>
               <tbody>
-                {previousRows.map((row) => (
-                  <tr key={row.id}>
+                {previous.map((plan) => (
+                  <tr key={plan.id}>
                     <td className="font-semibold text-slate-900">
-                      {row.typeLabel}
+                      {t(planTypeKey(plan.planType))}
                     </td>
-                    <td>{row.periodLabel}</td>
-                    <td>{row.statusLabel}</td>
-                    <td>{row.activitiesLabel ?? "—"}</td>
+                    <td>
+                      {formatPlanPeriod(
+                        plan.startsAt,
+                        plan.endsAt,
+                        locale,
+                        t("learner.plan.periodUnavailable"),
+                      )}
+                    </td>
+                    <td>{t(planStatusKey(plan.status))}</td>
+                    <td>
+                      {formatActivitiesProgress(
+                        findActivitiesTask(plan.tasks),
+                      ) ?? "—"}
+                    </td>
                   </tr>
                 ))}
               </tbody>

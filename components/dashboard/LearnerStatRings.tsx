@@ -1,6 +1,8 @@
 "use client";
 
 import { useId, useMemo, useState, type ReactNode } from "react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n/translate";
 
 interface LearnerStatRingsProps {
   readiness: number | null;
@@ -14,15 +16,15 @@ type MetricKey = "readiness" | "probability" | "progress" | "pace";
 
 const METRICS: Array<{
   key: MetricKey;
-  label: string;
-  unit: string;
+  labelKey: MessageKey;
+  unit: "pts" | "%" | "week";
   color: string;
   soft: string;
   Icon: (props: { color: string }) => ReactNode;
 }> = [
   {
     key: "readiness",
-    label: "Préparation",
+    labelKey: "admin.file.preparation",
     unit: "pts",
     color: "var(--brand)",
     soft: "var(--brand-soft)",
@@ -30,7 +32,7 @@ const METRICS: Array<{
   },
   {
     key: "probability",
-    label: "Probabilité",
+    labelKey: "admin.file.probability",
     unit: "%",
     color: "var(--accent)",
     soft: "var(--accent-soft)",
@@ -38,7 +40,7 @@ const METRICS: Array<{
   },
   {
     key: "progress",
-    label: "Progression",
+    labelKey: "admin.file.progress",
     unit: "%",
     color: "var(--info)",
     soft: "var(--info-soft)",
@@ -46,8 +48,8 @@ const METRICS: Array<{
   },
   {
     key: "pace",
-    label: "Rythme",
-    unit: "/sem.",
+    labelKey: "admin.file.activityPace",
+    unit: "week",
     color: "var(--violet)",
     soft: "var(--violet-soft)",
     Icon: IconPulse,
@@ -180,6 +182,7 @@ function RadarChart({
   labels: Array<{ name: string; value: string }>;
   emphasize: "actuel" | "objectif";
 }) {
+  const { t } = useLanguage();
   const gid = useId().replace(/:/g, "");
   const size = 340;
   const cx = size / 2;
@@ -219,7 +222,7 @@ function RadarChart({
       viewBox={`0 0 ${size} ${size}`}
       className="ko-analysis-radar"
       role="img"
-      aria-label="Radar des indicateurs"
+      aria-label={t("learner.rings.radarAria")}
     >
       <defs>
         <filter
@@ -427,7 +430,14 @@ export function LearnerStatRings({
   currentPace = null,
   requiredPace = null,
 }: LearnerStatRingsProps) {
+  const { t } = useLanguage();
   const [mode, setMode] = useState<"actuel" | "objectif">("actuel");
+
+  function unitLabel(unit: "pts" | "%" | "week"): string {
+    if (unit === "week") return t("learner.unitPerWeek");
+    if (unit === "pts") return t("learner.unitPts");
+    return unit;
+  }
 
   const rows = useMemo(() => {
     const paceValue =
@@ -487,10 +497,10 @@ export function LearnerStatRings({
   const actualSeries = rows.map((r) => r.actualRadar);
   const targetSeries = rows.map((r) => r.targetRadar);
   const shortName: Record<MetricKey, string> = {
-    readiness: "Prépa.",
-    probability: "Proba.",
-    progress: "Prog.",
-    pace: "Rythme",
+    readiness: t("learner.rings.shortPrep"),
+    probability: t("learner.rings.shortProb"),
+    progress: t("learner.rings.shortProg"),
+    pace: t("admin.file.activityPace"),
   };
   const radarLabels = rows.map((r) => {
     const shown = mode === "objectif" ? r.target : r.display;
@@ -499,9 +509,9 @@ export function LearnerStatRings({
     const value = empty
       ? "—"
       : r.key === "pace"
-        ? `${rounded}/s`
+        ? t("admin.file.perWeek", { value: rounded })
         : r.key === "readiness"
-          ? `${rounded} pts`
+          ? t("learner.glance.pts", { n: rounded })
           : `${rounded}%`;
     return { name: shortName[r.key], value };
   });
@@ -511,13 +521,13 @@ export function LearnerStatRings({
       <div className="ko-analysis-head">
         <div>
           <h2 className="ko-display text-[1.2rem] font-bold tracking-tight text-slate-900">
-            Analyse
+            {t("learner.rings.title")}
           </h2>
           <p className="mt-0.5 text-[0.78rem] font-medium text-slate-400">
-            Vue comparative de ta trajectoire
+            {t("learner.rings.subtitle")}
           </p>
         </div>
-        <div className="ko-analysis-toggle" role="tablist" aria-label="Série">
+        <div className="ko-analysis-toggle" role="tablist" aria-label={t("learner.rings.series")}>
           <button
             type="button"
             role="tab"
@@ -525,7 +535,7 @@ export function LearnerStatRings({
             className={mode === "actuel" ? "is-active" : ""}
             onClick={() => setMode("actuel")}
           >
-            Actuel
+            {t("learner.analytics.current")}
           </button>
           <button
             type="button"
@@ -534,7 +544,7 @@ export function LearnerStatRings({
             className={mode === "objectif" ? "is-active" : ""}
             onClick={() => setMode("objectif")}
           >
-            Objectif
+            {t("learner.analytics.target")}
           </button>
         </div>
       </div>
@@ -567,7 +577,7 @@ export function LearnerStatRings({
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="ko-analysis-label">{row.label}</p>
+                    <p className="ko-analysis-label">{t(row.labelKey)}</p>
                     {reach != null ? (
                       <span
                         className={`ko-analysis-delta ${
@@ -581,7 +591,7 @@ export function LearnerStatRings({
                   <p className="ko-analysis-value">
                     {empty ? "—" : Math.round(shown * 10) / 10}
                     {!empty ? (
-                      <span className="ko-analysis-unit">{row.unit}</span>
+                      <span className="ko-analysis-unit">{unitLabel(row.unit)}</span>
                     ) : null}
                   </p>
                   <div className="ko-analysis-bar" aria-hidden>
@@ -622,11 +632,11 @@ export function LearnerStatRings({
           <div className="ko-analysis-legend">
             <span className={mode === "actuel" ? "is-on" : ""}>
               <i className="bg-[var(--brand)]" />
-              Actuel
+              {t("learner.analytics.current")}
             </span>
             <span className={mode === "objectif" ? "is-on" : ""}>
               <i className="bg-[var(--accent)]" />
-              Objectif
+              {t("learner.analytics.target")}
             </span>
           </div>
         </div>

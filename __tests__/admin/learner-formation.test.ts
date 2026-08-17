@@ -116,7 +116,7 @@ describe("formation fiche admin", () => {
       path.join(process.cwd(), "components/admin/StudentProfileBoard.tsx"),
       "utf8",
     );
-    expect(src).toMatch(/label="Formation"/);
+    expect(src).toMatch(/admin\.file\.formation/);
     expect(src).not.toMatch(/label="Certification"/);
     expect(src).toMatch(/detail\.formation/);
     expect(src).not.toMatch(/student\.certification/);

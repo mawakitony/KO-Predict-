@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { LearnerStatRings } from "@/components/dashboard/LearnerStatRings";
 
 interface DetailedAnalysisProps {
@@ -13,12 +14,13 @@ interface DetailedAnalysisProps {
 
 export function DetailedAnalysis(props: DetailedAnalysisProps) {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <section className="ko-cockpit-analysis" aria-labelledby="analysis-title">
       <div className="hidden lg:block">
         <p className="ko-cockpit-kicker mb-3" id="analysis-title">
-          Analyse détaillée
+            {t("learner.cockpit.detailed")}
         </p>
         <LearnerStatRings
           readiness={props.readiness}
@@ -38,9 +40,11 @@ export function DetailedAnalysis(props: DetailedAnalysisProps) {
           onClick={() => setOpen((v) => !v)}
         >
           <span>
-            <span className="ko-cockpit-kicker block">Analyse détaillée</span>
+            <span className="ko-cockpit-kicker block">
+              {t("learner.cockpit.detailed")}
+            </span>
             <span className="text-sm font-semibold text-slate-700">
-              Voir l&apos;analyse détaillée
+              {t("learner.cockpit.seeDetailed")}
             </span>
           </span>
           <span className="ko-cockpit-accordion-icon" aria-hidden>

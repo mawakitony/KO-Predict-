@@ -1,36 +1,27 @@
-import { format, parseISO } from "date-fns";
-import { fr } from "date-fns/locale";
+import { formatDate, formatDateShort, formatDateTime } from "@/lib/i18n/format-date";
+import { paceKey, riskKey } from "@/lib/i18n/labels";
+import { translate } from "@/lib/i18n/translate";
 import type { PaceStatus, RiskLevel } from "@/types/prediction";
 
 export function formatDateFr(date: string | null | undefined): string {
-  if (!date) return "Donnée insuffisante";
-  try {
-    return format(parseISO(date), "d MMMM yyyy", { locale: fr });
-  } catch {
-    return "Donnée insuffisante";
-  }
+  return formatDate(date, "fr");
 }
 
 export function formatDateShortFr(date: string | null | undefined): string {
-  if (!date) return "—";
-  try {
-    return format(parseISO(date), "d MMMM", { locale: fr });
-  } catch {
-    return "—";
-  }
+  return formatDateShort(date, "fr");
 }
 
 export function formatDateTimeFr(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  try {
-    return format(parseISO(iso), "d MMMM yyyy 'à' HH:mm", { locale: fr });
-  } catch {
-    return "—";
-  }
+  return formatDateTime(iso, "fr");
 }
 
-export function formatPercent(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value)) return "Donnée insuffisante";
+export function formatPercent(
+  value: number | null | undefined,
+  locale: import("@/lib/i18n/storage").Locale = "fr",
+): string {
+  if (value == null || Number.isNaN(value)) {
+    return translate(locale, "date.unavailable");
+  }
   return `${Math.round(value)} %`;
 }
 
@@ -39,43 +30,29 @@ export function formatScore(value: number | null | undefined): string {
   return `${Math.round(value)}`;
 }
 
-export function formatPace(value: number | null | undefined): string {
+export function formatPace(
+  value: number | null | undefined,
+  locale: import("@/lib/i18n/storage").Locale = "fr",
+): string {
   if (value == null || Number.isNaN(value)) {
-    return "Pas encore assez d'activité pour calculer votre rythme.";
+    return translate(locale, "learner.issue.zeroPace");
   }
-  return `${value} activités / semaine`;
+  return translate(locale, "learner.activitiesPerWeek", { n: value });
 }
 
-export function riskLabel(level: RiskLevel | null): string {
-  switch (level) {
-    case "GREEN":
-      return "Trajectoire maîtrisée";
-    case "AMBER":
-      return "À surveiller";
-    case "RED":
-      return "Risque élevé";
-    case "CRITICAL":
-      return "Risque élevé";
-    default:
-      return "Non évalué";
-  }
+export function riskLabel(
+  level: RiskLevel | null,
+  locale: import("@/lib/i18n/storage").Locale = "fr",
+): string {
+  if (level == null) return translate(locale, "risk.unevaluated");
+  return translate(locale, riskKey(level));
 }
 
-export function paceStatusLabel(status: PaceStatus | null): string {
-  switch (status) {
-    case "ON_TRACK":
-      return "Sur la bonne trajectoire";
-    case "SLIGHTLY_BEHIND":
-      return "Légèrement en retard";
-    case "BEHIND":
-      return "En retard";
-    case "AHEAD":
-      return "En avance";
-    case "NO_ACTIVITY":
-      return "Aucune activité";
-    default:
-      return "Statut indisponible";
-  }
+export function paceStatusLabel(
+  status: PaceStatus | null,
+  locale: import("@/lib/i18n/storage").Locale = "fr",
+): string {
+  return translate(locale, paceKey(status));
 }
 
 export function riskToneClasses(level: RiskLevel | null): {

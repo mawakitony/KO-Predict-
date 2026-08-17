@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n/translate";
 
 type AnalyticsTab = "readiness" | "progress" | "probability" | "pace";
 
@@ -18,11 +20,11 @@ interface LearnerAnalyticsPanelProps {
   certification: string;
 }
 
-const TABS: Array<{ id: AnalyticsTab; label: string }> = [
-  { id: "readiness", label: "Préparation" },
-  { id: "progress", label: "Progression" },
-  { id: "probability", label: "Probabilité" },
-  { id: "pace", label: "Rythme" },
+const TABS: Array<{ id: AnalyticsTab; key: MessageKey }> = [
+  { id: "readiness", key: "admin.file.preparation" },
+  { id: "progress", key: "admin.file.progress" },
+  { id: "probability", key: "admin.file.probability" },
+  { id: "pace", key: "admin.file.activityPace" },
 ];
 
 function buildSeries(endValue: number, points = 7): number[] {
@@ -82,6 +84,7 @@ function BarChart({
   labels: string[];
   ghost?: boolean;
 }) {
+  const { t } = useLanguage();
   const max = Math.max(...primary, ...secondary, 1) * 1.15;
   const plotHeight = 200;
   const [hover, setHover] = useState<number | null>(null);
@@ -91,7 +94,9 @@ function BarChart({
       <div
         className="flex h-[230px] items-stretch gap-2 sm:gap-3"
         role="img"
-        aria-label={ghost ? "Aperçu du futur graphique" : "Histogramme d'évolution"}
+        aria-label={
+          ghost ? t("learner.analytics.previewAria") : t("learner.analytics.chartAria")
+        }
       >
         {primary.map((p, i) => {
           const s = secondary[i] ?? 0;
@@ -111,7 +116,10 @@ function BarChart({
             >
               {active ? (
                 <span className="ko-dd-tooltip pointer-events-none absolute bottom-[calc(100%-0.5rem)] z-10 whitespace-nowrap">
-                  Actuel {Math.round(p)} · Objectif {Math.round(s)}
+                  {t("learner.analytics.tooltip", {
+                    current: Math.round(p),
+                    target: Math.round(s),
+                  })}
                 </span>
               ) : null}
               <div className="flex h-[200px] w-full max-w-[2.6rem] items-end justify-center gap-1 sm:max-w-[3.1rem]">
@@ -143,6 +151,7 @@ function BarChart({
 
 /** Panneau histogramme DealDeck — rempli ou aperçu pendant la collecte. */
 export function LearnerAnalyticsPanel(props: LearnerAnalyticsPanelProps) {
+  const { t } = useLanguage();
   const {
     readiness,
     progress,
@@ -168,29 +177,29 @@ export function LearnerAnalyticsPanel(props: LearnerAnalyticsPanelProps) {
         end: readiness ?? 0,
         target: 100,
         empty: readiness == null,
-        title: "Évolution de la préparation",
+        title: t("learner.analytics.readinessTrend"),
         unit: "pts",
       },
       progress: {
         end: progress ?? 0,
         target: 100,
         empty: progress == null,
-        title: "Évolution de la progression",
+        title: t("learner.analytics.progressTrend"),
         unit: "%",
       },
       probability: {
         end: probability ?? 0,
         target: 80,
         empty: probability == null,
-        title: "Évolution de la probabilité",
+        title: t("learner.analytics.probabilityTrend"),
         unit: "%",
       },
       pace: {
         end: currentPace != null && currentPace > 0 ? currentPace : 0,
         target: requiredPace ?? Math.max(currentPace ?? 1, 1),
         empty: currentPace == null || currentPace <= 0,
-        title: "Évolution du rythme",
-        unit: "/sem.",
+        title: t("learner.analytics.paceTrend"),
+        unit: t("learner.unitPerWeek"),
       },
     };
     const active = map[tab];
@@ -206,9 +215,11 @@ export function LearnerAnalyticsPanel(props: LearnerAnalyticsPanelProps) {
           ),
         );
     return { ...active, primary, secondary };
-  }, [tab, readiness, progress, probability, currentPace, requiredPace]);
+  }, [tab, readiness, progress, probability, currentPace, requiredPace, t]);
 
-  const labels = ["J-18", "J-15", "J-12", "J-9", "J-6", "J-3", "Now"];
+  const labels = [18, 15, 12, 9, 6, 3]
+    .map((n) => t("learner.dayMinus", { n }))
+    .concat(t("learner.analytics.now"));
 
   const sideStats: Array<{
     label: string;
@@ -218,30 +229,30 @@ export function LearnerAnalyticsPanel(props: LearnerAnalyticsPanelProps) {
     tone: string;
   }> = [
     {
-      label: "Temps d'étude",
-      value: `${studyTimeMinutes} min`,
-      hint: "Total enregistré",
+      label: t("admin.file.studyTime"),
+      value: t("admin.file.studyTimeMin", { minutes: studyTimeMinutes }),
+      hint: t("learner.analytics.totalRecorded"),
       icon: <IconClock />,
       tone: "#2563eb",
     },
     {
-      label: "Activités",
+      label: t("admin.file.activities"),
       value: `${completedActivities}/${totalActivities}`,
-      hint: "Terminées / totales",
+      hint: t("learner.analytics.completedOf"),
       icon: <IconBook />,
       tone: "#0d9488",
     },
     {
-      label: "Moyenne QCM",
+      label: t("admin.file.qcmAverage"),
       value: qcmAverage != null ? `${Math.round(qcmAverage)}%` : "—",
-      hint: qcmAverage == null ? "Pas encore de QCM" : "Score moyen",
+      hint: qcmAverage == null ? t("learner.analytics.noQcm") : t("learner.analytics.avgScore"),
       icon: <IconQuiz />,
       tone: "#0ea5e9",
     },
     {
-      label: "Inactivité",
-      value: `${inactiveDays} j`,
-      hint: "Sans activité récente",
+      label: t("learner.analytics.inactivity"),
+      value: t("admin.file.inactivityDays", { days: inactiveDays }),
+      hint: t("learner.analytics.noRecent"),
       icon: <IconPause />,
       tone: "#64748b",
     },
@@ -253,11 +264,13 @@ export function LearnerAnalyticsPanel(props: LearnerAnalyticsPanelProps) {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="ko-display text-lg font-bold text-slate-900">
-              Habitudes d&apos;apprentissage
+              {t("learner.analytics.title")}
             </h2>
             <span className={`ko-habits-badge ${chart.empty ? "is-wait" : "is-live"}`}>
               <span className="ko-analytics-pulse" />
-              {chart.empty ? "Collecte" : "Live"}
+              {chart.empty
+                ? t("learner.analytics.collecting")
+                : t("learner.analytics.live")}
             </span>
           </div>
           <p className="mt-1 text-sm text-slate-500">
@@ -267,16 +280,16 @@ export function LearnerAnalyticsPanel(props: LearnerAnalyticsPanelProps) {
         <div className="ko-habits-legend">
           <span>
             <i className="bg-[#2563eb]" />
-            Actuel
+            {t("learner.analytics.current")}
           </span>
           <span>
             <i className="bg-[#93c5fd]" />
-            Objectif
+            {t("learner.analytics.target")}
           </span>
         </div>
       </div>
 
-      <div className="ko-habits-tabs" role="tablist" aria-label="Indicateur">
+      <div className="ko-habits-tabs" role="tablist" aria-label={t("learner.analytics.indicator")}>
         {TABS.map((item) => {
           const active = tab === item.id;
           return (
@@ -288,7 +301,7 @@ export function LearnerAnalyticsPanel(props: LearnerAnalyticsPanelProps) {
               onClick={() => setTab(item.id)}
               className={`ko-habits-tab ${active ? "is-active" : ""}`}
             >
-              {item.label}
+              {t(item.key)}
             </button>
           );
         })}
@@ -300,14 +313,15 @@ export function LearnerAnalyticsPanel(props: LearnerAnalyticsPanelProps) {
             <div className="ko-habits-empty-banner">
               <div>
                 <p className="ko-display text-base font-bold text-slate-900">
-                  Graphique en préparation
+                  {t("learner.analytics.chartSoon")}
                 </p>
                 <p className="mt-1 max-w-xl text-sm text-slate-600">
-                  Aperçu ci-dessous : les vraies barres apparaîtront dès que KO
-                  Predict™ aura assez de données.
+                  {t("learner.analytics.chartSoonBody")}
                 </p>
               </div>
-              <span className="ko-habits-empty-pill">Bientôt disponible</span>
+              <span className="ko-habits-empty-pill">
+                {t("learner.analytics.comingSoon")}
+              </span>
             </div>
             <BarChart
               key={`ghost-${tab}`}
@@ -327,7 +341,7 @@ export function LearnerAnalyticsPanel(props: LearnerAnalyticsPanelProps) {
                 </span>
               </p>
               <p className="mb-1 text-sm font-semibold text-slate-500">
-                valeur actuelle
+                {t("learner.analytics.currentValue")}
               </p>
             </div>
             <BarChart

@@ -1,3 +1,7 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
 const DEFAULT_SEGMENTS = 28;
 
 /**
@@ -15,6 +19,7 @@ export function SegmentedProgressBar({
   segments?: number;
   className?: string;
 }) {
+  const { t } = useLanguage();
   const isQualitative = percent == null;
   const clamped = isQualitative
     ? 0
@@ -28,13 +33,15 @@ export function SegmentedProgressBar({
       className={`ko-seg-progress${isQualitative ? " is-qualitative" : ""}${className ? ` ${className}` : ""}`}
       role="img"
       aria-label={
-        isQualitative ? label : `Progression ${clamped} pour cent`
+        isQualitative
+          ? label
+          : t("learner.planUi.ringAria", { pct: clamped })
       }
     >
       <div className="ko-seg-track" aria-hidden>
         {Array.from({ length: segments }, (_, i) => {
           const active = i < filled;
-          const t = segments <= 1 ? 0 : i / (segments - 1);
+          const stop = segments <= 1 ? 0 : i / (segments - 1);
           return (
             <span
               key={i}
@@ -42,7 +49,7 @@ export function SegmentedProgressBar({
               style={
                 active
                   ? {
-                      background: `linear-gradient(180deg, ${lerpGreen(t)} 0%, ${lerpGreenDeep(t)} 100%)`,
+                      background: `linear-gradient(180deg, ${lerpGreen(stop)} 0%, ${lerpGreenDeep(stop)} 100%)`,
                     }
                   : undefined
               }

@@ -1,10 +1,11 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { paceKey, riskKey } from "@/lib/i18n/labels";
 import type { PaceStatus, RiskLevel } from "@/types/prediction";
-import {
-  paceStatusLabel,
-  riskLabel,
-  riskToneClasses,
-} from "@/lib/dashboard/format";
+import { riskToneClasses } from "@/lib/dashboard/format";
 import type { LearnerPredictionUiState } from "@/lib/dashboard/learner-presentation";
+import type { MessageKey } from "@/lib/i18n/translate";
 
 interface StatusBannerProps {
   paceStatus: PaceStatus | null;
@@ -12,20 +13,20 @@ interface StatusBannerProps {
   uiState?: LearnerPredictionUiState;
 }
 
-function paceExplanation(status: PaceStatus | null): string {
+function paceExplanationKey(status: PaceStatus | null): MessageKey {
   switch (status) {
     case "ON_TRACK":
-      return "Vous avancez au bon rythme pour viser votre date d’examen.";
+      return "learner.status.onTrack";
     case "SLIGHTLY_BEHIND":
-      return "Un petit effort supplémentaire vous remettra sur la bonne trajectoire.";
+      return "learner.status.extraEffort";
     case "BEHIND":
-      return "Votre rythme est insuffisant pour la date cible. Augmentez vos activités cette semaine.";
+      return "learner.status.behind";
     case "AHEAD":
-      return "Vous êtes en avance : maintenez ce rythme pour arriver serein le jour J.";
+      return "learner.status.ahead";
     case "NO_ACTIVITY":
-      return "Aucune activité récente détectée. Reprenez votre formation pour mettre à jour l’estimation.";
+      return "learner.status.noActivity";
     default:
-      return "Le statut de rythme n’est pas encore disponible.";
+      return "pace.unavailable";
   }
 }
 
@@ -50,15 +51,16 @@ export function StatusBanner({
   riskLevel,
   uiState,
 }: StatusBannerProps) {
+  const { t } = useLanguage();
   const collecting =
     uiState === "COLLECTING_DATA" || uiState === "INSUFFICIENT_DATA";
   const tone = riskToneClasses(collecting ? null : riskLevel);
 
   const title = collecting
     ? uiState === "COLLECTING_DATA"
-      ? "Collecte de données en cours"
-      : "Données insuffisantes pour une estimation complète"
-    : paceStatusLabel(paceStatus);
+      ? t("learner.status.collecting")
+      : t("learner.status.insufficient")
+    : t(paceKey(paceStatus));
 
   return (
     <section
@@ -69,7 +71,7 @@ export function StatusBanner({
         <span className={`ko-action-icon ${collecting ? "is-blue" : ""}`}>
           <StatusIcon collecting={collecting} />
         </span>
-        <span className="ko-action-kicker">Votre situation</span>
+        <span className="ko-action-kicker">{t("learner.status.yourSituation")}</span>
       </div>
 
       <h2 id="status-title" className={`ko-action-title ${tone.text}`}>
@@ -78,29 +80,26 @@ export function StatusBanner({
 
       {collecting ? (
         <>
-          <p className="ko-action-body">
-            Ce n&apos;est pas un mauvais résultat : KO Predict™ n&apos;a pas
-            encore assez d&apos;informations pour évaluer votre préparation.
-          </p>
+          <p className="ko-action-body">{t("learner.status.notFailure")}</p>
           <div className="ko-action-chips">
             <span className="ko-action-chip is-soft">
               <span className="ko-analytics-pulse" />
-              Estimation en préparation
+              {t("learner.status.preparing")}
             </span>
-            <span className="ko-action-chip">Pas un échec</span>
+            <span className="ko-action-chip">{t("learner.status.notFailChip")}</span>
           </div>
         </>
       ) : (
         <>
-          <p className="ko-action-body">{paceExplanation(paceStatus)}</p>
+          <p className="ko-action-body">{t(paceExplanationKey(paceStatus))}</p>
           <div className="ko-action-chips">
             <span className="text-sm font-semibold text-slate-600">
-              Niveau de risque
+              {t("admin.file.riskLevel")}
             </span>
             <span
               className={`inline-flex rounded-full px-3 py-1 text-sm font-bold ${tone.badge}`}
             >
-              {riskLabel(riskLevel)}
+              {t(riskKey(riskLevel))}
             </span>
           </div>
         </>

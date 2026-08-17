@@ -17,6 +17,8 @@ import {
   useAdminLearnersChrome,
 } from "@/components/admin/AdminLearnersHeaderTabs";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { LanguageToggle } from "@/components/i18n/LanguageToggle";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { ClientInspectionDeterrent } from "@/components/security/ClientInspectionDeterrent";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -107,6 +109,7 @@ function AdminNavLinks({
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const onKoPredict =
     pathname === "/admin" && searchParams.get("tab") === "kopredict";
   const onAllLearners =
@@ -121,7 +124,7 @@ function AdminNavLinks({
     <>
       <NavItem
         href="/admin"
-        label="Apprenants"
+        label={t("nav.learners")}
         active={onAllLearners}
         icon={<IconUsers className="ko-icon" />}
       />
@@ -129,27 +132,27 @@ function AdminNavLinks({
       {canManageTeam ? (
         <NavItem
           href="/admin/team"
-          label="Équipe WOLOYEM"
+          label={t("nav.team")}
           active={onTeam}
           icon={<IconTeam className="ko-icon" />}
         />
       ) : null}
       <NavItem
         href="/admin/ecole"
-        label="Tableau de bord de l'école"
+        label={t("nav.schoolDashboard")}
         active={onSchool}
         icon={<IconDashboard className="ko-icon" />}
       />
       <NavItem
         href="/profile"
-        label="Mon profil"
+        label={t("nav.profile")}
         active={onProfile}
         icon={<IconUser className="ko-icon" />}
       />
       {showSecurityLink ? (
         <NavItem
           href="/account/security"
-          label="Sécurité"
+          label={t("nav.security")}
           active={onSecurity}
           icon={<IconSpark className="ko-icon" />}
         />
@@ -161,6 +164,7 @@ function AdminNavLinks({
 function AdminHeaderMeta() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const { studentFocus } = useAdminLearnersChrome();
   const onStudentDetail = pathname.startsWith("/admin/students/");
   const onKoPredict =
@@ -172,35 +176,37 @@ function AdminHeaderMeta() {
   const onSecurity = pathname.startsWith("/account/security");
 
   const headerTitle = onSecurity
-    ? "Sécurité du compte"
+    ? t("chrome.securityTitle")
     : onProfile
-    ? "Mon profil"
+    ? t("nav.profile")
     : onTeam
-      ? "Équipe WOLOYEM"
+      ? t("nav.team")
       : onSchool
-        ? "Tableau de bord de l'école"
+        ? t("nav.schoolDashboard")
         : onStudentDetail
-          ? (studentFocus?.fullName ?? "Apprenant")
+          ? (studentFocus?.fullName ?? t("chrome.learnerFallback"))
           : onKoPredict
             ? "KO Predict™"
             : onLearnersList
-              ? "Apprenants"
-              : "Administration";
+              ? t("nav.learners")
+              : t("nav.admin");
   const headerSubtitle = onSecurity
-    ? "Vérification en deux étapes et sessions"
+    ? t("chrome.securitySubtitle")
     : onProfile
-    ? "Préférences KO Predict™"
+    ? t("chrome.profilePrefs")
     : onTeam
-      ? "Comptes coach et admin"
+      ? t("chrome.teamSubtitle")
       : onSchool
-        ? "Vue d'ensemble de la promotion KO Predict™"
+        ? t("chrome.schoolSubtitle")
         : onStudentDetail
           ? studentFocus?.formationTitle
-            ? `${studentFocus.formationTitle} · Dossier apprenant`
-            : "Dossier apprenant"
+            ? t("chrome.learnerFileWithFormation", {
+                title: studentFocus.formationTitle,
+              })
+            : t("chrome.learnerFile")
           : onKoPredict
-            ? "Suivi et interventions des apprenants activés"
-            : "Gestion des comptes LearnWorlds et KO Predict™";
+            ? t("chrome.koPredictSubtitle")
+            : t("chrome.learnersSubtitle");
   const HeaderIcon = onSecurity || onProfile
     ? IconUser
     : onTeam
@@ -262,6 +268,7 @@ function AdminBottomNav({
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const onKoPredict =
     pathname === "/admin" && searchParams.get("tab") === "kopredict";
   const onAllLearners =
@@ -273,13 +280,16 @@ function AdminBottomNav({
   const onSecurity = pathname.startsWith("/account/security");
 
   return (
-    <nav className="ko-admin-mobile-nav" aria-label="Navigation admin mobile">
+    <nav className="ko-admin-mobile-nav" aria-label={t("chrome.adminNavMobile")}>
       <div className="ko-admin-mobile-nav-theme">
-        <ThemeToggle />
+        <div className="ko-chrome-prefs">
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
       </div>
       <AdminBottomNavLink
         href="/admin"
-        label="Apprenants"
+        label={t("nav.learners")}
         active={onAllLearners}
         icon={<IconUsers className="ko-icon" />}
       />
@@ -291,28 +301,28 @@ function AdminBottomNav({
       />
       <AdminBottomNavLink
         href="/admin/ecole"
-        label="École"
+        label={t("nav.schoolShort")}
         active={onSchool}
         icon={<IconDashboard className="ko-icon" />}
       />
       {canManageTeam ? (
         <AdminBottomNavLink
           href="/admin/team"
-          label="Équipe"
+          label={t("nav.teamShort")}
           active={onTeam}
           icon={<IconTeam className="ko-icon" />}
         />
       ) : null}
       <AdminBottomNavLink
         href="/profile"
-        label="Profil"
+        label={t("nav.profileShort")}
         active={onProfile}
         icon={<IconUser className="ko-icon" />}
       />
       {showSecurityLink ? (
         <AdminBottomNavLink
           href="/account/security"
-          label="Sécurité"
+          label={t("nav.security")}
           active={onSecurity}
           icon={<IconSpark className="ko-icon" />}
         />
@@ -338,6 +348,7 @@ export function AdminHubLayout({
     lastName,
     email,
   });
+  const { t } = useLanguage();
 
   return (
     <AdminLearnersChromeProvider>
@@ -347,15 +358,17 @@ export function AdminHubLayout({
           <aside className="ko-admin-sidebar hidden lg:flex">
             <div className="shrink-0 px-1">
               <BrandMark href="/" size="sm" tone="dark" />
-              <p className="mt-1 px-1 text-xs text-slate-400">Espace équipe</p>
+              <p className="mt-1 px-1 text-xs text-slate-400">
+                {t("chrome.teamSpace")}
+              </p>
             </div>
 
             <nav
               className="mt-8 flex-1 space-y-1 overflow-y-auto"
-              aria-label="Navigation admin"
+              aria-label={t("chrome.adminNav")}
             >
               <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                Principal
+                {t("nav.principal")}
               </p>
               <Suspense fallback={null}>
                 <AdminNavLinks
@@ -366,12 +379,15 @@ export function AdminHubLayout({
             </nav>
 
             <div className="mt-auto space-y-3">
-              <ThemeToggle />
+              <div className="ko-chrome-prefs">
+                <LanguageToggle />
+                <ThemeToggle />
+              </div>
               <div className="rounded-2xl border border-blue-100 bg-[var(--admin-blue-soft)] p-3">
                 <Link
                   href="/profile"
                   className="flex items-center gap-3 rounded-xl transition hover:bg-white/60"
-                  aria-label="Modifier mon profil"
+                  aria-label={t("chrome.editProfile")}
                 >
                   <UserAvatar
                     displayName={displayName}
@@ -386,7 +402,7 @@ export function AdminHubLayout({
                       {shownName}
                     </p>
                     <p className="truncate text-xs text-[var(--admin-blue)]">
-                      {email ? "Modifier le profil" : "En ligne"}
+                      {email ? t("chrome.editProfileShort") : t("chrome.online")}
                     </p>
                   </div>
                 </Link>
@@ -420,8 +436,8 @@ export function AdminHubLayout({
                 <Link
                   href="/profile"
                   className="hidden rounded-full ring-2 ring-transparent transition hover:ring-blue-200 sm:inline-flex"
-                  aria-label="Modifier mon profil"
-                  title="Modifier mon profil"
+                  aria-label={t("chrome.editProfile")}
+                  title={t("chrome.editProfile")}
                 >
                   <UserAvatar
                     displayName={displayName}

@@ -1,3 +1,7 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
 /** Comparaison rythme actuel vs nécessaire — style bar chart analytics. */
 export function PaceBarsCard({
   currentPace,
@@ -6,30 +10,31 @@ export function PaceBarsCard({
   currentPace: number | null;
   requiredPace: number | null;
 }) {
+  const { t } = useLanguage();
   const current = currentPace != null && currentPace > 0 ? currentPace : 0;
   const required = requiredPace != null && requiredPace > 0 ? requiredPace : 0;
   const max = Math.max(current, required, 1);
-  const weeks = ["S1", "S2", "S3", "S4", "S5", "S6", "S7"];
+  const weeks = [1, 2, 3, 4, 5, 6, 7];
 
   return (
     <article className="ko-dash-card flex h-full min-h-[22rem] flex-col p-6 sm:p-7">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="ko-display text-lg font-bold text-slate-900">
-            Rythme d&apos;étude
+            {t("learner.kpi.studyPace")}
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Actuel vs nécessaire (activités / semaine)
+            {t("learner.kpi.currentVsRequired")}
           </p>
         </div>
         <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm bg-[var(--dash-primary)]" />
-            Actuel
+            {t("learner.kpi.current")}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm bg-slate-200" />
-            Nécessaire
+            {t("learner.kpi.required")}
           </span>
         </div>
       </div>
@@ -55,18 +60,22 @@ export function PaceBarsCard({
                 style={{
                   height: `${Math.max(6, (current / max) * 100)}%`,
                 }}
-                title={`Actuel : ${current || "—"}`}
+                title={t("learner.kpi.currentColon", {
+                  value: current || "—",
+                })}
               />
               <div
                 className="w-[42%] max-w-[1.35rem] rounded-t-md bg-slate-200 transition-[height] duration-700"
                 style={{
                   height: `${Math.max(6, (required / max) * 100)}%`,
                 }}
-                title={`Nécessaire : ${required || "—"}`}
+                title={t("learner.kpi.requiredColon", {
+                  value: required || "—",
+                })}
               />
             </div>
             <span className="text-[11px] font-semibold text-slate-400">
-              {week}
+              {t("learner.kpi.week", { n: week })}
             </span>
           </div>
         ))}
@@ -74,13 +83,13 @@ export function PaceBarsCard({
 
       <div className="mt-4 flex flex-wrap gap-4 border-t border-slate-100 pt-4 text-sm">
         <p className="text-slate-500">
-          Actuel{" "}
+          {t("learner.kpi.current")}{" "}
           <span className="ko-display font-bold text-slate-900">
             {current > 0 ? current : "—"}
           </span>
         </p>
         <p className="text-slate-500">
-          Nécessaire{" "}
+          {t("learner.kpi.required")}{" "}
           <span className="ko-display font-bold text-slate-900">
             {required > 0 ? required : "—"}
           </span>

@@ -1,3 +1,7 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
 interface TrajectoryAlertProps {
   headline: string | null;
   paceHint: string | null;
@@ -78,6 +82,7 @@ export function TrajectoryAlert({
   currentPace = null,
   requiredPace = null,
 }: TrajectoryAlertProps) {
+  const { t } = useLanguage();
   if (!headline) return null;
 
   const tone = postponed ? "warn" : advanced ? "good" : "neutral";
@@ -125,11 +130,11 @@ export function TrajectoryAlert({
 
           <div className="min-w-0 flex-1">
             <div className="ko-traj-kicker-row">
-              <p className="ko-traj-kicker">Trajectoire</p>
+              <p className="ko-traj-kicker">{t("learner.traj.kicker")}</p>
               {delta != null ? (
                 <span className="ko-traj-badge">
                   {postponed ? "+" : "−"}
-                  {delta} j
+                  {t("learner.traj.daysShort", { n: delta })}
                 </span>
               ) : null}
             </div>
@@ -143,11 +148,13 @@ export function TrajectoryAlert({
         </div>
 
         {showPace ? (
-          <div className="ko-traj-meters" aria-label="Comparaison de rythme">
+          <div className="ko-traj-meters" aria-label={t("learner.traj.paceCompare")}>
             <div className="ko-traj-meter">
               <div className="ko-traj-meter-head">
-                <span>Rythme actuel</span>
-                <strong>{formatPace(currentPace!)} / sem.</strong>
+                <span>{t("learner.traj.currentPace")}</span>
+                <strong>
+                  {formatPace(currentPace!)} {t("learner.traj.perWeek")}
+                </strong>
               </div>
               <div className="ko-traj-meter-track">
                 <div
@@ -158,8 +165,10 @@ export function TrajectoryAlert({
             </div>
             <div className="ko-traj-meter">
               <div className="ko-traj-meter-head">
-                <span>Rythme cible</span>
-                <strong>{formatPace(requiredPace!)} / sem.</strong>
+                <span>{t("learner.traj.targetPace")}</span>
+                <strong>
+                  {formatPace(requiredPace!)} {t("learner.traj.perWeek")}
+                </strong>
               </div>
               <div className="ko-traj-meter-track">
                 <div

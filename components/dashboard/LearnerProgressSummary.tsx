@@ -1,8 +1,10 @@
+"use client";
+
 import Link from "next/link";
-import { LEARNER_COPY } from "@/lib/learner/copy";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
   formatPercentOrDash,
-  formatSyncRelativeFr,
+  formatSyncRelative,
 } from "@/lib/learning/format";
 
 interface LearnerProgressSummaryProps {
@@ -24,6 +26,7 @@ export function LearnerProgressSummary({
   recordedAt,
   collecting = false,
 }: LearnerProgressSummaryProps) {
+  const { t, locale } = useLanguage();
   const hasQcm = qcmAverage != null;
   const empty =
     collecting ||
@@ -36,42 +39,39 @@ export function LearnerProgressSummary({
       className="ko-lw-progress"
       aria-labelledby="learner-progress-title"
     >
-      <p className="ko-lw-progress-kicker">{LEARNER_COPY.progressKicker}</p>
+      <p className="ko-lw-progress-kicker">{t("learner.progressKicker")}</p>
       <h2 id="learner-progress-title" className="ko-lw-progress-title">
-        Ma progression pédagogique
+        {t("learner.learningTitle")}
       </h2>
-      <p className="ko-lw-progress-sync">{formatSyncRelativeFr(recordedAt)}</p>
+      <p className="ko-lw-progress-sync">
+        {formatSyncRelative(recordedAt, locale)}
+      </p>
 
       {empty ? (
         <div className="ko-lw-progress-empty">
-          <p>
-            Vos résultats apparaîtront ici au fur et à mesure de votre
-            progression.
-          </p>
-          <p>
-            {LEARNER_COPY.progressContinue}
-          </p>
+          <p>{t("learner.progressUi.emptyLead")}</p>
+          <p>{t("learner.progressContinue")}</p>
         </div>
       ) : (
         <div className="ko-lw-progress-grid">
           <Stat
-            label="Progression"
+            label={t("admin.file.progress")}
             value={formatPercentOrDash(progressPercent)}
           />
           <Stat
-            label="Activités terminées"
+            label={t("learner.progressUi.completed")}
             value={`${completedActivities} / ${totalActivities || "—"}`}
           />
           <Stat
-            label="Moyenne QCM"
+            label={t("admin.file.qcmAverage")}
             value={
               hasQcm
                 ? formatPercentOrDash(qcmAverage)
-                : "Pas encore de résultat"
+                : t("learner.progressUi.noResult")
             }
           />
           <Stat
-            label="Moyenne récente"
+            label={t("learner.progressUi.recentAvg")}
             value={
               recentQcmAverage == null
                 ? "—"
@@ -83,13 +83,13 @@ export function LearnerProgressSummary({
 
       <div className="ko-lw-progress-actions">
         <Link href="/learning?tab=activities" className="ko-lw-progress-cta">
-          Voir mes activités
+          {t("learner.seeActivities")}
         </Link>
         <Link
           href="/learning?tab=quizzes"
           className="ko-lw-progress-cta is-ghost"
         >
-          Voir mes quiz &amp; examens
+          {t("learner.progressUi.seeQuizzes")}
         </Link>
       </div>
     </section>

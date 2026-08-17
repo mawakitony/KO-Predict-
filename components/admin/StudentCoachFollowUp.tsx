@@ -1,16 +1,21 @@
+"use client";
+
 import { Icon3dCoach } from "@/components/learning/Learning3dIcons";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { formatDate, formatDateTime } from "@/lib/i18n/format-date";
 import {
-  interventionReasonLabelFr,
-  interventionStatusLabelFr,
-  type CoachInterventionRecord,
-} from "@/lib/admin/interventions/types";
-import { formatDateFr, formatDateTimeFr } from "@/lib/dashboard/format";
+  interventionReasonKey,
+  interventionStatusKey,
+} from "@/lib/i18n/labels";
+import type { CoachInterventionRecord } from "@/lib/admin/interventions/types";
 
 export function StudentCoachFollowUp({
   interventions,
 }: {
   interventions: CoachInterventionRecord[];
 }) {
+  const { t, locale } = useLanguage();
+
   return (
     <section
       className="ko-learn-panel"
@@ -23,10 +28,10 @@ export function StudentCoachFollowUp({
           </span>
           <div>
             <h2 id="coach-followup-title" className="ko-learn-panel-title">
-              Suivi coach
+              {t("admin.file.coachFollow")}
             </h2>
             <p className="ko-learn-panel-sub">
-              Historique léger des cycles d’intervention.
+              {t("admin.interventions.followSub")}
             </p>
           </div>
         </div>
@@ -34,7 +39,7 @@ export function StudentCoachFollowUp({
 
       {interventions.length === 0 ? (
         <p className="ko-learn-empty">
-          Aucun suivi coach enregistré pour cet apprenant.
+          {t("admin.interventions.emptyFollow")}
         </p>
       ) : (
         <ol className="ko-learn-list">
@@ -45,29 +50,33 @@ export function StudentCoachFollowUp({
               </div>
               <div className="ko-learn-card-body">
                 <p className="ko-learn-card-title">
-                  {interventionStatusLabelFr(item.status)}
+                  {t(interventionStatusKey(item.status))}
                   {item.riskLevel ? ` · ${item.riskLevel}` : ""}
                 </p>
                 <p className="ko-learn-card-meta">
-                  Ouvert le {formatDateFr(item.createdAt.slice(0, 10))}
+                  {t("admin.interventions.openedOn", {
+                    date: formatDate(item.createdAt.slice(0, 10), locale),
+                  })}
                   {" · "}
-                  {item.reasons.map(interventionReasonLabelFr).join(" · ") ||
-                    "Motif non précisé"}
+                  {item.reasons
+                    .map((code) => t(interventionReasonKey(code)))
+                    .join(" · ") || t("admin.interventions.reasonUnknown")}
                 </p>
                 <ul className="mt-2 space-y-1 text-xs font-semibold text-slate-600">
                   <li>
-                    {formatDateTimeFr(item.createdAt)} — Risque détecté / cycle
-                    ouvert
+                    {formatDateTime(item.createdAt, locale)} —{" "}
+                    {t("admin.interventions.cycleOpened")}
                   </li>
                   {item.contactedAt ? (
                     <li>
-                      {formatDateTimeFr(item.contactedAt)} — Contacté / suivi
+                      {formatDateTime(item.contactedAt, locale)} —{" "}
+                      {t("admin.interventions.contactedFollow")}
                     </li>
                   ) : null}
                   {item.resolvedAt ? (
                     <li>
-                      {formatDateTimeFr(item.resolvedAt)} — Intervention
-                      terminée
+                      {formatDateTime(item.resolvedAt, locale)} —{" "}
+                      {t("admin.interventions.interventionDone")}
                     </li>
                   ) : null}
                 </ul>

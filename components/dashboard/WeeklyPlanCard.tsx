@@ -1,24 +1,28 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import type { WeeklyPlan, WeeklyPlanStatus } from "@/lib/planning/weekly-plan";
 import { round1 } from "@/lib/prediction/math";
+import type { MessageKey } from "@/lib/i18n/translate";
 
-function statusLabel(status: WeeklyPlanStatus): string {
+function statusKey(status: WeeklyPlanStatus): MessageKey {
   switch (status) {
     case "INSUFFICIENT_DATA":
-      return "En construction";
+      return "learner.week.statusBuild";
     case "NO_ACTIVITY":
-      return "Reprise";
+      return "learner.week.statusResume";
     case "BEHIND":
-      return "À accélérer";
+      return "learner.week.statusBehind";
     case "SLIGHTLY_BEHIND":
-      return "Léger retard";
+      return "learner.week.statusSlight";
     case "ON_TRACK":
-      return "Dans les clous";
+      return "learner.week.statusOnTrack";
     case "AHEAD":
-      return "En avance";
+      return "learner.week.statusAhead";
     case "COMPLETE":
-      return "Révision";
+      return "learner.week.statusReview";
     default:
-      return "Plan";
+      return "learner.week.statusPlan";
   }
 }
 
@@ -50,6 +54,7 @@ export function WeeklyPlanCard({
   plan: WeeklyPlan;
   compact?: boolean;
 }) {
+  const { t } = useLanguage();
   const showPaceGap =
     (plan.status === "BEHIND" ||
       plan.status === "SLIGHTLY_BEHIND" ||
@@ -83,30 +88,30 @@ export function WeeklyPlanCard({
           </svg>
         </span>
         <div className="min-w-0 flex-1">
-          <p className="ko-week-kicker">Votre plan cette semaine</p>
+          <p className="ko-week-kicker">{t("learner.week.kicker")}</p>
           <h2 id="weekly-plan-title" className="ko-week-title">
             {plan.primaryAction}
           </h2>
         </div>
-        <span className="ko-week-badge">{statusLabel(plan.status)}</span>
+        <span className="ko-week-badge">{t(statusKey(plan.status))}</span>
       </div>
 
       <p className="ko-week-reason">{plan.reason}</p>
 
       {showPaceGap ? (
-        <div className="ko-week-pace" aria-label="Rythme actuel et cible">
+        <div className="ko-week-pace" aria-label={t("learner.week.paceAria")}>
           <div>
-            <p className="ko-week-pace-label">Rythme actuel</p>
+            <p className="ko-week-pace-label">{t("learner.traj.currentPace")}</p>
             <p className="ko-week-pace-value">
               {formatPace(plan.currentPace!)}
-              <span> / semaine</span>
+              <span> {t("learner.week.perWeek")}</span>
             </p>
           </div>
           <div>
-            <p className="ko-week-pace-label">Rythme cible</p>
+            <p className="ko-week-pace-label">{t("learner.traj.targetPace")}</p>
             <p className="ko-week-pace-value">
               {formatPace(plan.requiredPace!)}
-              <span> / semaine</span>
+              <span> {t("learner.week.perWeek")}</span>
             </p>
           </div>
         </div>
@@ -114,19 +119,17 @@ export function WeeklyPlanCard({
 
       {plan.targetActivities != null ? (
         <div className="ko-week-objective">
-          <p className="ko-week-objective-label">Objectif</p>
+          <p className="ko-week-objective-label">{t("learner.week.objective")}</p>
           <p className="ko-week-objective-value">
-            {plan.targetActivities} activité
-            {plan.targetActivities > 1 ? "s" : ""} cette semaine
+            {plan.targetActivities === 1
+              ? t("learner.week.activityOne")
+              : t("learner.week.activityMany", { n: plan.targetActivities })}
           </p>
         </div>
       ) : null}
 
       {plan.emphasizeQcm ? (
-        <p className="ko-week-qcm">
-          Réalisez plusieurs QCM cette semaine afin de renforcer la fiabilité
-          de votre estimation.
-        </p>
+        <p className="ko-week-qcm">{t("learner.week.emphasizeQcm")}</p>
       ) : null}
     </section>
   );

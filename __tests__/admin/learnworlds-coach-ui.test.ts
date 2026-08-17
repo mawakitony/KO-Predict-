@@ -84,7 +84,7 @@ describe("UI source — modal + TeamBoard", () => {
     expect(src).toMatch(/\/api\/admin\/team\/learnworlds\/lookup/);
     expect(src).toMatch(/\/api\/admin\/team\/learnworlds\/create-coach/);
     expect(src).toMatch(/ELIGIBLE_INSTRUCTOR/);
-    expect(src).toMatch(/Créer comme coach KO Predict/);
+    expect(src).toMatch(/admin\.team\.createAsCoach/);
     expect(src).toMatch(/auth\/mfa\/challenge/);
     expect(src).toMatch(/body: JSON\.stringify\(\{ email/);
     expect(src).toMatch(/create-coach[\s\S]*JSON\.stringify\(\{\s*email: lookup\.email\s*\}\)/);
@@ -118,8 +118,8 @@ describe("UI source — modal + TeamBoard", () => {
       join(process.cwd(), "components/admin/TeamBoard.tsx"),
       "utf8",
     );
-    expect(src).toMatch(/Ajouter un coach LearnWorlds/);
-    expect(src).toMatch(/Ajouter un membre/);
+    expect(src).toMatch(/admin\.team\.addLwCoach/);
+    expect(src).toMatch(/admin\.team\.addMember/);
     expect(src).toMatch(/AddLearnWorldsCoachModal/);
     expect(src).toMatch(/ActivationCodeModal/);
   });
@@ -129,8 +129,8 @@ describe("UI source — modal + TeamBoard", () => {
       join(process.cwd(), "components/admin/AddLearnWorldsCoachModal.tsx"),
       "utf8",
     );
-    expect(src).toMatch(/Vérification…/);
-    expect(src).toMatch(/Création…/);
+    expect(src).toMatch(/common\.verifying/);
+    expect(src).toMatch(/admin\.team\.creating/);
     expect(src).toMatch(/phase === \"lookup\"/);
     expect(src).toMatch(/phase === \"create\"/);
   });

@@ -15,7 +15,9 @@ import {
   uploadAvatarAction,
   type ProfileActionState,
 } from "@/lib/auth/profile-actions";
-import { roleLabelFr } from "@/lib/auth/roles";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { roleKey } from "@/lib/i18n/labels";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { resolveDisplayName } from "@/lib/profile/display";
 import type { UserRole } from "@/types/student";
 
@@ -30,6 +32,12 @@ interface ProfileEditorProps {
 
 const initial: ProfileActionState = { ok: false };
 
+const PROFILE_SUCCESS_KEYS: Record<string, MessageKey> = {
+  "Profil mis à jour.": "admin.profile.updated",
+  "Photo de profil mise à jour.": "admin.profile.photoUpdated",
+  "Photo retirée.": "admin.profile.photoRemoved",
+};
+
 export function ProfileEditor({
   email,
   firstName,
@@ -38,6 +46,7 @@ export function ProfileEditor({
   avatarUrl,
   role,
 }: ProfileEditorProps) {
+  const { t } = useLanguage();
   const [profileState, profileAction, profilePending] = useActionState(
     updateProfileAction,
     initial,
@@ -73,7 +82,12 @@ export function ProfileEditor({
     lastName: liveLastName,
     email,
   });
-  const roleLabel = roleLabelFr(role);
+  const roleLabel = t(roleKey(role));
+  function successText(raw: string | null | undefined): string | null {
+    if (!raw) return null;
+    const key = PROFILE_SUCCESS_KEYS[raw];
+    return key ? t(key) : raw;
+  }
 
   useEffect(() => {
     if (profileState.ok) {
@@ -133,7 +147,7 @@ export function ProfileEditor({
               className="ko-profile-camera"
               onClick={() => fileRef.current?.click()}
               disabled={avatarPending || removing}
-              aria-label="Changer la photo de profil"
+              aria-label={t("admin.profile.changePhotoAria")}
             >
               <svg
                 viewBox="0 0 24 24"
@@ -153,12 +167,12 @@ export function ProfileEditor({
 
           <div className="ko-profile-identity-copy">
             <h2 id="photo-title" className="sr-only">
-              Photo de profil
+              {t("admin.profile.photoTitle")}
             </h2>
             <p className="ko-display ko-profile-identity-name">{shownName}</p>
             <span className="ko-profile-role-badge">{roleLabel}</span>
             <p className="ko-profile-hint">
-              JPG, JPEG, PNG ou WebP · max 5 Mo
+              {t("admin.profile.photoHint")}
             </p>
 
             <form action={avatarAction} className="ko-profile-photo-actions">
@@ -182,7 +196,9 @@ export function ProfileEditor({
                 onClick={() => fileRef.current?.click()}
                 disabled={avatarPending || removing}
               >
-                {avatarPending ? "Envoi…" : "Changer la photo"}
+                {avatarPending
+                  ? t("common.sending")
+                  : t("admin.profile.changePhoto")}
               </button>
               {liveAvatarUrl || preview ? (
                 <button
@@ -201,7 +217,7 @@ export function ProfileEditor({
                     });
                   }}
                 >
-                  {removing ? "Suppression…" : "Supprimer"}
+                  {removing ? t("admin.profile.removing") : t("admin.profile.remove")}
                 </button>
               ) : null}
             </form>
@@ -211,9 +227,9 @@ export function ProfileEditor({
                 {avatarState.error ?? removeState?.error}
               </p>
             ) : null}
-            {avatarState.message || removeState?.message ? (
+            {successText(avatarState.message ?? removeState?.message) ? (
               <p className="mt-2 text-sm font-medium text-teal-700">
-                {avatarState.message ?? removeState?.message}
+                {successText(avatarState.message ?? removeState?.message)}
               </p>
             ) : null}
           </div>
@@ -222,63 +238,62 @@ export function ProfileEditor({
 
       <section className="ko-profile-card" aria-labelledby="info-title">
         <div className="ko-profile-card-head">
-          <p className="ko-profile-section-kicker">Identité</p>
+          <p className="ko-profile-section-kicker">{t("admin.profile.identity")}</p>
           <h2 id="info-title" className="ko-display ko-profile-section-title">
-            Informations personnelles
+            {t("admin.profile.personal")}
           </h2>
           <p className="ko-profile-section-lead">
-            Ces informations apparaissent dans KO Predict™. Votre email et votre
-            rôle restent gérés séparément.
+            {t("admin.profile.personalLead")}
           </p>
         </div>
 
         <form action={profileAction} className="ko-profile-form">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="ko-profile-field">
-              <span>Prénom</span>
+              <span>{t("admin.profile.firstName")}</span>
               <input
                 name="firstName"
                 defaultValue={liveFirstName ?? ""}
                 maxLength={80}
                 required
-                placeholder="Prénom"
+                placeholder={t("admin.profile.firstName")}
                 autoComplete="given-name"
               />
             </label>
             <label className="ko-profile-field">
-              <span>Nom</span>
+              <span>{t("admin.profile.lastName")}</span>
               <input
                 name="lastName"
                 defaultValue={liveLastName ?? ""}
                 maxLength={80}
-                placeholder="Nom"
+                placeholder={t("admin.profile.lastName")}
                 autoComplete="family-name"
               />
             </label>
           </div>
 
           <label className="ko-profile-field">
-            <span>Pseudo / nom d&apos;affichage</span>
+            <span>{t("admin.profile.displayName")}</span>
             <input
               name="displayName"
               defaultValue={liveDisplayName ?? ""}
               maxLength={40}
-              placeholder="Ex. Tony A."
+              placeholder={t("admin.profile.displayNameHint")}
               autoComplete="nickname"
             />
           </label>
 
           <div className="ko-profile-locked-grid">
             <label className="ko-profile-field is-locked">
-              <span>Email</span>
+              <span>{t("common.email")}</span>
               <input value={email ?? ""} disabled readOnly />
-              <em>Non modifiable ici (vérification requise).</em>
+              <em>{t("admin.profile.emailLocked")}</em>
             </label>
 
             <label className="ko-profile-field is-locked">
-              <span>Rôle</span>
+              <span>{t("admin.team.changeRole")}</span>
               <input value={roleLabel} disabled readOnly />
-              <em>Lecture seule — géré par WOLOYEM.</em>
+              <em>{t("admin.profile.roleLocked")}</em>
             </label>
           </div>
 
@@ -287,9 +302,9 @@ export function ProfileEditor({
               {profileState.error}
             </p>
           ) : null}
-          {profileState.message ? (
+          {successText(profileState.message) ? (
             <p className="text-sm font-medium text-teal-700">
-              {profileState.message}
+              {successText(profileState.message)}
             </p>
           ) : null}
 
@@ -300,8 +315,8 @@ export function ProfileEditor({
               disabled={profilePending}
             >
               {profilePending
-                ? "Enregistrement…"
-                : "Enregistrer les modifications"}
+                ? t("admin.profile.saving")
+                : t("admin.profile.save")}
             </button>
           </div>
         </form>

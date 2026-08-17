@@ -91,12 +91,12 @@ describe("thème — anti-FOUC et câblage", () => {
 });
 
 describe("thème — switch Admin + Apprenant", () => {
-  it("ThemeToggle : Mode sombre + switch accessible", () => {
+  it("ThemeToggle : Mode sombre via t() + switch accessible", () => {
     const src = readSrc("components/theme/ThemeToggle.tsx");
-    expect(src).toContain("Mode sombre");
+    expect(src).toContain('t("common.darkMode")');
     expect(src).toContain('role="switch"');
     expect(src).toContain("aria-checked");
-    expect(src).toContain('aria-label="Mode sombre"');
+    expect(src).toContain("aria-label={label}");
   });
 
   it("ThemeProvider mémorise light|dark et suit le système tant qu’aucun choix", () => {

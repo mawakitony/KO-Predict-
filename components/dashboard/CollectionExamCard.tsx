@@ -1,5 +1,8 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { cockpitDaysUntil } from "@/lib/dashboard/cockpit-copy";
-import { formatDateFr } from "@/lib/dashboard/format";
+import { formatDate } from "@/lib/i18n/format-date";
 
 interface CollectionExamCardProps {
   targetExamDate: string | null;
@@ -11,13 +14,14 @@ export function CollectionExamCard({
   targetExamDate,
   certification,
 }: CollectionExamCardProps) {
+  const { t, locale } = useLanguage();
   const days = cockpitDaysUntil(targetExamDate);
 
   let jLabel: string | null = null;
   if (days != null) {
-    if (days > 0) jLabel = `J-${days}`;
-    else if (days === 0) jLabel = "Jour J";
-    else jLabel = `J+${Math.abs(days)}`;
+    if (days > 0) jLabel = t("learner.dayMinus", { n: days });
+    else if (days === 0) jLabel = t("learner.collection.examDay");
+    else jLabel = t("learner.dayPlus", { n: Math.abs(days) });
   }
 
   return (
@@ -27,24 +31,23 @@ export function CollectionExamCard({
       aria-labelledby="exam-collect-title"
     >
       <p id="exam-collect-title" className="ko-collect-exam-kicker">
-        Votre examen {certification}
+        {t("learner.collection.examYours", { certification })}
       </p>
 
       {!targetExamDate ? (
         <p className="ko-collect-exam-missing">
-          Date d&apos;examen non renseignée
+          {t("learner.dates.examMissing")}
         </p>
       ) : (
         <div className="ko-collect-exam-row">
           <p className="ko-collect-exam-j">{jLabel}</p>
           <span className="ko-collect-exam-sep" aria-hidden />
           <p className="ko-collect-exam-date">
-            {formatDateFr(targetExamDate)}
+            {formatDate(targetExamDate, locale)}
           </p>
           <span className="ko-collect-exam-sep is-desktop" aria-hidden />
           <p className="ko-collect-exam-note">
-            Les estimations de trajectoire apparaîtront lorsque suffisamment de
-            données seront disponibles.
+            {t("learner.collection.examNote")}
           </p>
         </div>
       )}

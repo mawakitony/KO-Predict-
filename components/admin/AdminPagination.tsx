@@ -4,6 +4,7 @@ import {
   IconChevronLeft,
   IconChevronRight,
 } from "@/components/admin/AdminIcons";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 interface AdminPaginationProps {
   page: number;
@@ -62,6 +63,7 @@ export function AdminPagination({
     : rowCount >= pageSize && !pending;
 
   const items = knownTotal ? pageWindow(page, totalPages!) : null;
+  const { t } = useLanguage();
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-1 border-t border-slate-100 pt-4">
@@ -70,10 +72,10 @@ export function AdminPagination({
         disabled={!canPrev}
         onClick={() => onChange(page - 1)}
         className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-medium text-[var(--admin-blue-hover)] hover:bg-[var(--admin-blue-soft)] disabled:opacity-40"
-        aria-label="Page précédente"
+        aria-label={t("common.previousPage")}
       >
         <IconChevronLeft className="ko-icon-sm" />
-        Préc.
+        {t("common.previous")}
       </button>
 
       {items ? (
@@ -104,7 +106,9 @@ export function AdminPagination({
           ),
         )
       ) : (
-        <span className="px-3 text-sm text-slate-500">Page {page}</span>
+        <span className="px-3 text-sm text-slate-500">
+          {t("common.page", { page })}
+        </span>
       )}
 
       <button
@@ -112,9 +116,9 @@ export function AdminPagination({
         disabled={!canNext}
         onClick={() => onChange(page + 1)}
         className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-medium text-[var(--admin-blue-hover)] hover:bg-[var(--admin-blue-soft)] disabled:opacity-40"
-        aria-label="Page suivante"
+        aria-label={t("common.nextPage")}
       >
-        Suiv.
+        {t("common.next")}
         <IconChevronRight className="ko-icon-sm" />
       </button>
     </div>

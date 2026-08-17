@@ -1,3 +1,7 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
 /** Anneaux de synthèse — style product statistic. */
 export function DashboardRingsCard({
   readiness,
@@ -8,26 +12,30 @@ export function DashboardRingsCard({
   progress: number | null;
   probability: number | null;
 }) {
+  const { t } = useLanguage();
   const items = [
     {
-      label: "Préparation",
+      key: "readiness",
+      label: t("admin.file.preparation"),
       value: readiness,
       color: "var(--brand)",
       track: "var(--brand-soft)",
     },
     {
-      label: "Progression",
+      key: "progress",
+      label: t("admin.file.progress"),
       value: progress,
       color: "var(--info)",
       track: "var(--info-soft)",
     },
     {
-      label: "Probabilité",
+      key: "probability",
+      label: t("admin.file.probability"),
       value: probability,
       color: "var(--text-secondary)",
       track: "var(--surface-muted)",
     },
-  ] as const;
+  ];
 
   const center = readiness != null ? Math.round(readiness) : null;
 
@@ -36,10 +44,10 @@ export function DashboardRingsCard({
       <div className="flex items-start justify-between gap-2">
         <div>
           <h2 className="ko-display text-lg font-bold text-slate-900">
-            Statistiques
+            {t("learner.kpi.stats")}
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Indicateurs clés KO Predict™
+            {t("learner.kpi.statsSub")}
           </p>
         </div>
       </div>
@@ -54,7 +62,7 @@ export function DashboardRingsCard({
                 ? Math.min(100, Math.max(0, item.value)) / 100
                 : 0;
             return (
-              <g key={item.label}>
+              <g key={item.key}>
                 <circle
                   cx="60"
                   cy="60"
@@ -82,7 +90,7 @@ export function DashboardRingsCard({
             {center ?? "—"}
           </p>
           <p className="text-[11px] font-semibold text-slate-400">
-            Préparation
+            {t("admin.file.preparation")}
           </p>
         </div>
       </div>
@@ -90,7 +98,7 @@ export function DashboardRingsCard({
       <ul className="mt-auto space-y-3 border-t border-slate-100 pt-4">
         {items.map((item) => (
           <li
-            key={item.label}
+            key={item.key}
             className="flex items-center justify-between gap-3 text-sm"
           >
             <span className="flex items-center gap-2.5 font-medium text-slate-600">

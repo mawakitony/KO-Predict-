@@ -8,6 +8,7 @@ import {
   IconSearch,
   IconSort,
 } from "@/components/admin/AdminIcons";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 export function SchoolCurveToolbar({
   query,
@@ -18,7 +19,7 @@ export function SchoolCurveToolbar({
   onRefresh,
   onSort,
   onReset,
-  sortLabel = "Trier",
+  sortLabel,
 }: {
   query: string;
   onQueryChange: (value: string) => void;
@@ -30,13 +31,16 @@ export function SchoolCurveToolbar({
   onReset: () => void;
   sortLabel?: string;
 }) {
+  const { t } = useLanguage();
+  const resolvedSortLabel = sortLabel ?? t("admin.school.sort");
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     onSearch();
   }
 
   return (
-    <div className="ko-curve-toolbar" aria-label="Recherche sur la vue d'ensemble">
+    <div className="ko-curve-toolbar" aria-label={t("admin.school.searchAria")}>
       <form className="ko-curve-tools" onSubmit={handleSubmit}>
         <button
           type="button"
@@ -45,34 +49,34 @@ export function SchoolCurveToolbar({
           aria-pressed={filtersOpen}
         >
           <IconFilter className="ko-icon" />
-          Filtrer
+          {t("common.filter")}
         </button>
 
         <label className="ko-curve-search">
           <IconSearch className="ko-curve-search-icon" />
           <span className="sr-only">
-            Rechercher un apprenant sur la vue d&apos;ensemble
+            {t("admin.school.searchLearner")}
           </span>
           <input
             type="search"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="Rechercher un apprenant..."
+            placeholder={t("admin.school.searchPlaceholder")}
             autoComplete="off"
           />
         </label>
 
         <button type="submit" className="ko-curve-search-btn">
           <IconSearch className="ko-icon" />
-          Rechercher
+          {t("common.search")}
         </button>
 
         <div className="ko-curve-tool-actions">
           <button
             type="button"
             className="ko-curve-icon-btn"
-            aria-label={sortLabel}
-            title={sortLabel}
+            aria-label={resolvedSortLabel}
+            title={resolvedSortLabel}
             onClick={onSort}
           >
             <IconSort className="ko-icon" />
@@ -80,8 +84,8 @@ export function SchoolCurveToolbar({
           <button
             type="button"
             className="ko-curve-icon-btn"
-            aria-label="Actualiser la vue d'ensemble"
-            title="Actualiser"
+            aria-label={t("admin.school.refreshOverview")}
+            title={t("common.refresh")}
             onClick={onRefresh}
           >
             <IconRefresh className="ko-icon" />
@@ -89,8 +93,8 @@ export function SchoolCurveToolbar({
           <button
             type="button"
             className="ko-curve-icon-btn"
-            aria-label="Réinitialiser la recherche"
-            title="Réinitialiser"
+            aria-label={t("admin.school.resetSearch")}
+            title={t("common.reset")}
             onClick={onReset}
           >
             <IconMore className="ko-icon" />

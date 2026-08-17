@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 export type PlanCurvePoint = {
   label: string;
@@ -145,6 +146,7 @@ export function PlanCycleCurve({
   paceSeries?: number[];
   note?: string | null;
 }) {
+  const { t } = useLanguage();
   const [active, setActive] = useState<number | null>(null);
 
   const values = series.map((s) => s.value);
@@ -222,9 +224,13 @@ export function PlanCycleCurve({
           </div>
         </div>
         <div className="ko-plan-curve-legend" aria-hidden>
-          <span className="ko-plan-curve-leg is-actual">Avancement réel</span>
+          <span className="ko-plan-curve-leg is-actual">
+            {t("learner.planUi.actualPace")}
+          </span>
           {pacePath ? (
-            <span className="ko-plan-curve-leg is-pace">Rythme cible</span>
+            <span className="ko-plan-curve-leg is-pace">
+              {t("learner.planUi.targetPace")}
+            </span>
           ) : null}
         </div>
       </div>
@@ -234,7 +240,7 @@ export function PlanCycleCurve({
           viewBox={`0 0 ${w} ${h}`}
           className="ko-plan-curve-svg"
           role="img"
-          aria-label="Courbe d'avancement du plan"
+          aria-label={t("learner.planUi.curveAria")}
         >
           <defs>
             <linearGradient id="ko-plan-area" x1="0" y1="0" x2="0" y2="1">

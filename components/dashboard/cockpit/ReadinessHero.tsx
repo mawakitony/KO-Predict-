@@ -1,3 +1,6 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
   cockpitHeroNarrative,
   cockpitRiskLabel,
@@ -28,18 +31,22 @@ export function ReadinessHero({
   requiredPace,
   collecting,
 }: ReadinessHeroProps) {
+  const { t, locale } = useLanguage();
   const tone = collecting ? "neutral" : cockpitRiskTone(riskLevel);
   const riskText = collecting
-    ? "Estimation en préparation"
-    : cockpitRiskLabel(riskLevel);
+    ? t("learner.status.preparing")
+    : cockpitRiskLabel(riskLevel, locale);
   const narrative = collecting
-    ? "Votre estimation n’est pas encore disponible."
-    : cockpitHeroNarrative({
-        paceStatus,
-        currentPace,
-        requiredPace,
-        readinessScore,
-      });
+    ? t("learner.heroUnavailable")
+    : cockpitHeroNarrative(
+        {
+          paceStatus,
+          currentPace,
+          requiredPace,
+          readinessScore,
+        },
+        locale,
+      );
 
   return (
     <section
@@ -47,16 +54,22 @@ export function ReadinessHero({
       aria-labelledby="cockpit-hero-title"
     >
       <p className="ko-cockpit-kicker">KO Predict™</p>
-      <p className="ko-cockpit-hello">Bonjour, {displayName}</p>
+      <p className="ko-cockpit-hello">
+        {t("chrome.hello", { name: displayName })}
+      </p>
       <h2 id="cockpit-hero-title" className="ko-cockpit-hero-title">
-        Votre préparation au {certification}
+        {t("learner.cockpit.prepFor", { certification })}
       </h2>
 
       <div className="ko-cockpit-hero-grid">
         <div className="ko-cockpit-score-block">
-          <p className="ko-cockpit-score-label">Niveau de préparation</p>
+          <p className="ko-cockpit-score-label">
+            {t("learner.cockpit.readinessLevel")}
+          </p>
           {readinessScore == null ? (
-            <p className="ko-cockpit-score-empty">Estimation en cours</p>
+            <p className="ko-cockpit-score-empty">
+              {t("learner.cockpit.estimationOngoing")}
+            </p>
           ) : (
             <p className="ko-cockpit-score">
               <span className="ko-cockpit-score-num">
@@ -65,25 +78,27 @@ export function ReadinessHero({
               <span className="ko-cockpit-score-den">/ 100</span>
             </p>
           )}
-          <p className="ko-cockpit-score-caption">Score sur 100</p>
+          <p className="ko-cockpit-score-caption">
+            {t("learner.cockpit.scoreOn100")}
+          </p>
         </div>
 
         <div className="ko-cockpit-hero-side">
           <div
             className={`ko-cockpit-badge is-${tone}`}
             role="status"
-            aria-label={`Statut : ${riskText}`}
+            aria-label={t("learner.cockpit.statusAria", { status: riskText })}
           >
             {riskText}
           </div>
 
           <div className="ko-cockpit-prob">
             <p className="ko-cockpit-prob-label">
-              Probabilité estimée de réussite
+              {t("learner.cockpit.successProb")}
             </p>
             {readinessProbability == null ? (
               <p className="ko-cockpit-prob-value is-empty">
-                Pas encore assez de données
+                {t("learner.cockpit.notEnoughData")}
               </p>
             ) : (
               <p className="ko-cockpit-prob-value">

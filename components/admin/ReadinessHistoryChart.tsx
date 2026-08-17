@@ -1,5 +1,8 @@
+"use client";
+
 import type { PredictionHistory } from "@/types/prediction";
-import { formatDateShortFr } from "@/lib/dashboard/format";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { formatDateShort } from "@/lib/i18n/format-date";
 
 interface ReadinessHistoryChartProps {
   history: PredictionHistory[];
@@ -9,6 +12,8 @@ interface ReadinessHistoryChartProps {
  * Graphique SVG simple (sans lib lourde) — évolution du Readiness Score.
  */
 export function ReadinessHistoryChart({ history }: ReadinessHistoryChartProps) {
+  const { t, locale } = useLanguage();
+
   const points = [...history]
     .filter((h) => h.readinessScore != null)
     .sort(
@@ -19,8 +24,7 @@ export function ReadinessHistoryChart({ history }: ReadinessHistoryChartProps) {
   if (points.length === 0) {
     return (
       <p className="text-sm text-slate-500">
-        Pas encore d&apos;historique de prédiction. L&apos;historique
-        apparaîtra après les premiers calculs KO Predict™.
+        {t("admin.file.historyEmpty")}
       </p>
     );
   }
@@ -49,7 +53,7 @@ export function ReadinessHistoryChart({ history }: ReadinessHistoryChartProps) {
         viewBox={`0 0 ${width} ${height}`}
         className="h-auto w-full min-w-[20rem] max-w-3xl"
         role="img"
-        aria-label="Évolution du Readiness Score"
+        aria-label={t("admin.file.chartAria")}
       >
         {[0, 25, 50, 75, 100].map((tick) => {
           const y = padding.top + innerH - (tick / 100) * innerH;
@@ -93,10 +97,10 @@ export function ReadinessHistoryChart({ history }: ReadinessHistoryChartProps) {
               className="fill-slate-500"
               fontSize="10"
             >
-              {formatDateShortFr(p.createdAt)}
+              {formatDateShort(p.createdAt, locale)}
             </text>
             <title>
-              {formatDateShortFr(p.createdAt)} : {p.readinessScore} / 100
+              {formatDateShort(p.createdAt, locale)} : {p.readinessScore} / 100
             </title>
           </g>
         ))}
@@ -105,7 +109,7 @@ export function ReadinessHistoryChart({ history }: ReadinessHistoryChartProps) {
       <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
         {points.map((p) => (
           <li key={`${p.id}-legend`}>
-            {formatDateShortFr(p.createdAt)} :{" "}
+            {formatDateShort(p.createdAt, locale)} :{" "}
             <span className="font-semibold text-slate-700">
               {p.readinessScore}
             </span>

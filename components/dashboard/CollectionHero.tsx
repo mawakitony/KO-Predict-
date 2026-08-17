@@ -1,4 +1,8 @@
-import { LEARNER_COPY } from "@/lib/learner/copy";
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { predictionIssueKey } from "@/lib/i18n/labels";
+import type { PredictionDataIssue } from "@/types/prediction";
 
 function IconPulse({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -71,20 +75,13 @@ function IconCheck({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
-function pickIcon(text: string) {
-  const lower = text.toLowerCase();
-  if (
-    lower.includes("qcm") ||
-    lower.includes("maîtrise") ||
-    lower.includes("maitrise")
-  ) {
+function pickIcon(issue?: PredictionDataIssue) {
+  if (issue === "INSUFFICIENT_QCM") {
     return <IconQuiz className="h-5 w-5" />;
   }
   if (
-    lower.includes("rythme") ||
-    lower.includes("étude") ||
-    lower.includes("etude") ||
-    lower.includes("activité")
+    issue === "ZERO_CURRENT_PACE" ||
+    issue === "INSUFFICIENT_ACTIVITY_FOR_PACE"
   ) {
     return <IconPulse className="h-5 w-5" />;
   }
@@ -92,16 +89,21 @@ function pickIcon(text: string) {
 }
 
 interface CollectionHeroProps {
-  explanations: string[];
+  issues?: PredictionDataIssue[];
 }
 
-export function CollectionHero({ explanations }: CollectionHeroProps) {
-  const steps =
-    explanations.length > 0
-      ? explanations
+export function CollectionHero({ issues = [] }: CollectionHeroProps) {
+  const { t } = useLanguage();
+  const uniqueIssues = Array.from(new Set(issues));
+  const steps: Array<{ issue?: PredictionDataIssue; text: string }> =
+    uniqueIssues.length > 0
+      ? uniqueIssues.map((issue) => ({
+          issue,
+          text: t(predictionIssueKey(issue)),
+        }))
       : [
-          "Continuez vos activités de formation.",
-          "Réalisez des QCM pour établir votre niveau.",
+          { text: t("learner.collection.fallbackActivity") },
+          { text: t("learner.collection.fallbackQcm") },
         ];
 
   return (
@@ -124,10 +126,10 @@ export function CollectionHero({ explanations }: CollectionHeroProps) {
           <div className="flex flex-wrap items-center gap-2">
             <span className="ko-collect-badge">
               <span className="ko-analytics-pulse" />
-              Collecte en cours
+              {t("learner.status.collectingShort")}
             </span>
             <span className="rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-bold text-slate-500">
-              Pas un mauvais résultat
+              {t("learner.status.notBadResult")}
             </span>
           </div>
 
@@ -135,33 +137,31 @@ export function CollectionHero({ explanations }: CollectionHeroProps) {
             id="collecting-title"
             className="ko-display mt-3 text-2xl font-bold tracking-tight text-slate-900 sm:text-[1.75rem]"
           >
-            KO Predict™ construit votre estimation
+            {t("learner.collection.title")}
           </h2>
           <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-600">
-            Continuez votre formation et réalisez des QCM. Dès que suffisamment
-            de données seront disponibles, votre première estimation de
-            préparation apparaîtra automatiquement.
+            {t("learner.collection.body")}
           </p>
 
           <div className="ko-collect-meter mt-5" aria-hidden>
             <div className="ko-collect-meter-bar" />
           </div>
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-blue-700/80">
-            Progression de la collecte
+            {t("learner.collection.meter")}
           </p>
         </div>
       </div>
 
       <ul className="relative mt-6 grid gap-3 sm:grid-cols-2">
-        {steps.map((text, index) => (
-          <li key={text} className="ko-collect-step">
-            <span className="ko-collect-step-icon">{pickIcon(text)}</span>
+        {steps.map((step, index) => (
+          <li key={step.text} className="ko-collect-step">
+            <span className="ko-collect-step-icon">{pickIcon(step.issue)}</span>
             <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400">
-                Manque {index + 1}
+                {t("learner.collection.missing", { n: index + 1 })}
               </p>
               <p className="mt-1 text-sm font-semibold leading-snug text-slate-800">
-                {text}
+                {step.text}
               </p>
             </div>
           </li>
@@ -172,10 +172,10 @@ export function CollectionHero({ explanations }: CollectionHeroProps) {
           </span>
           <div className="min-w-0">
             <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-teal-700/80">
-              Prochaine étape
+              {t("learner.collection.next")}
             </p>
             <p className="mt-1 text-sm font-semibold leading-snug text-slate-800">
-              {LEARNER_COPY.collectionNextStep}
+              {t("learner.collectionNextStep")}
             </p>
           </div>
         </li>

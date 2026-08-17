@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { signOutAction } from "@/lib/auth/actions";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 interface SignOutButtonProps {
   variant?: "light" | "dark" | "nav" | "mobile";
@@ -32,6 +33,8 @@ export function SignOutButton({
   className = "",
 }: SignOutButtonProps) {
   const [pending, startTransition] = useTransition();
+  const { t } = useLanguage();
+  const label = t("common.signOut");
 
   const styles =
     variant === "light"
@@ -60,12 +63,12 @@ export function SignOutButton({
           >
             <IconLogout className="ko-icon" />
           </span>
-          {pending ? "…" : "Déconnexion"}
+          {pending ? "…" : label}
         </>
       ) : pending ? (
         "…"
       ) : (
-        "Déconnexion"
+        label
       )}
     </button>
   );

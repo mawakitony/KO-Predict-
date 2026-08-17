@@ -1,5 +1,8 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { formatStudyHours } from "@/lib/dashboard/cockpit-copy";
-import { formatDateFr } from "@/lib/dashboard/format";
+import { formatDate } from "@/lib/i18n/format-date";
 
 interface RecentActivityProps {
   studyTimeMinutes: number;
@@ -16,10 +19,15 @@ export function RecentActivity({
   completedActivities,
   currentPace,
 }: RecentActivityProps) {
+  const { t, locale } = useLanguage();
   const weekPace =
     currentPace == null
-      ? "Pas encore assez de données"
-      : `${Number.isInteger(currentPace) ? currentPace : currentPace.toFixed(1)} act. / sem.`;
+      ? t("learner.cockpit.notEnoughData")
+      : t("learner.cockpit.actPerWeek", {
+          n: Number.isInteger(currentPace)
+            ? currentPace
+            : currentPace.toFixed(1),
+        });
 
   return (
     <section
@@ -27,41 +35,41 @@ export function RecentActivity({
       aria-labelledby="activity-title"
     >
       <p className="ko-cockpit-kicker" id="activity-title">
-        Activité récente
+        {t("learner.cockpit.recentActivity")}
       </p>
       <p className="ko-cockpit-section-lead">
-        Un aperçu simple de votre comportement d&apos;apprentissage récent.
+        {t("learner.cockpit.recentLead")}
       </p>
 
       <dl className="ko-cockpit-activity-grid">
         <div>
-          <dt>Rythme observé</dt>
+          <dt>{t("learner.cockpit.observedPace")}</dt>
           <dd>{weekPace}</dd>
         </div>
         <div>
-          <dt>Temps d&apos;étude cumulé</dt>
-          <dd>{formatStudyHours(studyTimeMinutes)}</dd>
+          <dt>{t("learner.cockpit.studyTime")}</dt>
+          <dd>{formatStudyHours(studyTimeMinutes, locale)}</dd>
         </div>
         <div>
-          <dt>Dernière activité</dt>
+          <dt>{t("learner.cockpit.lastActivity")}</dt>
           <dd>
             {lastActivityDate
-              ? formatDateFr(lastActivityDate)
-              : "Pas encore assez de données"}
+              ? formatDate(lastActivityDate, locale)
+              : t("learner.cockpit.notEnoughData")}
           </dd>
         </div>
         <div>
-          <dt>Jours d&apos;inactivité</dt>
+          <dt>{t("learner.cockpit.inactivityDays")}</dt>
           <dd>
             {inactiveDays <= 0
-              ? "Activité récente"
+              ? t("learner.cockpit.recentYes")
               : inactiveDays === 1
-                ? "1 jour"
-                : `${inactiveDays} jours`}
+                ? t("learner.dayOne")
+                : t("learner.dayMany", { n: inactiveDays })}
           </dd>
         </div>
         <div>
-          <dt>Activités complétées</dt>
+          <dt>{t("learner.cockpit.completed")}</dt>
           <dd>{completedActivities}</dd>
         </div>
       </dl>

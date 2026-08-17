@@ -1,38 +1,42 @@
 /**
- * Libellés visibles côté apprenant.
+ * Libellés persistés / API (FR V1).
+ * L’affichage apprenant passe par t() + lib/i18n/fr.ts|en.ts.
  * Ne pas utiliser pour l’admin (LearnWorlds y reste techniquement utile).
  */
 
-export const LEARNER_PLATFORM = "plateforme WOLOYEM";
-export const LEARNER_TRAINING_SPACE = "espace de formation WOLOYEM";
+import { translate } from "@/lib/i18n/translate";
 
-export const LEARNER_LAST_SYNC_LABEL =
-  "Dernière synchronisation avec la plateforme WOLOYEM";
+export const LEARNER_PLATFORM = translate("fr", "learner.platform");
+export const LEARNER_TRAINING_SPACE = translate("fr", "learner.trainingSpace");
 
-export const LEARNER_LAST_SYNC_UNAVAILABLE =
-  "Dernière synchronisation indisponible";
+export const LEARNER_LAST_SYNC_LABEL = translate("fr", "learner.lastSync");
 
-export const LEARNER_DATA_UNAVAILABLE_MESSAGE =
-  "Vos données de l’espace de formation WOLOYEM sont momentanément indisponibles.";
+export const LEARNER_LAST_SYNC_UNAVAILABLE = translate(
+  "fr",
+  "learner.lastSyncUnavailable",
+);
+
+export const LEARNER_DATA_UNAVAILABLE_MESSAGE = translate(
+  "fr",
+  "learner.dataUnavailable",
+);
 
 export const LEARNER_COPY = {
-  collectionNextStep: `Suivez votre formation sur la ${LEARNER_PLATFORM} : KO Predict™ mettra à jour votre tableau de bord dès que possible.`,
-  progressKicker: "Parcours de formation",
-  progressContinue: `Continuez votre formation sur la ${LEARNER_PLATFORM} : activités et quiz s'afficheront automatiquement après synchronisation.`,
+  collectionNextStep: translate("fr", "learner.collectionNextStep"),
+  progressKicker: translate("fr", "learner.progressKicker"),
+  progressContinue: translate("fr", "learner.progressContinue"),
   datesSyncPrefix: LEARNER_LAST_SYNC_LABEL,
-  issueTargetDatePassed: `Votre date cible d'examen est dépassée. Mettez-la à jour dans votre ${LEARNER_TRAINING_SPACE} pour recalculer votre trajectoire.`,
-  issueNoRemainingWork:
-    "Le parcours semble terminé côté activités. Vérifiez votre progression pédagogique.",
-  actionMissingDate: `Renseignez votre date cible d'examen dans votre ${LEARNER_TRAINING_SPACE}.`,
-  actionTargetDatePassed: `Mettez à jour votre date cible d'examen dans votre ${LEARNER_TRAINING_SPACE} pour recalculer votre trajectoire.`,
-  learningKicker: "Historique de formation",
-  learningEmptyQuizzes: `Pas encore de résultat QCM. Vos scores apparaîtront après vos premiers quiz sur la ${LEARNER_PLATFORM}.`,
-  planEmptySync: `Votre premier plan sera généré automatiquement après la prochaine synchronisation avec la ${LEARNER_PLATFORM}.`,
-  examCountdownMissing: `Renseignez votre date cible dans votre ${LEARNER_TRAINING_SPACE} pour activer le compte à rebours et la trajectoire.`,
-  profileSubtitle: `Préférences KO Predict™ — indépendantes de l’${LEARNER_TRAINING_SPACE}`,
+  issueTargetDatePassed: translate("fr", "learner.issue.targetPassed"),
+  issueNoRemainingWork: translate("fr", "learner.issue.noRemainingWork"),
+  actionMissingDate: translate("fr", "learner.action.missingDate"),
+  actionTargetDatePassed: translate("fr", "learner.action.targetPassed"),
+  learningKicker: translate("fr", "learner.learningKicker"),
+  learningEmptyQuizzes: translate("fr", "learner.learningEmptyQuizzes"),
+  planEmptySync: translate("fr", "learner.planEmptySync"),
+  examCountdownMissing: translate("fr", "learner.examCountdownMissing"),
+  profileSubtitle: translate("fr", "learner.profileSubtitle"),
   taskActivitiesStartup:
     "Avancez dans vos activités de formation afin que KO Predict™ puisse mesurer votre trajectoire.",
-  taskTargetDate: `Indiquez votre date cible d’examen dans l’${LEARNER_TRAINING_SPACE} pour activer le calcul de trajectoire.`,
-  taskActivitiesCatchUp:
-    "Avancez régulièrement dans vos activités de formation.",
+  taskTargetDate: translate("fr", "learner.action.missingDate"),
+  taskActivitiesCatchUp: "Avancez régulièrement dans vos activités de formation.",
 } as const;

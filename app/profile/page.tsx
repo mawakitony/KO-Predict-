@@ -1,6 +1,6 @@
-import { LEARNER_COPY } from "@/lib/learner/copy";
 import { AdminHubLayout } from "@/components/admin/AdminHubLayout";
 import { LearnerHubLayout } from "@/components/dashboard/LearnerHubLayout";
+import { TranslatedText } from "@/components/i18n/TranslatedText";
 import { ProfileEditor } from "@/components/profile/ProfileEditor";
 import {
   canAccessAdmin,
@@ -46,15 +46,21 @@ export default async function ProfilePage() {
         <section className="ko-admin-panel">
           <div className="ko-admin-panel-head">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                Compte
-              </p>
-              <h1 className="ko-display mt-1 text-xl font-semibold text-slate-900">
-                Mon profil
-              </h1>
-              <p className="mt-1 text-sm text-slate-500">
-                Préférences KO Predict™ — indépendantes de LearnWorlds
-              </p>
+              <TranslatedText
+                as="p"
+                messageKey="nav.account"
+                className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400"
+              />
+              <TranslatedText
+                as="h1"
+                messageKey="nav.profile"
+                className="ko-display mt-1 text-xl font-semibold text-slate-900"
+              />
+              <TranslatedText
+                as="p"
+                messageKey="chrome.profilePrefsStaff"
+                className="mt-1 text-sm text-slate-500"
+              />
             </div>
           </div>
           <div className="ko-admin-panel-body">{editor}</div>
@@ -71,7 +77,7 @@ export default async function ProfilePage() {
       displayName={profile.displayName}
       avatarUrl={profile.avatarUrl}
       title="Mon profil"
-      subtitle={LEARNER_COPY.profileSubtitle}
+      page="profile"
       showAdminLink={false}
     >
       {editor}

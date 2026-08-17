@@ -1,6 +1,8 @@
 "use client";
 
 import type { RiskLevel } from "@/types/prediction";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { riskKey } from "@/lib/i18n/labels";
 
 const RISK_OPTIONS: Array<RiskLevel | "ALL"> = [
   "ALL",
@@ -29,13 +31,14 @@ export function RiskFilter({
   search,
   onSearchChange,
 }: RiskFilterProps) {
+  const { t } = useLanguage();
   return (
     <div className="ko-admin-filters">
       <input
         type="search"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="Rechercher un apprenant…"
+        placeholder={t("admin.learners.searchPlaceholder")}
         className="ko-admin-filter-search"
       />
       <select
@@ -43,7 +46,7 @@ export function RiskFilter({
         onChange={(e) => onCertificationChange(e.target.value)}
         className="ko-admin-filter-select"
       >
-        <option value="ALL">Toutes certifications</option>
+        <option value="ALL">{t("admin.learners.allCerts")}</option>
         {certifications.map((c) => (
           <option key={c} value={c}>
             {c}
@@ -57,7 +60,7 @@ export function RiskFilter({
       >
         {RISK_OPTIONS.map((opt) => (
           <option key={opt} value={opt}>
-            {opt === "ALL" ? "Tous risques" : opt}
+            {opt === "ALL" ? t("risk.all") : t(riskKey(opt))}
           </option>
         ))}
       </select>

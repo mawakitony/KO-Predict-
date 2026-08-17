@@ -1,4 +1,4 @@
-import { LEARNER_PLATFORM } from "@/lib/learner/copy";
+import { translate } from "@/lib/i18n/translate";
 import type { PredictionDataIssue } from "@/types/prediction";
 
 export const LEARNER_GUIDE_KEYS = [
@@ -55,51 +55,51 @@ export type LearnerAutoPopup =
 export const LEARNER_GUIDE_COPY: Record<LearnerGuideKey, LearnerGuideContent> = {
   welcome_dashboard: {
     key: "welcome_dashboard",
-    title: "Bienvenue dans votre espace de préparation",
-    body: "KO Predict™ analyse votre progression pour vous aider à savoir où vous en êtes et sur quoi concentrer vos efforts.",
-    ctaLabel: "Découvrir mon tableau de bord",
+    title: translate("fr", "learner.guide.welcome_dashboard.title"),
+    body: translate("fr", "learner.guide.welcome_dashboard.body"),
+    ctaLabel: translate("fr", "learner.guide.welcome_dashboard.cta"),
     href: null,
   },
   missing_exam_date: {
     key: "missing_exam_date",
-    title: "Avez-vous déjà une date d’examen ?",
-    body: "Ajouter votre date cible permet d’adapter plus précisément votre rythme de préparation.",
-    ctaLabel: "Ajouter ma date",
+    title: translate("fr", "learner.guide.missing_exam_date.title"),
+    body: translate("fr", "learner.guide.missing_exam_date.body"),
+    ctaLabel: translate("fr", "learner.guide.missing_exam_date.cta"),
     href: LEARNER_DATES_HREF,
   },
   no_scored_qcm: {
     key: "no_scored_qcm",
-    title: "Commencez à mesurer votre niveau",
-    body: `Les QCM permettent à KO Predict™ de mieux évaluer votre préparation. Réalisez quelques évaluations sur la ${LEARNER_PLATFORM} pour enrichir votre suivi.`,
-    ctaLabel: "Voir mes activités",
+    title: translate("fr", "learner.guide.no_scored_qcm.title"),
+    body: translate("fr", "learner.guide.no_scored_qcm.body"),
+    ctaLabel: translate("fr", "learner.guide.no_scored_qcm.cta"),
     href: "/learning",
   },
   inactivity: {
     key: "inactivity",
-    title: "Reprenez votre préparation",
-    body: "Votre activité récente est faible. Reprendre quelques activités cette semaine peut vous aider à retrouver votre rythme.",
-    ctaLabel: "Voir mon plan",
+    title: translate("fr", "learner.guide.inactivity.title"),
+    body: translate("fr", "learner.guide.inactivity.body"),
+    ctaLabel: translate("fr", "learner.guide.inactivity.cta"),
     href: "/plan",
   },
   low_readiness: {
     key: "low_readiness",
-    title: "Votre niveau peut encore progresser",
-    body: "Votre niveau actuel indique qu’un travail régulier peut améliorer votre préparation. Consultez votre plan pour savoir quoi faire cette semaine.",
-    ctaLabel: "Voir mon plan",
+    title: translate("fr", "learner.guide.low_readiness.title"),
+    body: translate("fr", "learner.guide.low_readiness.body"),
+    ctaLabel: translate("fr", "learner.guide.low_readiness.cta"),
     href: "/plan",
   },
   first_visit_learning: {
     key: "first_visit_learning",
-    title: "Suivez votre activité pédagogique",
-    body: "Vous pouvez ici consulter vos activités terminées, celles qu’il vous reste à faire, vos quiz et vos tentatives.",
-    ctaLabel: "Compris",
+    title: translate("fr", "learner.guide.first_visit_learning.title"),
+    body: translate("fr", "learner.guide.first_visit_learning.body"),
+    ctaLabel: translate("fr", "learner.guide.first_visit_learning.cta"),
     href: null,
   },
   first_visit_plan: {
     key: "first_visit_plan",
-    title: "Votre plan s’adapte à votre progression",
-    body: "Ce plan vous propose les actions prioritaires à réaliser sur votre cycle actuel. Il sera réévalué à partir de votre progression.",
-    ctaLabel: "Compris",
+    title: translate("fr", "learner.guide.first_visit_plan.title"),
+    body: translate("fr", "learner.guide.first_visit_plan.body"),
+    ctaLabel: translate("fr", "learner.guide.first_visit_plan.cta"),
     href: null,
   },
 };

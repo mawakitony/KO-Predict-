@@ -1,3 +1,7 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
 interface EstimationPreparingProps {
   tips: string[];
   explanations: string[];
@@ -7,20 +11,20 @@ export function EstimationPreparing({
   tips,
   explanations,
 }: EstimationPreparingProps) {
+  const { t } = useLanguage();
   return (
     <section
       className="ko-cockpit-card ko-cockpit-preparing"
       aria-labelledby="preparing-title"
     >
       <p className="ko-cockpit-kicker is-accent" id="preparing-title">
-        Estimation en préparation
+        {t("learner.status.preparing")}
       </p>
       <h2 className="ko-cockpit-preparing-title">
-        Votre estimation n&apos;est pas encore disponible.
+        {t("learner.heroUnavailable")}
       </h2>
       <p className="ko-cockpit-muted mt-2 max-w-2xl">
-        KO Predict™ collecte encore les données nécessaires pour établir votre
-        trajectoire.
+        {t("learner.cockpit.preparingBody")}
       </p>
 
       {explanations.length > 0 ? (
@@ -33,7 +37,9 @@ export function EstimationPreparing({
 
       {tips.length > 0 ? (
         <div className="ko-cockpit-tips">
-          <p className="ko-cockpit-why-label">Pour améliorer votre estimation</p>
+          <p className="ko-cockpit-why-label">
+            {t("learner.cockpit.improveTips")}
+          </p>
           <ul>
             {tips.map((tip) => (
               <li key={tip}>{tip}</li>

@@ -4,16 +4,19 @@ import {
   useCallback,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   useTransition,
 } from "react";
-import type {
-  KoPredictAccountStatus,
-  LearnWorldsRosterPage,
-} from "@/lib/admin/types";
+import type { LearnWorldsRosterPage } from "@/lib/admin/types";
 import { adminStudentDetailHref } from "@/lib/admin/types";
-import { formatDateFr } from "@/lib/dashboard/format";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { formatDate } from "@/lib/i18n/format-date";
+import {
+  accountStatusKey,
+  accountStatusTabKey,
+} from "@/lib/i18n/labels";
 import {
   ActivationCodeModal,
   type ActivationCodeModalData,
@@ -36,35 +39,21 @@ import { AdminRowAction, AdminRowActions } from "@/components/admin/AdminRowActi
 type RosterSort = "name-asc" | "name-desc" | "date-asc" | "date-desc";
 type MenuId = "filter" | "sort" | "more" | null;
 
-const SORT_OPTIONS: Array<{ value: RosterSort; label: string }> = [
-  { value: "name-asc", label: "Nom A → Z" },
-  { value: "name-desc", label: "Nom Z → A" },
-  { value: "date-desc", label: "Plus récents" },
-  { value: "date-asc", label: "Plus anciens" },
-];
-
-const STATUS_LABEL: Record<KoPredictAccountStatus, string> = {
-  NOT_ACTIVATED: "Non activé",
-  PENDING_ACTIVATION: "En attente",
-  ACTIVE: "Actif",
-  DISABLED: "Désactivé",
-  ERROR: "Erreur",
-};
-
-const STATUS_TABS: Array<{ value: string; label: string }> = [
-  { value: "ALL", label: "Tous" },
-  { value: "ACTIVE", label: "Actifs" },
-  { value: "PENDING_ACTIVATION", label: "En attente" },
-  { value: "NOT_ACTIVATED", label: "Non activés" },
-  { value: "DISABLED", label: "Désactivés" },
-  { value: "ERROR", label: "Erreurs" },
-];
+const STATUS_TAB_VALUES = [
+  "ALL",
+  "ACTIVE",
+  "PENDING_ACTIVATION",
+  "NOT_ACTIVATED",
+  "DISABLED",
+  "ERROR",
+] as const;
 
 export function LearnWorldsRoster({
   canManageStudents = false,
 }: {
   canManageStudents?: boolean;
 }) {
+  const { t, locale } = useLanguage();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("ALL");
   const [query, setQuery] = useState("");
@@ -82,6 +71,28 @@ export function LearnWorldsRoster({
   const [menuNote, setMenuNote] = useState<string | null>(null);
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const searchInputId = useId();
+
+  const statusTabs = useMemo(
+    () =>
+      STATUS_TAB_VALUES.map((value) => ({
+        value,
+        label:
+          value === "ALL"
+            ? t("common.all")
+            : t(accountStatusTabKey(value)),
+      })),
+    [t],
+  );
+
+  const sortOptions = useMemo(
+    (): Array<{ value: RosterSort; label: string }> => [
+      { value: "name-asc", label: t("admin.learners.sortNameAsc") },
+      { value: "name-desc", label: t("admin.learners.sortNameDesc") },
+      { value: "date-desc", label: t("admin.learners.sortDateDesc") },
+      { value: "date-asc", label: t("admin.learners.sortDateAsc") },
+    ],
+    [t],
+  );
 
   const load = useCallback(
     (signal?: AbortSignal, fresh = false) => {
@@ -102,18 +113,18 @@ export function LearnWorldsRoster({
           const json = await res.json();
           if (signal?.aborted) return;
           if (!res.ok || !json.ok) {
-            setError(json.error ?? "Impossible de charger LearnWorlds.");
+            setError(json.error ?? t("admin.learners.loadError"));
             return;
           }
           setData(json);
         } catch (err) {
           if (signal?.aborted) return;
           if (err instanceof DOMException && err.name === "AbortError") return;
-          setError("Erreur réseau.");
+          setError(t("common.networkError"));
         }
       });
     },
-    [page, status, query, sort],
+    [page, status, query, sort, t],
   );
 
   useEffect(() => {
@@ -188,13 +199,13 @@ export function LearnWorldsRoster({
       });
       const json = await res.json();
       if (!json.ok) {
-        setError(json.error ?? "Action échouée.");
+        setError(json.error ?? t("common.actionFailed"));
       } else if (json.activationCode && json.activationExpiresAt) {
         openCodeModal(row, json.activationCode, json.activationExpiresAt);
       }
       load(undefined, true);
     } catch {
-      setError("Erreur réseau.");
+      setError(t("common.networkError"));
     } finally {
       setBusyId(null);
     }
@@ -218,7 +229,7 @@ export function LearnWorldsRoster({
       );
       const json = await res.json();
       if (!json.ok) {
-        setError(json.error ?? "Régénération échouée.");
+        setError(json.error ?? t("admin.learners.regenerateFail"));
       } else if (json.activationCode && json.activationExpiresAt) {
         openCodeModal(
           {
@@ -231,7 +242,7 @@ export function LearnWorldsRoster({
       }
       load(undefined, true);
     } catch {
-      setError("Erreur réseau.");
+      setError(t("common.networkError"));
     } finally {
       setBusyId(null);
     }
@@ -242,9 +253,7 @@ export function LearnWorldsRoster({
     fullName: string;
     email: string | null;
   }) {
-    const ok = window.confirm(
-      "Générer un code de réinitialisation valable 60 minutes ? Communiquez-le à l’apprenant hors plateforme. Un éventuel code PENDING précédent sera révoqué.",
-    );
+    const ok = window.confirm(t("admin.learners.resetCodeConfirm"));
     if (!ok) return;
 
     setBusyId(row.studentId);
@@ -261,7 +270,7 @@ export function LearnWorldsRoster({
       );
       const json = await res.json();
       if (!json.ok) {
-        setError(json.error ?? "Émission du code échouée.");
+        setError(json.error ?? t("admin.learners.issueFail"));
       } else if (json.resetCode && json.resetExpiresAt) {
         openCodeModal(
           {
@@ -271,13 +280,13 @@ export function LearnWorldsRoster({
           json.resetCode,
           json.resetExpiresAt,
           {
-            title: "Code de réinitialisation",
-            hint: "Communiquez ce code à l’apprenant hors plateforme. Il expire dans 60 minutes et ne pourra plus être relu.",
+            title: t("admin.learners.resetCodeTitle"),
+            hint: t("admin.learners.resetCodeHint"),
           },
         );
       }
     } catch {
-      setError("Erreur réseau.");
+      setError(t("common.networkError"));
     } finally {
       setBusyId(null);
     }
@@ -287,9 +296,9 @@ export function LearnWorldsRoster({
     studentId: string;
     email: string | null;
   }) {
-    const displayEmail = row.email?.trim() || "l’apprenant";
+    const displayEmail = row.email?.trim() || t("chrome.learnerFallback");
     const ok = window.confirm(
-      `Cette action permettra à l’apprenant de définir un nouveau mot de passe. Un email de récupération sera envoyé à ${displayEmail}.`,
+      t("admin.learners.recoveryConfirm", { email: displayEmail }),
     );
     if (!ok) return;
 
@@ -304,12 +313,12 @@ export function LearnWorldsRoster({
       });
       const json = await res.json();
       if (!json.ok) {
-        setError(json.error ?? "Envoi du lien impossible.");
+        setError(json.error ?? t("admin.learners.emailFail"));
       } else {
-        setSuccessFlash("Lien de réinitialisation envoyé.");
+        setSuccessFlash(t("admin.learners.emailSent"));
       }
     } catch {
-      setError("Erreur réseau.");
+      setError(t("common.networkError"));
     } finally {
       setBusyId(null);
     }
@@ -320,9 +329,7 @@ export function LearnWorldsRoster({
     kind: "disable" | "enable",
   ) {
     if (kind === "disable") {
-      const ok = window.confirm(
-        "Voulez-vous vraiment désactiver l'accès KO Predict™ de cet apprenant ?\nSes données seront conservées.",
-      );
+      const ok = window.confirm(t("admin.learners.disableConfirm"));
       if (!ok) return;
     }
     setBusyId(studentId);
@@ -339,11 +346,11 @@ export function LearnWorldsRoster({
       });
       const json = await res.json();
       if (!json.ok) {
-        setError(json.error ?? "Action échouée.");
+        setError(json.error ?? t("common.actionFailed"));
       }
       load(undefined, true);
     } catch {
-      setError("Erreur réseau.");
+      setError(t("common.networkError"));
     } finally {
       setBusyId(null);
     }
@@ -368,10 +375,10 @@ export function LearnWorldsRoster({
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div
           role="tablist"
-          aria-label="Filtrer par statut"
+          aria-label={t("admin.learners.filterStatus")}
           className="flex flex-wrap items-center gap-1 rounded-full bg-slate-100/90 p-1"
         >
-          {STATUS_TABS.map((tab) => {
+          {statusTabs.map((tab) => {
             const active = status === tab.value;
             return (
               <button
@@ -393,12 +400,15 @@ export function LearnWorldsRoster({
         </div>
 
         <p className="text-sm text-slate-500 lg:text-right">
-          {searching ? "Recherche… · " : null}
+          {searching ? `${t("admin.learners.searching")} · ` : null}
           {query
-            ? `${totalItems ?? 0} résultat${(totalItems ?? 0) > 1 ? "s" : ""}`
+            ? t("admin.school.results", { count: totalItems ?? 0 })
             : totalItems != null
-              ? `${totalItems} apprenants · 10 / page`
-              : "10 / page"}
+              ? t("admin.learners.perPageWithTotal", {
+                  total: totalItems,
+                  size: 10,
+                })
+              : t("admin.learners.perPage", { size: 10 })}
         </p>
       </div>
 
@@ -417,14 +427,14 @@ export function LearnWorldsRoster({
             }
           >
             <IconFilter className="ko-icon-sm" />
-            Filtrer
+            {t("common.filter")}
           </button>
           {openMenu === "filter" ? (
             <div
               role="menu"
               className="ko-admin-menu absolute left-0 top-[calc(100%+0.4rem)] z-30 min-w-[12rem]"
             >
-              {STATUS_TABS.map((tab) => (
+              {statusTabs.map((tab) => (
                 <button
                   key={tab.value}
                   type="button"
@@ -460,8 +470,8 @@ export function LearnWorldsRoster({
                 setQuery(next);
               }
             }}
-            placeholder="Rechercher un apprenant…"
-            aria-label="Rechercher un apprenant"
+            placeholder={t("admin.learners.searchPlaceholder")}
+            aria-label={t("admin.learners.searchAria")}
             className="ko-admin-search"
           />
         </div>
@@ -476,7 +486,7 @@ export function LearnWorldsRoster({
           className="ko-admin-primary-btn shrink-0"
         >
           <IconSearch className="ko-icon-sm" />
-          Rechercher
+          {t("common.search")}
         </button>
 
         <div className="flex items-center gap-2">
@@ -485,10 +495,10 @@ export function LearnWorldsRoster({
               type="button"
               className="ko-admin-toolbar-icon"
               data-active={openMenu === "sort" || sort !== "name-asc"}
-              aria-label="Trier"
+              aria-label={t("admin.school.sort")}
               aria-expanded={openMenu === "sort"}
               aria-haspopup="menu"
-              title="Trier la liste"
+              title={t("admin.learners.sortList")}
               onClick={() =>
                 setOpenMenu((m) => (m === "sort" ? null : "sort"))
               }
@@ -500,7 +510,7 @@ export function LearnWorldsRoster({
                 role="menu"
                 className="ko-admin-menu absolute right-0 top-[calc(100%+0.4rem)] z-30 min-w-[11.5rem]"
               >
-                {SORT_OPTIONS.map((opt) => (
+                {sortOptions.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
@@ -524,8 +534,8 @@ export function LearnWorldsRoster({
           <button
             type="button"
             className="ko-admin-toolbar-icon"
-            aria-label="Actualiser"
-            title="Actualiser (ignore le cache)"
+            aria-label={t("admin.learners.refreshAria")}
+            title={t("admin.learners.refreshTitle")}
             disabled={pending}
             onClick={() => {
               setOpenMenu(null);
@@ -540,7 +550,7 @@ export function LearnWorldsRoster({
               type="button"
               className="ko-admin-toolbar-icon"
               data-active={openMenu === "more"}
-              aria-label="Plus d’options"
+              aria-label={t("common.more")}
               aria-expanded={openMenu === "more"}
               aria-haspopup="menu"
               onClick={() =>
@@ -565,10 +575,10 @@ export function LearnWorldsRoster({
                     setSort("name-asc");
                     setPage(1);
                     setOpenMenu(null);
-                    setMenuNote("Filtres réinitialisés");
+                    setMenuNote(t("admin.learners.filtersReset"));
                   }}
                 >
-                  Réinitialiser filtres
+                  {t("admin.learners.resetFilters")}
                 </button>
                 <button
                   type="button"
@@ -582,7 +592,7 @@ export function LearnWorldsRoster({
                     document.getElementById(searchInputId)?.focus();
                   }}
                 >
-                  Effacer la recherche
+                  {t("admin.school.resetSearch")}
                 </button>
                 <button
                   type="button"
@@ -593,7 +603,7 @@ export function LearnWorldsRoster({
                     load(undefined, true);
                   }}
                 >
-                  Forcer l’actualisation
+                  {t("admin.learners.refreshTitle")}
                 </button>
                 <button
                   type="button"
@@ -603,14 +613,14 @@ export function LearnWorldsRoster({
                     const n = totalItems ?? data?.rows.length ?? 0;
                     try {
                       await navigator.clipboard.writeText(String(n));
-                      setMenuNote(`${n} copié dans le presse-papiers`);
+                      setMenuNote(t("common.copied"));
                     } catch {
-                      setMenuNote("Copie impossible");
+                      setMenuNote(t("admin.learners.copyFail"));
                     }
                     setOpenMenu(null);
                   }}
                 >
-                  Copier le total ({totalItems ?? "—"})
+                  {t("common.copy")} ({totalItems ?? "—"})
                 </button>
               </div>
             ) : null}
@@ -650,22 +660,22 @@ export function LearnWorldsRoster({
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/90">
                 <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                  Apprenant
+                  {t("admin.learners.colLearner")}
                 </th>
                 <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                  Email
+                  {t("common.email")}
                 </th>
                 <th className="hidden px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 md:table-cell">
-                  Formation
+                  {t("admin.file.formation")}
                 </th>
                 <th className="hidden px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 lg:table-cell">
-                  Inscription
+                  {t("admin.learners.colEnrolled")}
                 </th>
                 <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                  Statut
+                  {t("admin.learners.colAccess")}
                 </th>
                 <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                  Action
+                  {t("admin.learners.colAction")}
                 </th>
               </tr>
             </thead>
@@ -676,7 +686,7 @@ export function LearnWorldsRoster({
                     colSpan={6}
                     className="px-4 py-16 text-center text-slate-500"
                   >
-                    Chargement de la liste…
+                    {t("admin.learners.loadingList")}
                   </td>
                 </tr>
               ) : null}
@@ -726,12 +736,12 @@ export function LearnWorldsRoster({
                       )}
                     </td>
                     <td className="hidden whitespace-nowrap px-4 py-3.5 align-middle text-slate-600 lg:table-cell">
-                      {formatDateFr(row.createdAt)}
+                      {formatDate(row.createdAt, locale)}
                     </td>
                     <td className="px-4 py-3.5 align-middle">
                       <AccountStatusBadge
                         status={row.accountStatus}
-                        label={STATUS_LABEL[row.accountStatus]}
+                        label={t(accountStatusKey(row.accountStatus))}
                       />
                       {row.invitationError ? (
                         <p className="mt-1 max-w-[11rem] truncate text-[11px] text-red-600" title={row.invitationError}>
@@ -745,7 +755,7 @@ export function LearnWorldsRoster({
                           {href ? (
                             <AdminRowAction
                               href={href}
-                              label="Voir"
+                              label={t("status.view")}
                               tone="primary"
                               icon={<IconEye className="ko-icon-sm" />}
                             />
@@ -755,7 +765,7 @@ export function LearnWorldsRoster({
                           row.studentId ? (
                             <>
                               <AdminRowAction
-                                label="Réinitialiser l’accès"
+                                label={t("status.resetAccess")}
                                 disabled={busyId === row.studentId}
                                 onClick={() =>
                                   runIssuePasswordReset({
@@ -767,7 +777,7 @@ export function LearnWorldsRoster({
                                 icon={<IconRefresh className="ko-icon-sm" />}
                               />
                               <AdminRowAction
-                                label="Lien email"
+                                label={t("admin.learners.emailLink")}
                                 disabled={busyId === row.studentId}
                                 onClick={() =>
                                   runPasswordRecovery({
@@ -778,7 +788,7 @@ export function LearnWorldsRoster({
                                 icon={<IconMail className="ko-icon-sm" />}
                               />
                               <AdminRowAction
-                                label="Désactiver"
+                                label={t("common.disable")}
                                 tone="danger"
                                 disabled={busyId === row.studentId}
                                 onClick={() =>
@@ -793,7 +803,7 @@ export function LearnWorldsRoster({
                           row.studentId ? (
                             <AdminRowAction
                               labeled
-                              label="Réactiver"
+                              label={t("common.reactivate")}
                               tone="success"
                               disabled={busyId === row.studentId}
                               onClick={() =>
@@ -807,7 +817,7 @@ export function LearnWorldsRoster({
                           row.studentId ? (
                             <>
                               <AdminRowAction
-                                label="Régénérer"
+                                label={t("admin.learners.regenerate")}
                                 disabled={busyId === row.studentId}
                                 onClick={() =>
                                   runRegenerate({
@@ -819,7 +829,7 @@ export function LearnWorldsRoster({
                                 icon={<IconRefresh className="ko-icon-sm" />}
                               />
                               <AdminRowAction
-                                label="Désactiver"
+                                label={t("common.disable")}
                                 tone="danger"
                                 disabled={busyId === row.studentId}
                                 onClick={() =>
@@ -837,8 +847,8 @@ export function LearnWorldsRoster({
                               tone="success"
                               label={
                                 row.accountStatus === "ERROR"
-                                  ? "Réessayer"
-                                  : "Activer"
+                                  ? t("admin.learners.retry")
+                                  : t("status.active")
                               }
                               disabled={busyId === row.learnworldsUserId}
                               onClick={() =>
@@ -863,7 +873,7 @@ export function LearnWorldsRoster({
                     colSpan={6}
                     className="px-4 py-16 text-center text-slate-500"
                   >
-                    Aucun apprenant pour ce filtre.
+                    {t("admin.learners.empty")}
                   </td>
                 </tr>
               ) : null}

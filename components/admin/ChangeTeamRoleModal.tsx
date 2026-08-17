@@ -2,12 +2,13 @@
 
 import { useState, useTransition } from "react";
 import type { TeamMemberRow } from "@/lib/admin/team-types";
-import { roleLabelFr, type TeamCreatableRole } from "@/lib/auth/roles";
+import { type TeamCreatableRole } from "@/lib/auth/roles";
 import {
   CHANGE_TEAM_ROLE_MFA_NEXT,
-  formatTeamRoleTransitionSummary,
   mapChangeTeamRoleApiError,
 } from "@/lib/admin/team-role-ui";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { roleKey } from "@/lib/i18n/labels";
 
 interface ChangeTeamRoleModalProps {
   member: TeamMemberRow;
@@ -20,6 +21,7 @@ export function ChangeTeamRoleModal({
   onClose,
   onChanged,
 }: ChangeTeamRoleModalProps) {
+  const { t } = useLanguage();
   const currentRole = member.role as TeamCreatableRole;
   const [selected, setSelected] = useState<TeamCreatableRole>(currentRole);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export function ChangeTeamRoleModal({
   const unchanged = selected === currentRole;
   const summary = unchanged
     ? null
-    : formatTeamRoleTransitionSummary(currentRole, selected);
+    : `${t(roleKey(currentRole))} → ${t(roleKey(selected))}`;
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -70,10 +72,15 @@ export function ChangeTeamRoleModal({
         await onChanged();
         onClose();
       } catch {
-        setError("Erreur réseau.");
+        setError(t("common.networkError"));
       }
     });
   }
+
+  const roleOptions: Array<{ value: TeamCreatableRole; labelKey: ReturnType<typeof roleKey> }> = [
+    { value: "coach", labelKey: roleKey("coach") },
+    { value: "admin", labelKey: roleKey("admin") },
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 sm:items-center">
@@ -82,12 +89,12 @@ export function ChangeTeamRoleModal({
         className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl"
       >
         <h2 className="ko-display text-lg font-semibold text-slate-900">
-          Modifier le rôle
+          {t("admin.modal.changeRoleTitle")}
         </h2>
 
         <div className="mt-4 space-y-1 rounded-xl border border-slate-100 bg-slate-50 px-3 py-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-            Membre
+            {t("admin.team.members")}
           </p>
           <p className="font-semibold text-slate-900">{fullName}</p>
           <p className="truncate text-sm text-slate-500">
@@ -96,22 +103,14 @@ export function ChangeTeamRoleModal({
         </div>
 
         <p className="mt-4 text-sm text-slate-600">
-          Rôle actuel :{" "}
-          <span className="font-semibold text-slate-900">
-            {roleLabelFr(currentRole)}
-          </span>
+          {t("admin.team.currentRole", { role: t(roleKey(currentRole)) })}
         </p>
 
         <fieldset className="mt-4 space-y-2">
           <legend className="text-sm font-medium text-slate-700">
-            Nouveau rôle
+            {t("admin.team.changeRole")}
           </legend>
-          {(
-            [
-              { value: "coach", label: "Coach" },
-              { value: "admin", label: "Administrateur" },
-            ] as const
-          ).map((option) => {
+          {roleOptions.map((option) => {
             const active = selected === option.value;
             return (
               <label
@@ -130,7 +129,7 @@ export function ChangeTeamRoleModal({
                   onChange={() => setSelected(option.value)}
                   className="h-4 w-4 border-slate-300 text-blue-600"
                 />
-                {option.label}
+                {t(option.labelKey)}
               </label>
             );
           })}
@@ -142,7 +141,7 @@ export function ChangeTeamRoleModal({
           </p>
         ) : (
           <p className="mt-4 text-sm text-slate-500">
-            Sélectionnez un rôle différent pour activer la confirmation.
+            {t("admin.team.selectDifferentRole")}
           </p>
         )}
 
@@ -154,7 +153,7 @@ export function ChangeTeamRoleModal({
                 href={mfaHref}
                 className="mt-2 inline-flex font-semibold text-rose-900 underline"
               >
-                Ouvrir la vérification en deux étapes
+                {t("admin.team.openMfa")}
               </a>
             ) : null}
           </div>
@@ -167,14 +166,14 @@ export function ChangeTeamRoleModal({
             disabled={pending}
             className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
-            Annuler
+            {t("common.cancel")}
           </button>
           <button
             type="submit"
             disabled={pending || unchanged}
             className="min-h-11 rounded-xl bg-[var(--admin-blue)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--admin-blue-hover)] disabled:opacity-50"
           >
-            Confirmer le changement
+            {t("admin.team.confirmChange")}
           </button>
         </div>
       </form>

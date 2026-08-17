@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit, Source_Sans_3 } from "next/font/google";
+import { LanguageProvider } from "@/components/i18n/LanguageProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { LANGUAGE_BOOTSTRAP_SCRIPT } from "@/lib/i18n/storage";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme/storage";
 import "./globals.css";
 
@@ -51,9 +53,14 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }}
         />
+        <script
+          dangerouslySetInnerHTML={{ __html: LANGUAGE_BOOTSTRAP_SCRIPT }}
+        />
       </head>
       <body className="ko-app-body min-h-full flex flex-col font-sans">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <LanguageProvider>{children}</LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

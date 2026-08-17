@@ -1,3 +1,7 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
 interface PaceActivityBarsProps {
   currentPace: number | null;
   requiredPace: number | null;
@@ -8,7 +12,16 @@ export function PaceActivityBars({
   currentPace,
   requiredPace,
 }: PaceActivityBarsProps) {
-  const days = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+  const { t } = useLanguage();
+  const days = [
+    t("common.weekdayMon"),
+    t("common.weekdayTue"),
+    t("common.weekdayWed"),
+    t("common.weekdayThu"),
+    t("common.weekdayFri"),
+    t("common.weekdaySat"),
+    t("common.weekdaySun"),
+  ];
   const max = Math.max(currentPace ?? 0, requiredPace ?? 0, 1);
 
   /** Répartition illustrative basée sur le rythme hebdo (pas de données journalières V1). */
@@ -27,7 +40,7 @@ export function PaceActivityBars({
         <div
           className="pointer-events-none absolute inset-x-0 border-t border-dashed border-[var(--admin-blue)]/50"
           style={{ bottom: `${requiredLine}%` }}
-          title={`Rythme nécessaire : ${requiredPace}`}
+          title={t("admin.file.requiredPaceTitle", { pace: String(requiredPace) })}
         />
       ) : null}
       {days.map((day, i) => (

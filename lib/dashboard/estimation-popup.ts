@@ -1,8 +1,12 @@
 import {
+  getLearnerIssueExplanationKeys,
   getLearnerIssueExplanations,
   isLearnerDashboardCollecting,
   resolveLearnerRecommendedAction,
 } from "@/lib/dashboard/learner-presentation";
+import { translate } from "@/lib/i18n/translate";
+import type { MessageKey } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/i18n/storage";
 import type { PredictionDataIssue, PredictionResult } from "@/types/prediction";
 
 export const ESTIMATION_POPUP_DELAY_MS = 10_000;
@@ -15,13 +19,11 @@ export interface EstimationPopupContent {
   title: string;
   body: string;
   reasons: string[];
+  reasonKeys?: MessageKey[];
   primaryLabel: string;
   secondaryLabel: string;
   secondaryHref: string;
 }
-
-const TITLE_UNAVAILABLE =
-  "Pourquoi l’estimation n’est pas encore disponible ?";
 
 /**
  * Contenu du popup d’explication — basé sur le statut réel (issues / readiness).
@@ -32,33 +34,37 @@ export function buildEstimationPopupContent(
     PredictionResult,
     "readinessScore" | "riskLevel" | "issues" | "recommendedAction"
   >,
+  locale: Locale = "fr",
 ): EstimationPopupContent {
   if (!isLearnerDashboardCollecting(prediction)) {
     return {
       show: false,
-      title: TITLE_UNAVAILABLE,
+      title: translate(locale, "learner.estimationTitle"),
       body: "",
       reasons: [],
-      primaryLabel: "Compris",
-      secondaryLabel: "Voir mon plan",
+      reasonKeys: [],
+      primaryLabel: translate(locale, "learner.understood"),
+      secondaryLabel: translate(locale, "learner.seePlan"),
       secondaryHref: "/plan",
     };
   }
 
   const reasons = getLearnerIssueExplanations(prediction.issues);
+  const reasonKeys = getLearnerIssueExplanationKeys(prediction.issues);
   const action = resolveLearnerRecommendedAction(prediction);
   const body =
     reasons.length > 0
-      ? "KO Predict™ n’affiche un score que lorsque les données minimales sont présentes. Voici ce qui bloque encore votre estimation :"
+      ? translate(locale, "learner.estimationBody")
       : action;
 
   return {
     show: true,
-    title: TITLE_UNAVAILABLE,
+    title: translate(locale, "learner.estimationTitle"),
     body,
     reasons: reasons.length > 0 ? reasons : [],
-    primaryLabel: "Compris",
-    secondaryLabel: "Voir mon tableau de bord",
+    reasonKeys,
+    primaryLabel: translate(locale, "learner.understood"),
+    secondaryLabel: translate(locale, "learner.seeDashboard"),
     secondaryHref: "/dashboard",
   };
 }

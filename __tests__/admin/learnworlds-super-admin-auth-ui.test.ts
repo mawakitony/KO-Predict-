@@ -137,10 +137,10 @@ describe("UI / routes Phase B — source", () => {
       ),
       "utf8",
     );
-    expect(panel).toMatch(/Autorisations Super Admin LearnWorlds/);
-    expect(panel).toMatch(/LW_SA_AUTH_REVOKE_NOTICE/);
+    expect(panel).toMatch(/admin\.team\.lwAuthTitle/);
+    expect(panel).toMatch(/admin\.team\.lwRevokeNotice/);
     expect(panel).not.toMatch(/promoteToSuperAdmin|changeTeamRole|createUser/);
-    expect(modal).toMatch(/LW_SA_AUTH_NOT_PROMOTION_NOTICE/);
+    expect(modal).toMatch(/admin\.team\.lwNotPromotion/);
     expect(modal).toMatch(/expectedLearnWorldsUserId/);
     expect(modal).not.toMatch(/promoteToSuperAdmin|createTeamMember/);
   });
@@ -162,7 +162,7 @@ describe("UI / routes Phase B — source", () => {
     );
     expect(src).toMatch(/resolveAdminPromoteLwAuthUiState/);
     expect(src).toMatch(/LW_SA_AUTH_SECTION_ID/);
-    expect(src).toMatch(/Autorisation LearnWorlds requise/);
+    expect(src).toMatch(/admin\.team\.lwAuthRequired/);
     expect(LW_SA_AUTH_SECTION_ID).toBe("lw-sa-authorizations");
   });
 

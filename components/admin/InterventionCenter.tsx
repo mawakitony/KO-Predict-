@@ -18,28 +18,31 @@ import {
 } from "@/components/admin/AdminIcons";
 import { AdminAvatar } from "@/components/admin/AdminUi";
 import type { CoachInterventionCard } from "@/lib/admin/interventions/types";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { formatDate } from "@/lib/i18n/format-date";
 import {
-  interventionReasonLabelFr,
-  interventionStatusLabelFr,
-  type InterventionStatus,
-} from "@/lib/admin/interventions/types";
-import {
-  formatDateFr,
-  formatScore,
-  riskLabel,
-  riskToneClasses,
-} from "@/lib/dashboard/format";
-import { cockpitDaysUntil } from "@/lib/dashboard/cockpit-copy";
+  interventionReasonKey,
+  interventionStatusKey,
+  riskKey,
+} from "@/lib/i18n/labels";
+import type { MessageKey } from "@/lib/i18n/translate";
+import { formatScore, riskToneClasses } from "@/lib/dashboard/format";
+import type { InterventionStatus } from "@/lib/admin/interventions/types";
 
 type StatusFilter = InterventionStatus | "ACTIVE";
 
-function daysLabel(targetExamDate: string | null): string | null {
+import { cockpitDaysUntil } from "@/lib/dashboard/cockpit-copy";
+
+function daysLabel(
+  targetExamDate: string | null,
+  t: (key: MessageKey, params?: Record<string, string | number>) => string,
+): string | null {
   if (!targetExamDate) return null;
   const days = cockpitDaysUntil(targetExamDate);
   if (days == null) return null;
-  if (days < 0) return "Date d’examen dépassée";
-  if (days === 0) return "Examen aujourd’hui";
-  return `Examen dans ${days} jour${days > 1 ? "s" : ""}`;
+  if (days < 0) return t("admin.interventions.examPassed");
+  if (days === 0) return t("admin.interventions.examToday");
+  return t("admin.interventions.examInDays", { days });
 }
 
 function MetricTile({
@@ -79,6 +82,7 @@ export function InterventionCenter({
   canManage: boolean;
   dataSource: "demo" | "database";
 }) {
+  const { t, locale } = useLanguage();
   const router = useRouter();
   const [filter, setFilter] = useState<StatusFilter>("ACTIVE");
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -115,7 +119,7 @@ export function InterventionCenter({
   function setStatus(interventionId: string, status: InterventionStatus) {
     if (!canManage) return;
     if (dataSource === "demo") {
-      setError("Mode démo : les statuts ne sont pas persistés.");
+      setError(t("admin.interventions.demoNoPersist"));
       return;
     }
     setError(null);
@@ -129,12 +133,12 @@ export function InterventionCenter({
         });
         const json = (await res.json()) as { ok?: boolean; error?: string };
         if (!res.ok || !json.ok) {
-          setError(json.error ?? "Mise à jour impossible.");
+          setError(json.error ?? t("admin.interventions.updateFail"));
           return;
         }
         router.refresh();
       } catch {
-        setError("Erreur réseau.");
+        setError(t("common.networkError"));
       } finally {
         setPendingId(null);
       }
@@ -143,24 +147,24 @@ export function InterventionCenter({
 
   const filters: Array<{
     id: StatusFilter;
-    label: string;
+    labelKey: MessageKey;
     icon: ReactNode;
   }> = [
-    { id: "ACTIVE", label: "Actives", icon: <IconInboxDuo className="ko-icon-sm" /> },
-    { id: "OPEN", label: "Ouvert", icon: <IconAlertDuo className="ko-icon-sm" /> },
+    { id: "ACTIVE", labelKey: "admin.interventions.activePlural", icon: <IconInboxDuo className="ko-icon-sm" /> },
+    { id: "OPEN", labelKey: "admin.interventions.open", icon: <IconAlertDuo className="ko-icon-sm" /> },
     {
       id: "CONTACTED",
-      label: "Contacté",
+      labelKey: "admin.interventions.contacted",
       icon: <IconPhoneDuo className="ko-icon-sm" />,
     },
     {
       id: "FOLLOW_UP",
-      label: "À rappeler",
+      labelKey: "admin.interventions.followUp",
       icon: <IconBellDuo className="ko-icon-sm" />,
     },
     {
       id: "RESOLVED",
-      label: "Terminé",
+      labelKey: "admin.interventions.resolved",
       icon: <IconCheckDuo className="ko-icon-sm" />,
     },
   ];
@@ -181,10 +185,10 @@ export function InterventionCenter({
                 id="coach-center-title"
                 className="ko-display text-xl font-semibold text-slate-900"
               >
-                Interventions prioritaires
+                {t("admin.school.priorityTitle")}
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                File de travail coach — qui contacter aujourd’hui.
+                {t("admin.interventions.followSub")}
               </p>
             </div>
           </div>
@@ -192,15 +196,15 @@ export function InterventionCenter({
           <div className="flex flex-wrap gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 ring-1 ring-rose-200">
               <IconAlertDuo className="ko-icon-sm" />
-              {counts.critical} critiques
+              {counts.critical} {t("admin.school.critical").toLowerCase()}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-800 ring-1 ring-orange-200">
               <IconTargetDuo className="ko-icon-sm" />
-              {counts.red} risques élevés
+              {counts.red} {t("admin.school.high").toLowerCase()}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 ring-1 ring-amber-200">
               <IconBellDuo className="ko-icon-sm" />
-              {counts.amber} à surveiller
+              {counts.amber} {t("admin.school.amber").toLowerCase()}
             </span>
           </div>
         </div>
@@ -208,7 +212,7 @@ export function InterventionCenter({
         <div
           className="mt-4 flex flex-wrap gap-1.5 rounded-2xl bg-white/80 p-1.5 ring-1 ring-slate-200/80"
           role="tablist"
-          aria-label="Filtrer les interventions"
+          aria-label={t("admin.learners.filterStatus")}
         >
           {filters.map((f) => {
             const active = filter === f.id;
@@ -228,7 +232,7 @@ export function InterventionCenter({
                 <span className={active ? "text-white" : "text-slate-400"}>
                   {f.icon}
                 </span>
-                {f.label}
+                {t(f.labelKey)}
               </button>
             );
           })}
@@ -246,10 +250,10 @@ export function InterventionCenter({
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-10 text-center">
             <IconInboxDuo className="mx-auto h-8 w-8 text-slate-300" />
             <p className="mt-3 text-sm font-medium text-slate-600">
-              Aucune intervention dans ce filtre.
+              {t("admin.school.noActive")}
             </p>
             <p className="mt-1 text-xs text-slate-400">
-              Changez de statut ou revenez plus tard.
+              {t("admin.school.noMatch")}
             </p>
           </div>
         ) : (
@@ -258,7 +262,7 @@ export function InterventionCenter({
               const { row, intervention } = card;
               const currentRisk = row.prediction.riskLevel;
               const tone = riskToneClasses(currentRisk);
-              const exam = daysLabel(row.student.targetExamDate);
+              const exam = daysLabel(row.student.targetExamDate, t);
               const busy = isPending && pendingId === intervention.id;
               return (
                 <li
@@ -278,12 +282,12 @@ export function InterventionCenter({
                           >
                             <IconAlertDuo className="h-3.5 w-3.5" />
                             {currentRisk
-                              ? `${currentRisk} — ${riskLabel(currentRisk)}`
-                              : `Risque : ${riskLabel(null)}`}
+                              ? `${currentRisk} — ${t(riskKey(currentRisk))}`
+                              : `${currentRisk ?? "—"} — ${t(riskKey(null))}`}
                           </span>
                           <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
                             <IconClockDuo className="h-3.5 w-3.5" />
-                            {interventionStatusLabelFr(intervention.status)}
+                            {t(interventionStatusKey(intervention.status))}
                           </span>
                         </div>
                         <p className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-slate-500">
@@ -298,7 +302,7 @@ export function InterventionCenter({
                             <span className="ko-interv-chip-icon bg-slate-100 text-slate-600">
                               <IconCalendarDuo />
                             </span>
-                            {exam ?? "Date d’examen non renseignée"}
+                            {exam ?? t("admin.learners.dateMissing")}
                           </span>
                         </p>
                       </div>
@@ -308,13 +312,13 @@ export function InterventionCenter({
                       <MetricTile
                         tone="blue"
                         icon={<IconTargetDuo />}
-                        label="Readiness"
+                        label={t("admin.learners.colReadiness")}
                         value={`${formatScore(row.prediction.readinessScore)} / 100`}
                       />
                       <MetricTile
                         tone="teal"
                         icon={<IconPulseDuo />}
-                        label="Rythme"
+                        label={t("admin.file.activityPace")}
                         value={
                           row.prediction.requiredPace != null
                             ? `${row.prediction.currentPace ?? "—"} / ${row.prediction.requiredPace}`
@@ -324,19 +328,22 @@ export function InterventionCenter({
                       <MetricTile
                         tone="amber"
                         icon={<IconClockDuo />}
-                        label="Inactivité"
+                        label={t("admin.file.inactivity")}
                         value={
                           row.metrics.inactiveDays != null
-                            ? `${row.metrics.inactiveDays} j`
+                            ? t("admin.file.inactivityDays", {
+                                days: row.metrics.inactiveDays,
+                              })
                             : "—"
                         }
                       />
                       <MetricTile
                         tone="slate"
                         icon={<IconCalendarDuo />}
-                        label="Ouvert le"
-                        value={formatDateFr(
+                        label={t("admin.interventions.open")}
+                        value={formatDate(
                           intervention.createdAt.slice(0, 10),
+                          locale,
                         )}
                       />
                     </div>
@@ -349,7 +356,7 @@ export function InterventionCenter({
                             className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 ring-1 ring-slate-200"
                           >
                             <span className="h-1.5 w-1.5 rounded-full bg-[var(--admin-blue)]" />
-                            {interventionReasonLabelFr(code)}
+                            {t(interventionReasonKey(code))}
                           </li>
                         ))}
                       </ul>
@@ -361,7 +368,7 @@ export function InterventionCenter({
                         className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[var(--admin-blue)] px-3 py-2 text-xs font-semibold text-white shadow-[0_8px_18px_-12px_rgba(37,99,235,0.9)] hover:bg-[var(--admin-blue-hover)]"
                       >
                         <IconEyeDuo className="ko-icon-sm" />
-                        Voir le dossier
+                        {t("status.view")}
                       </Link>
                       {canManage && intervention.status !== "RESOLVED" ? (
                         <>
@@ -375,7 +382,7 @@ export function InterventionCenter({
                               className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                             >
                               <IconPhoneDuo className="ko-icon-sm" />
-                              Marquer contacté
+                              {t("admin.interventions.contacted")}
                             </button>
                           ) : null}
                           {intervention.status !== "FOLLOW_UP" ? (
@@ -388,7 +395,7 @@ export function InterventionCenter({
                               className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                             >
                               <IconBellDuo className="ko-icon-sm" />
-                              À rappeler
+                              {t("admin.interventions.followUp")}
                             </button>
                           ) : null}
                           <button
@@ -400,7 +407,7 @@ export function InterventionCenter({
                             className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-60"
                           >
                             <IconCheckDuo className="ko-icon-sm" />
-                            Terminer
+                            {t("admin.interventions.resolved")}
                           </button>
                         </>
                       ) : null}

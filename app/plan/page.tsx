@@ -1,4 +1,5 @@
 import { LearnerHubLayout } from "@/components/dashboard/LearnerHubLayout";
+import { TranslatedText } from "@/components/i18n/TranslatedText";
 import { WorkPlanDetail } from "@/components/plan/WorkPlanDetail";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { canAccessAdmin } from "@/lib/auth/permissions";
@@ -26,12 +27,12 @@ export default async function PlanPage() {
       avatarUrl={profile?.avatarUrl}
       title="Mon plan de progression"
       subtitle="Courbe d'avancement, objectifs et historique du cycle"
+      page="plan"
       showAdminLink={showAdmin}
     >
       {error === "UNAVAILABLE" ? (
         <section className="ko-dash-card p-5 text-sm text-slate-600">
-          Le plan est temporairement indisponible. Réessayez dans quelques
-          instants.
+          <TranslatedText messageKey="learner.planUnavailable" />
         </section>
       ) : (
         <WorkPlanDetail active={active} previous={previous} />

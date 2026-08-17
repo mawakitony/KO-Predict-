@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
 import type { SchoolChartPoint } from "@/lib/admin/school-overview";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 export { SchoolHeroChart } from "@/components/dashboard/SchoolHeroCurve";
 
@@ -34,6 +37,7 @@ export function SchoolRiskDonut({
 }: {
   segments: Array<{ key: string; label: string; count: number; color: string }>;
 }) {
+  const { t } = useLanguage();
   const totalCount = segments.reduce((s, x) => s + x.count, 0);
   const total = Math.max(totalCount, 1);
   const dominant = [...segments].sort((a, b) => b.count - a.count)[0];
@@ -47,8 +51,10 @@ export function SchoolRiskDonut({
   return (
     <section className="ko-inv-card" aria-labelledby="risk-donut-title">
       <div className="ko-inv-card-head">
-        <h3 id="risk-donut-title">Répartition risques</h3>
-        <span className="ko-inv-chip">{totalCount} apprenants</span>
+        <h3 id="risk-donut-title">{t("admin.school.riskDistribution")}</h3>
+        <span className="ko-inv-chip">
+          {t("admin.school.learnersCount", { count: totalCount })}
+        </span>
       </div>
 
       <div className="ko-inv-donut-wrap">
@@ -114,13 +120,14 @@ export function SchoolProgressBars({
 }: {
   points: SchoolChartPoint[];
 }) {
+  const { t } = useLanguage();
   const max = Math.max(...points.map((p) => p.value), 1);
 
   return (
     <section className="ko-inv-card" aria-labelledby="progress-bars-title">
       <div className="ko-inv-card-head">
-        <h3 id="progress-bars-title">Progression</h3>
-        <span className="ko-inv-chip">Paliers</span>
+        <h3 id="progress-bars-title">{t("admin.file.progress")}</h3>
+        <span className="ko-inv-chip">{t("admin.school.progressTiers")}</span>
       </div>
       <div className="ko-inv-bars">
         {points.map((p) => {
@@ -133,7 +140,7 @@ export function SchoolProgressBars({
                   <span
                     className="ko-inv-bar-fill"
                     style={{ height: `${h}%` }}
-                    title={`${p.value} apprenant${p.value > 1 ? "s" : ""}`}
+                    title={t("admin.school.learnerBar", { count: p.value })}
                   />
                 ) : (
                   <span className="ko-inv-bar-empty" aria-hidden />

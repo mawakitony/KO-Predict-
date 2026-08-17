@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
-  activityStatusLabelFr,
-  activityTypeLabelFr,
   bestAssessmentScore,
   formatDurationSeconds,
   formatScorePercent,
@@ -12,12 +11,12 @@ import {
   scoredAssessments,
   summarizeAttempts,
 } from "@/lib/admin/learning-history/parse";
-import { formatDateTimeFr } from "@/lib/dashboard/format";
-import { LEARNER_COPY } from "@/lib/learner/copy";
+import { formatDateTime } from "@/lib/i18n/format-date";
+import { activityStatusKey, activityTypeKey } from "@/lib/i18n/labels";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { formatPercentOrDash } from "@/lib/learning/format";
 import {
   interpretActivitiesResponse,
-  LEARNER_HISTORY_TEMPORARY_MESSAGE,
   shouldAutoFetchOnMount,
 } from "@/lib/learning/lw-id";
 import {
@@ -34,14 +33,14 @@ import type {
 
 type Tab = "activities" | "quizzes";
 
-const FILTERS: Array<{ id: LearningActivityFilter; label: string }> = [
-  { id: "all", label: "Toutes" },
-  { id: "completed", label: "Terminées" },
-  { id: "not_completed", label: "À faire" },
-  { id: "quiz", label: "Quiz" },
-  { id: "videos", label: "Vidéos" },
-  { id: "documents", label: "Documents" },
-  { id: "other", label: "Autres" },
+const FILTER_KEYS: Array<{ id: LearningActivityFilter; key: MessageKey }> = [
+  { id: "all", key: "admin.history.filterAll" },
+  { id: "completed", key: "admin.history.filterDone" },
+  { id: "not_completed", key: "admin.history.filterTodo" },
+  { id: "quiz", key: "admin.history.filterQuiz" },
+  { id: "videos", key: "admin.history.filterVideos" },
+  { id: "documents", key: "admin.history.filterDocs" },
+  { id: "other", key: "admin.history.filterOther" },
 ];
 
 type AttemptState =
@@ -73,6 +72,7 @@ export function LearnerLearningPanel({
   qcmAverage: number | null;
   recentQcmAverage: number | null;
 }) {
+  const { t, locale } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -120,13 +120,13 @@ export function LearnerLearningPanel({
       setActivities(body?.activities ?? []);
       setAssessments(body?.assessments ?? []);
     } catch {
-      setError(LEARNER_HISTORY_TEMPORARY_MESSAGE);
+      setError(t("learner.dataUnavailable"));
       setActivities([]);
       setAssessments([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!shouldAutoFetchOnMount(didMountFetch.current)) return;
@@ -187,7 +187,7 @@ export function LearnerLearningPanel({
           [assessmentId]: {
             status: "error",
             message:
-              body?.error ?? LEARNER_HISTORY_TEMPORARY_MESSAGE,
+              body?.error ?? t("learner.dataUnavailable"),
           },
         }));
         return;
@@ -198,8 +198,7 @@ export function LearnerLearningPanel({
           [assessmentId]: {
             status: "unavailable",
             message:
-              body.message ??
-              "Détail des tentatives indisponible pour le moment.",
+              body.message ?? t("admin.history.attemptsUnavailable"),
           },
         }));
         return;
@@ -220,7 +219,7 @@ export function LearnerLearningPanel({
         ...p,
         [assessmentId]: {
           status: "error",
-          message: LEARNER_HISTORY_TEMPORARY_MESSAGE,
+          message: t("learner.dataUnavailable"),
         },
       }));
     }
@@ -245,24 +244,21 @@ export function LearnerLearningPanel({
     <div className="ko-learn-board ko-dash-stagger">
       <section className="ko-learn-hero">
         <div className="ko-learn-hero-main">
-          <p className="ko-learn-kicker">{LEARNER_COPY.learningKicker}</p>
-          <h2 className="ko-learn-hero-title">Ma progression pédagogique</h2>
-          <p className="ko-learn-hero-sub">
-            Activités et quiz chargés à la demande — sans inventer de date ni de
-            score.
-          </p>
+          <p className="ko-learn-kicker">{t("learner.learningKicker")}</p>
+          <h2 className="ko-learn-hero-title">{t("learner.learningTitle")}</h2>
+          <p className="ko-learn-hero-sub">{t("learner.learn.heroSub")}</p>
           <div className="ko-learn-hero-stats">
             <div>
               <p>{totalCount > 0 ? `${completedCount}/${totalCount}` : "—"}</p>
-              <span>Terminées</span>
+              <span>{t("learner.learn.completed")}</span>
             </div>
             <div>
               <p>{formatPercentOrDash(qcmAverage)}</p>
-              <span>Moyenne QCM</span>
+              <span>{t("admin.file.qcmAverage")}</span>
             </div>
             <div>
               <p>{scored.length}</p>
-              <span>Quiz scorés</span>
+              <span>{t("learner.learn.scoredQuizzes")}</span>
             </div>
           </div>
         </div>
@@ -270,8 +266,8 @@ export function LearnerLearningPanel({
           className="ko-learn-hero-ring"
           aria-label={
             totalCount > 0
-              ? `Progression ${progressPct}%`
-              : "Progression indisponible"
+              ? t("learner.learn.progressPct", { pct: progressPct })
+              : t("learner.learn.progressUnavailable")
           }
         >
           <div
@@ -284,7 +280,9 @@ export function LearnerLearningPanel({
               <p className="ko-learn-hero-ring-value">
                 {totalCount > 0 ? `${progressPct}%` : "—"}
               </p>
-              <p className="ko-learn-hero-ring-label">réalisé</p>
+              <p className="ko-learn-hero-ring-label">
+                {t("learner.learn.realized")}
+              </p>
             </div>
           </div>
         </div>
@@ -299,7 +297,7 @@ export function LearnerLearningPanel({
             onClick={() => selectTab("activities")}
             className={`ko-learn-tab${tab === "activities" ? " is-active" : ""}`}
           >
-            Mes activités
+            {t("learner.learn.myActivities")}
           </button>
           <button
             type="button"
@@ -308,7 +306,7 @@ export function LearnerLearningPanel({
             onClick={() => selectTab("quizzes")}
             className={`ko-learn-tab${tab === "quizzes" ? " is-active" : ""}`}
           >
-            Mes quiz &amp; examens
+            {t("learner.learn.myQuizzes")}
           </button>
         </div>
         <button
@@ -317,33 +315,33 @@ export function LearnerLearningPanel({
           className="ko-learn-refresh"
         >
           <Icon3dRefresh className="ko-learn-3d is-xs" />
-          Actualiser
+          {t("common.refresh")}
         </button>
       </div>
 
       {loading ? (
-        <p className="ko-learn-loading">Chargement de votre parcours…</p>
+        <p className="ko-learn-loading">{t("learner.learn.loading")}</p>
       ) : null}
       {error && !loading ? (
         <div className="ko-learn-error">
           <p>{error}</p>
           <button type="button" onClick={() => void load(true)}>
-            Réessayer
+            {t("admin.learners.retry")}
           </button>
         </div>
       ) : null}
 
       {!loading && !error && tab === "activities" ? (
         <section className="ko-learn-panel">
-          <div className="ko-learn-filters" role="group" aria-label="Filtres">
-            {FILTERS.map((f) => (
+          <div className="ko-learn-filters" role="group" aria-label={t("common.filter")}>
+            {FILTER_KEYS.map((f) => (
               <button
                 key={f.id}
                 type="button"
                 onClick={() => setFilter(f.id)}
                 className={`ko-learn-filter${filter === f.id ? " is-active" : ""}`}
               >
-                {f.label}
+                {t(f.key)}
               </button>
             ))}
           </div>
@@ -352,8 +350,8 @@ export function LearnerLearningPanel({
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher une activité…"
-              aria-label="Rechercher une activité"
+              placeholder={t("admin.history.searchActivity")}
+              aria-label={t("chrome.searchActivity")}
             />
           </label>
           <ul className="ko-learn-list">
@@ -367,23 +365,27 @@ export function LearnerLearningPanel({
                   <div className="ko-learn-card-body">
                     <p className="ko-learn-card-title">{a.name}</p>
                     <p className="ko-learn-card-meta">
-                      {a.section ?? "Sans section"} ·{" "}
-                      {activityTypeLabelFr(a.type)}
+                      {a.section ?? t("admin.file.noSection")} ·{" "}
+                      {t(activityTypeKey(a.type))}
                     </p>
                     <div className="ko-learn-card-foot">
                       <span
                         className={`ko-learn-status ${statusTone(a.status)}`}
                       >
-                        {activityStatusLabelFr(a.status)}
+                        {t(activityStatusKey(a.status))}
                       </span>
                       <span>
-                        Score :{" "}
-                        {a.type === "assessmentV2"
-                          ? formatScorePercent(a.score)
-                          : "—"}
+                        {t("learner.learn.scoreLabel", {
+                          value:
+                            a.type === "assessmentV2"
+                              ? formatScorePercent(a.score)
+                              : "—",
+                        })}
                       </span>
                       <span>
-                        Temps : {formatDurationSeconds(a.timeOnUnitSeconds)}
+                        {t("learner.learn.timeLabel", {
+                          value: formatDurationSeconds(a.timeOnUnitSeconds),
+                        })}
                       </span>
                     </div>
                   </div>
@@ -392,7 +394,7 @@ export function LearnerLearningPanel({
             })}
             {filtered.length === 0 ? (
               <li className="ko-learn-empty">
-                Aucune activité pour ce filtre.
+                {t("learner.learn.emptyFilter")}
               </li>
             ) : null}
           </ul>
@@ -403,41 +405,38 @@ export function LearnerLearningPanel({
         <section className="ko-learn-panel space-y-4">
           <div className="ko-learn-kpi-row">
             <MiniStat
-              label="Moyenne globale"
+              label={t("learner.learn.globalAvg")}
               value={
                 qcmAverage == null
-                  ? "Pas encore de résultat"
+                  ? t("learner.progressUi.noResult")
                   : formatPercentOrDash(qcmAverage)
               }
               icon={<Icon3dQuiz className="ko-learn-3d is-sm" />}
             />
             <MiniStat
-              label="Moyenne récente"
+              label={t("learner.learn.recentAvg")}
               value={formatPercentOrDash(recentQcmAverage)}
               icon={<Icon3dQuiz className="ko-learn-3d is-sm" />}
             />
             <MiniStat
-              label="Évaluations scorées"
+              label={t("admin.history.scoredEvals")}
               value={String(scored.length)}
             />
             <MiniStat
-              label="Meilleur score"
+              label={t("admin.history.bestScore")}
               value={formatPercentOrDash(best)}
             />
           </div>
 
           {trendPoints.length >= 2 ? (
             <div className="ko-learn-trend">
-              <p className="ko-learn-trend-label">Évolution de mes résultats</p>
+              <p className="ko-learn-trend-label">{t("learner.learn.trend")}</p>
               <p className="ko-learn-trend-value">
                 {trendPoints.map((p) => Math.round(p.grade)).join(" → ")}
               </p>
             </div>
           ) : scored.length > 0 ? (
-            <p className="ko-learn-hint">
-              Pas encore assez de résultats datés pour afficher une tendance.
-              Ouvrez quelques tentatives ci-dessous.
-            </p>
+            <p className="ko-learn-hint">{t("learner.learn.noTrend")}</p>
           ) : null}
 
           <ul className="ko-learn-list">
@@ -454,11 +453,12 @@ export function LearnerLearningPanel({
                       <div>
                         <p className="ko-learn-card-title">{a.name}</p>
                         <p className="ko-learn-card-meta">
-                          {a.section ?? "Sans section"}
+                          {a.section ?? t("admin.file.noSection")}
                         </p>
                         <p className="ko-learn-card-score">
-                          Score :{" "}
-                          <strong>{formatScorePercent(a.score)}</strong>
+                          {t("learner.learn.scoreLabel", {
+                            value: formatScorePercent(a.score),
+                          })}
                         </p>
                       </div>
                       <button
@@ -472,13 +472,15 @@ export function LearnerLearningPanel({
                         }}
                         className="ko-learn-cta"
                       >
-                        {open ? "Masquer" : "Voir mes tentatives"}
+                        {open
+                          ? t("admin.history.hide")
+                          : t("learner.learn.viewAttempts")}
                       </button>
                     </div>
                     {open ? (
                       <div className="ko-learn-attempts">
                         {state.status === "loading" ? (
-                          <p className="ko-learn-hint">Chargement…</p>
+                          <p className="ko-learn-hint">{t("common.loading")}</p>
                         ) : null}
                         {state.status === "unavailable" ||
                         state.status === "error" ? (
@@ -495,7 +497,7 @@ export function LearnerLearningPanel({
             })}
             {scored.length === 0 ? (
               <li className="ko-learn-empty">
-                {LEARNER_COPY.learningEmptyQuizzes}
+                {t("learner.learningEmptyQuizzes")}
               </li>
             ) : null}
           </ul>
@@ -530,6 +532,7 @@ function AttemptsList({
 }: {
   state: Extract<AttemptState, { status: "ok" }>;
 }) {
+  const { t, locale } = useLanguage();
   const chronological = [...state.attempts].sort((a, b) => {
     const ta = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
     const tb = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
@@ -539,24 +542,30 @@ function AttemptsList({
     <div className="ko-learn-attempt-list">
       {chronological.map((attempt, i) => (
         <div key={attempt.id} className="ko-learn-attempt">
-          <p className="ko-learn-attempt-title">Tentative {i + 1}</p>
+          <p className="ko-learn-attempt-title">
+            {t("common.attemptN", { n: i + 1 })}
+          </p>
           <p>{formatScorePercent(attempt.grade)}</p>
           <p className="ko-learn-attempt-date">
             {attempt.submittedAt
-              ? formatDateTimeFr(attempt.submittedAt)
-              : "Date indisponible"}
+              ? formatDateTime(attempt.submittedAt, locale)
+              : t("admin.history.dateUnavailable")}
           </p>
           {attempt.passed != null ? (
             <p className="ko-learn-attempt-pass">
-              {attempt.passed ? "Réussi" : "Non réussi"}
+              {attempt.passed
+                ? t("admin.history.passed")
+                : t("admin.history.failed")}
             </p>
           ) : null}
         </div>
       ))}
       {chronological.length > 1 ? (
         <p className="ko-learn-hint">
-          Meilleur score {formatScorePercent(state.bestGrade)} · Dernier score{" "}
-          {formatScorePercent(state.lastGrade)}
+          {t("admin.history.attemptBestLast", {
+            best: formatScorePercent(state.bestGrade),
+            last: formatScorePercent(state.lastGrade),
+          })}
         </p>
       ) : null}
     </div>

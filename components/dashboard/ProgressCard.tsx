@@ -1,3 +1,7 @@
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
 interface ProgressCardProps {
   progressPercent: number | null;
   completedActivities: number;
@@ -9,17 +13,18 @@ export function ProgressCard({
   completedActivities,
   totalActivities,
 }: ProgressCardProps) {
+  const { t } = useLanguage();
   const value =
     progressPercent != null
       ? `${Math.round(progressPercent)} %`
-      : "Donnée insuffisante";
+      : t("date.unavailable");
   const width =
     progressPercent != null ? Math.min(100, Math.max(0, progressPercent)) : 0;
 
   return (
     <article className="ko-dash-kpi">
       <div className="flex items-start justify-between gap-2">
-        <p className="ko-dash-kpi-label">Progression</p>
+        <p className="ko-dash-kpi-label">{t("admin.file.progress")}</p>
         {progressPercent != null ? (
           <span className="ko-dash-badge ko-dash-badge-up">
             {Math.round(progressPercent)}%
@@ -30,7 +35,10 @@ export function ProgressCard({
         {value}
       </p>
       <p className="mt-1 text-sm text-slate-500">
-        {completedActivities} / {totalActivities} activités
+        {t("learner.progressUi.activitiesCount", {
+          completed: completedActivities,
+          total: totalActivities,
+        })}
       </p>
       <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-100">
         <div

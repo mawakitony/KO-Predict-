@@ -1,3 +1,5 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { PaceActivityBars } from "@/components/admin/PaceActivityBars";
@@ -14,13 +16,16 @@ import type { AdminStudentDetail } from "@/lib/admin/types";
 import type { PersistedWorkPlan } from "@/lib/planning/work-plan/memory-store";
 import { AdminWorkPlanPanel } from "@/components/admin/AdminWorkPlanPanel";
 import { StudentPasswordRecoveryAction } from "@/components/admin/StudentPasswordRecoveryAction";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { formatDate, formatDateTime } from "@/lib/i18n/format-date";
 import {
-  formatDateFr,
-  formatDateTimeFr,
+  accountStatusKey,
+  paceKey,
+  riskKey,
+} from "@/lib/i18n/labels";
+import {
   formatPercent,
   formatScore,
-  paceStatusLabel,
-  riskLabel,
   riskToneClasses,
 } from "@/lib/dashboard/format";
 
@@ -87,12 +92,13 @@ export function StudentProfileBoard({
   activeWorkPlan = null,
   previousWorkPlan = null,
 }: StudentProfileBoardProps) {
+  const { t, locale } = useLanguage();
   const { student, metrics, prediction, history, dataSource, accountStatus } =
     detail;
   const tone = riskToneClasses(prediction.riskLevel);
   const targetExamLabel = student.targetExamDate
-    ? formatDateFr(student.targetExamDate)
-    : "Date d'examen non renseignée";
+    ? formatDate(student.targetExamDate, locale)
+    : t("admin.learners.dateMissing");
 
   const readiness = prediction.readinessScore;
   const probability = prediction.readinessProbability;
@@ -105,17 +111,20 @@ export function StudentProfileBoard({
           href="/admin"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--admin-blue-hover)] hover:underline"
         >
-          ← Retour aux apprenants
+          ← {t("admin.file.back")}
         </Link>
         <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 shadow-sm ring-1 ring-blue-100">
-          Source :{" "}
-          {dataSource === "database" ? "Supabase / LearnWorlds" : "démo"}
+          {t("admin.file.sourceLabel", {
+            source:
+              dataSource === "database"
+                ? t("admin.file.sourceDb")
+                : t("admin.file.sourceDemo"),
+          })}
         </span>
       </div>
 
       <div className="grid w-full min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]">
         <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)]">
-          {/* Profil */}
           <section className="rounded-[1.5rem] bg-white p-5 shadow-[0_12px_40px_-24px_rgba(37,99,235,0.45)] ring-1 ring-blue-100/80">
             <div className="flex flex-col items-center text-center">
               <AdminAvatar name={student.fullName} size="lg" />
@@ -135,15 +144,15 @@ export function StudentProfileBoard({
                 className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${tone.badge}`}
               >
                 {prediction.riskLevel
-                  ? `${prediction.riskLevel} — ${riskLabel(prediction.riskLevel)}`
-                  : riskLabel(null)}
+                  ? `${prediction.riskLevel} — ${t(riskKey(prediction.riskLevel))}`
+                  : t(riskKey(null))}
               </span>
             </div>
 
             <dl className="mt-6 space-y-3 border-t border-slate-100 pt-5">
               {detail.formation.courses.length > 1 ? (
                 <div className="text-sm">
-                  <dt className="text-slate-400">Formation</dt>
+                  <dt className="text-slate-400">{t("admin.file.formation")}</dt>
                   <dd className="mt-1 text-right font-semibold text-slate-800">
                     <p>{detail.formation.compactLabel}</p>
                     <ul className="mt-2 space-y-1 text-left font-medium text-slate-700">
@@ -155,20 +164,17 @@ export function StudentProfileBoard({
                 </div>
               ) : (
                 <ProfileRow
-                  label="Formation"
+                  label={t("admin.file.formation")}
                   value={detail.formation.compactLabel}
                 />
               )}
-              <ProfileRow label="Date cible" value={targetExamLabel} />
               <ProfileRow
-                label="Accès"
-                value={
-                  accountStatus === "DISABLED"
-                    ? "Désactivé"
-                    : accountStatus === "PENDING_ACTIVATION"
-                      ? "En attente"
-                      : "Actif"
-                }
+                label={t("admin.learners.colTargetDate")}
+                value={targetExamLabel}
+              />
+              <ProfileRow
+                label={t("admin.learners.colAccess")}
+                value={t(accountStatusKey(accountStatus))}
               />
               {canManageStudents ? (
                 <div className="pt-2">
@@ -182,53 +188,54 @@ export function StudentProfileBoard({
                 </div>
               ) : null}
               <ProfileRow
-                label="Fuseau"
+                label={t("admin.file.timezone")}
                 value={student.timezone ?? "—"}
               />
               <ProfileRow
-                label="Dernière activité"
-                value={formatDateTimeFr(metrics.lastActivityDate)}
+                label={t("admin.file.lastActivity")}
+                value={formatDateTime(metrics.lastActivityDate, locale)}
               />
               <ProfileRow
-                label="Dernière synchronisation LearnWorlds"
+                label={t("admin.file.lastLwSync")}
                 value={
                   metrics.recordedAt
-                    ? formatDateTimeFr(metrics.recordedAt)
-                    : "Pas encore synchronisé"
+                    ? formatDateTime(metrics.recordedAt, locale)
+                    : t("admin.file.neverSynced")
                 }
               />
               <ProfileRow
-                label="Inactivité"
-                value={`${metrics.inactiveDays} j`}
+                label={t("admin.file.inactivity")}
+                value={t("admin.file.inactivityDays", {
+                  days: metrics.inactiveDays,
+                })}
               />
             </dl>
           </section>
 
-          {/* Colonne centrale */}
           <div className="min-w-0 space-y-4 overflow-hidden">
             <section className="overflow-hidden rounded-[1.5rem] bg-white p-5 shadow-[0_12px_40px_-24px_rgba(37,99,235,0.45)] ring-1 ring-blue-100/80">
               <div className="mb-4 flex items-center justify-between gap-2">
                 <h2 className="ko-display text-base font-semibold text-slate-900">
-                  Indicateurs clés
+                  {t("admin.file.keyIndicators")}
                 </h2>
                 <span className="text-xs text-slate-400">
-                  Estimation KO Predict™
+                  {t("admin.file.estimation")}
                 </span>
               </div>
               <RingProgressRow>
                 <RingProgress
                   value={readiness}
-                  label="Préparation"
+                  label={t("admin.file.preparation")}
                   tone="sky"
                 />
                 <RingProgress
                   value={probability}
-                  label="Probabilité d’être prêt"
+                  label={t("admin.file.probability")}
                   tone="emerald"
                 />
                 <RingProgress
                   value={progress}
-                  label="Progression"
+                  label={t("admin.file.progress")}
                   tone="amber"
                   striped
                 />
@@ -238,33 +245,37 @@ export function StudentProfileBoard({
                 <span className="font-semibold text-slate-800">
                   {readiness != null
                     ? `${formatScore(readiness)} / 100`
-                    : "en préparation"}
+                    : t("admin.file.preparing")}
                 </span>
                 {" · "}
-                {paceStatusLabel(prediction.paceStatus)}
+                {t(paceKey(prediction.paceStatus))}
               </p>
             </section>
 
             <section className="rounded-[1.5rem] bg-white p-5 shadow-[0_12px_40px_-24px_rgba(37,99,235,0.45)] ring-1 ring-blue-100/80">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="ko-display text-base font-semibold text-slate-900">
-                  Rythme d&apos;activité
+                  {t("admin.file.activityPace")}
                 </h2>
                 <div className="flex flex-wrap gap-3 text-xs text-slate-500">
                   <span>
-                    Actuel :{" "}
+                    {t("admin.file.currentPace")}{" "}
                     <strong className="text-slate-800">
                       {prediction.currentPace != null &&
                       prediction.currentPace > 0
-                        ? `${prediction.currentPace}/sem`
+                        ? t("admin.file.perWeek", {
+                            value: prediction.currentPace,
+                          })
                         : "—"}
                     </strong>
                   </span>
                   <span>
-                    Nécessaire :{" "}
+                    {t("admin.file.requiredPace")}{" "}
                     <strong className="text-[var(--admin-blue-hover)]">
                       {prediction.requiredPace != null
-                        ? `${prediction.requiredPace}/sem`
+                        ? t("admin.file.perWeek", {
+                            value: prediction.requiredPace,
+                          })
                         : "—"}
                     </strong>
                   </span>
@@ -275,17 +286,17 @@ export function StudentProfileBoard({
                 requiredPace={prediction.requiredPace}
               />
               <p className="mt-2 text-xs text-slate-400">
-                Répartition illustrative sur 7 jours (données hebdomadaires V1).
+                {t("admin.file.paceHint")}
               </p>
             </section>
 
             <section className="rounded-[1.5rem] bg-white p-5 shadow-[0_12px_40px_-24px_rgba(37,99,235,0.45)] ring-1 ring-blue-100/80">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <h2 className="ko-display text-base font-semibold text-slate-900">
-                  Évolution de la préparation
+                  {t("admin.file.readinessHistory")}
                 </h2>
                 <span className="rounded-full bg-[var(--admin-blue-soft)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--admin-blue-hover)]">
-                  Historique
+                  {t("admin.file.history")}
                 </span>
               </div>
               <ReadinessHistoryChart history={history} />
@@ -293,11 +304,11 @@ export function StudentProfileBoard({
 
             <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <MiniStat
-                label="Activités"
+                label={t("admin.file.activities")}
                 value={`${metrics.completedActivities} / ${metrics.totalActivities}`}
               />
               <MiniStat
-                label="Moyenne QCM"
+                label={t("admin.file.qcmAverage")}
                 value={
                   metrics.qcmAverage != null
                     ? `${Math.round(metrics.qcmAverage)} %`
@@ -305,7 +316,7 @@ export function StudentProfileBoard({
                 }
               />
               <MiniStat
-                label="QCM récent"
+                label={t("admin.file.recentQcm")}
                 value={
                   metrics.recentQcmAverage != null
                     ? `${Math.round(metrics.recentQcmAverage)} %`
@@ -313,15 +324,17 @@ export function StudentProfileBoard({
                 }
               />
               <MiniStat
-                label="Temps d'étude"
-                value={`${metrics.studyTimeMinutes} min`}
+                label={t("admin.file.studyTime")}
+                value={t("admin.file.studyTimeMin", {
+                  minutes: metrics.studyTimeMinutes,
+                })}
               />
               <MiniStat
-                label="Progression"
+                label={t("admin.file.progress")}
                 value={formatPercent(prediction.progressPercent)}
               />
               <MiniStat
-                label="Probabilité"
+                label={t("admin.file.probability")}
                 value={
                   prediction.readinessProbability != null
                     ? `${Math.round(prediction.readinessProbability)} %`
@@ -332,44 +345,43 @@ export function StudentProfileBoard({
           </div>
         </div>
 
-        {/* Colonne droite — agenda / insights */}
         <aside className="min-w-0 space-y-4 xl:max-w-sm">
           <section className="rounded-[1.5rem] bg-white p-5 shadow-[0_12px_40px_-24px_rgba(37,99,235,0.45)] ring-1 ring-blue-100/80">
             <h2 className="ko-display text-base font-semibold text-slate-900">
-              Dates clés
+              {t("admin.file.keyDates")}
             </h2>
             <p className="mt-1 text-xs text-slate-400">
-              Trajectoire vers l&apos;examen
+              {t("admin.file.trajectory")}
             </p>
             <div className="mt-4 space-y-2.5">
               <InsightCard
                 tone="blue"
                 icon={<IconBook className="ko-icon" />}
-                title="Examen cible"
+                title={t("admin.file.examTarget")}
                 subtitle={targetExamLabel}
-                badge="Cible"
+                badge={t("admin.file.targetBadge")}
               />
               <InsightCard
                 tone="sky"
                 icon={<IconSpark className="ko-icon" />}
-                title="Fin de contenu prévue"
+                title={t("admin.file.predictedEnd")}
                 subtitle={
                   prediction.predictedCompletionDate
-                    ? formatDateFr(prediction.predictedCompletionDate)
-                    : "En attente"
+                    ? formatDate(prediction.predictedCompletionDate, locale)
+                    : t("admin.file.pending")
                 }
-                badge="Fin"
+                badge={t("admin.file.endBadge")}
               />
               <InsightCard
                 tone="teal"
                 icon={<IconCheck className="ko-icon" />}
-                title="Prêt pour l'examen"
+                title={t("admin.file.readyExam")}
                 subtitle={
                   prediction.predictedReadinessDate
-                    ? formatDateFr(prediction.predictedReadinessDate)
-                    : "En attente"
+                    ? formatDate(prediction.predictedReadinessDate, locale)
+                    : t("admin.file.pending")
                 }
-                badge="Prêt"
+                badge={t("admin.file.readyBadge")}
               />
               <InsightCard
                 tone={
@@ -381,8 +393,8 @@ export function StudentProfileBoard({
                       : "blue"
                 }
                 icon={<IconSpark className="ko-icon" />}
-                title="Niveau de risque"
-                subtitle={riskLabel(prediction.riskLevel)}
+                title={t("admin.file.riskLevel")}
+                subtitle={t(riskKey(prediction.riskLevel))}
                 badge={prediction.riskLevel ?? "N/A"}
               />
             </div>
@@ -390,11 +402,11 @@ export function StudentProfileBoard({
 
           <section className="rounded-[1.5rem] bg-[linear-gradient(160deg,#2563eb_0%,#1d4ed8_55%,#0f766e_100%)] p-5 text-white shadow-[0_12px_40px_-20px_rgba(37,99,235,0.65)]">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
-              Action recommandée
+              {t("admin.file.recommended")}
             </p>
             <p className="mt-3 text-sm leading-relaxed text-white/95 sm:text-base">
               {prediction.recommendedAction ??
-                "Continuez la formation : KO Predict™ affinera bientôt l’estimation."}
+                t("admin.file.recommendedFallback")}
             </p>
           </section>
 

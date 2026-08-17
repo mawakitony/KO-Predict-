@@ -1,4 +1,7 @@
 import { LEARNER_COPY } from "@/lib/learner/copy";
+import { predictionIssueKey } from "@/lib/i18n/labels";
+import { translate } from "@/lib/i18n/translate";
+import type { MessageKey } from "@/lib/i18n/translate";
 import type {
   PredictionDataIssue,
   PredictionResult,
@@ -28,21 +31,32 @@ const INSUFFICIENT_BLOCKERS: ReadonlySet<PredictionDataIssue> = new Set([
   "NO_REMAINING_WORK",
 ]);
 
-/** Messages pédagogiques — jamais les codes techniques bruts. */
+/** Messages pédagogiques FR (explication moteur / API). L’UI apprenant utilise t(predictionIssueKey). */
 export const ISSUE_LEARNER_MESSAGES: Record<PredictionDataIssue, string> = {
-  INSUFFICIENT_QCM:
-    "Pas encore assez de résultats QCM pour évaluer votre niveau de maîtrise.",
-  ZERO_CURRENT_PACE:
-    "Votre rythme d'étude n'est pas encore suffisamment établi.",
-  INSUFFICIENT_ACTIVITY_FOR_PACE:
-    "Pas encore assez d'activité récente pour estimer votre rythme d'étude.",
-  INCOMPLETE_METRICS:
-    "Certaines données de formation sont encore incomplètes.",
-  MISSING_TARGET_DATE:
-    "Définissez votre date cible d'examen pour permettre à KO Predict™ de calculer votre trajectoire.",
-  TARGET_DATE_PASSED: LEARNER_COPY.issueTargetDatePassed,
-  NO_REMAINING_WORK: LEARNER_COPY.issueNoRemainingWork,
+  INSUFFICIENT_QCM: translate("fr", "learner.issue.insufficientQcm"),
+  ZERO_CURRENT_PACE: translate("fr", "learner.issue.zeroPace"),
+  INSUFFICIENT_ACTIVITY_FOR_PACE: translate(
+    "fr",
+    "learner.issue.insufficientActivity",
+  ),
+  INCOMPLETE_METRICS: translate("fr", "learner.issue.incompleteMetrics"),
+  MISSING_TARGET_DATE: translate("fr", "learner.issue.missingDate"),
+  TARGET_DATE_PASSED: translate("fr", "learner.issue.targetPassed"),
+  NO_REMAINING_WORK: translate("fr", "learner.issue.noRemainingWork"),
 };
+
+export function getLearnerIssueExplanationKeys(issues: PredictionDataIssue[]) {
+  const seen = new Set<string>();
+  const keys: Array<ReturnType<typeof predictionIssueKey>> = [];
+  for (const issue of issues) {
+    const key = predictionIssueKey(issue);
+    if (!seen.has(key)) {
+      seen.add(key);
+      keys.push(key);
+    }
+  }
+  return keys;
+}
 
 export function resolveLearnerPredictionUiState(
   prediction: Pick<PredictionResult, "readinessScore" | "riskLevel" | "issues">,
@@ -125,22 +139,22 @@ export function resolveLearnerRecommendedAction(
   }
 
   if (issues.has("INSUFFICIENT_QCM") && issues.has("ZERO_CURRENT_PACE")) {
-    return "Continuez votre formation et réalisez quelques QCM afin que KO Predict™ puisse établir votre première estimation.";
+    return translate("fr", "learner.action.qcmAndPace");
   }
 
   if (issues.has("INSUFFICIENT_QCM")) {
-    return "Réalisez davantage de QCM pour permettre à KO Predict™ d'évaluer votre niveau de maîtrise.";
+    return translate("fr", "learner.action.moreQcm");
   }
 
   if (
     issues.has("ZERO_CURRENT_PACE") ||
     issues.has("INSUFFICIENT_ACTIVITY_FOR_PACE")
   ) {
-    return "Poursuivez régulièrement votre formation afin que KO Predict™ puisse mesurer votre rythme d'étude.";
+    return translate("fr", "learner.action.keepPace");
   }
 
   if (issues.has("INCOMPLETE_METRICS")) {
-    return "Continuez votre formation : KO Predict™ finalisera votre estimation dès que les données seront complètes.";
+    return translate("fr", "learner.action.incomplete");
   }
 
   if (prediction.recommendedAction?.trim()) {
@@ -148,10 +162,51 @@ export function resolveLearnerRecommendedAction(
   }
 
   if (prediction.readinessScore == null) {
-    return "Continuez votre formation : KO Predict™ calculera automatiquement votre première estimation dès que suffisamment de données seront disponibles.";
+    return translate("fr", "learner.action.waitingScore");
   }
 
-  return "Poursuivez votre préparation selon le rythme recommandé.";
+  return translate("fr", "learner.action.keepPreparing");
+}
+
+/**
+ * Clé i18n de l’action prioritaire — null si le moteur fournit déjà un texte.
+ */
+export function resolveLearnerRecommendedActionKey(
+  prediction: Pick<
+    PredictionResult,
+    "issues" | "recommendedAction" | "readinessScore"
+  >,
+): MessageKey | null {
+  const issues = new Set(prediction.issues);
+
+  if (issues.has("MISSING_TARGET_DATE")) {
+    return "learner.action.missingDate";
+  }
+  if (issues.has("TARGET_DATE_PASSED")) {
+    return "learner.action.targetPassed";
+  }
+  if (issues.has("INSUFFICIENT_QCM") && issues.has("ZERO_CURRENT_PACE")) {
+    return "learner.action.qcmAndPace";
+  }
+  if (issues.has("INSUFFICIENT_QCM")) {
+    return "learner.action.moreQcm";
+  }
+  if (
+    issues.has("ZERO_CURRENT_PACE") ||
+    issues.has("INSUFFICIENT_ACTIVITY_FOR_PACE")
+  ) {
+    return "learner.action.keepPace";
+  }
+  if (issues.has("INCOMPLETE_METRICS")) {
+    return "learner.action.incomplete";
+  }
+  if (prediction.recommendedAction?.trim()) {
+    return null;
+  }
+  if (prediction.readinessScore == null) {
+    return "learner.action.waitingScore";
+  }
+  return "learner.action.keepPreparing";
 }
 
 export function learnerRiskDisplay(riskLevel: RiskLevel | null): {

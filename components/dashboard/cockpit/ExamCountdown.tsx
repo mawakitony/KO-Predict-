@@ -1,9 +1,11 @@
-import { LEARNER_COPY } from "@/lib/learner/copy";
+"use client";
+
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
   cockpitCountdownInterpretation,
   cockpitDaysUntil,
 } from "@/lib/dashboard/cockpit-copy";
-import { formatDateFr } from "@/lib/dashboard/format";
+import { formatDate } from "@/lib/i18n/format-date";
 
 interface ExamCountdownProps {
   targetExamDate: string | null;
@@ -16,17 +18,21 @@ export function ExamCountdown({
   predictedReadinessDate,
   trajectoryHeadline,
 }: ExamCountdownProps) {
+  const { t, locale } = useLanguage();
   const days = cockpitDaysUntil(targetExamDate);
-  const interpretation = cockpitCountdownInterpretation({
-    targetExamDate,
-    predictedReadinessDate,
-  });
+  const interpretation = cockpitCountdownInterpretation(
+    {
+      targetExamDate,
+      predictedReadinessDate,
+    },
+    locale,
+  );
 
   let jLabel: string | null = null;
   if (days != null) {
-    if (days > 0) jLabel = `J-${days}`;
-    else if (days === 0) jLabel = "Jour J";
-    else jLabel = `J+${Math.abs(days)}`;
+    if (days > 0) jLabel = t("learner.dayMinus", { n: days });
+    else if (days === 0) jLabel = t("learner.collection.examDay");
+    else jLabel = t("learner.dayPlus", { n: Math.abs(days) });
   }
 
   return (
@@ -35,33 +41,38 @@ export function ExamCountdown({
       aria-labelledby="countdown-title"
     >
       <p className="ko-cockpit-kicker" id="countdown-title">
-        Votre examen
+        {t("learner.collection.examShort")}
       </p>
 
       {!targetExamDate ? (
         <>
           <p className="ko-cockpit-countdown-empty">
-            Date d&apos;examen non renseignée
+            {t("learner.dates.examMissing")}
           </p>
           <p className="ko-cockpit-muted mt-2">
-            {LEARNER_COPY.examCountdownMissing}
+            {t("learner.examCountdownMissing")}
           </p>
         </>
       ) : (
         <>
-          <p className="ko-cockpit-jlabel" aria-label={`Compte à rebours ${jLabel}`}>
+          <p
+            className="ko-cockpit-jlabel"
+            aria-label={t("learner.collection.countdownAria", {
+              label: jLabel ?? "",
+            })}
+          >
             {jLabel}
           </p>
           <p className="ko-cockpit-exam-date">
-            {formatDateFr(targetExamDate)}
+            {formatDate(targetExamDate, locale)}
           </p>
 
           <div className="ko-cockpit-ready-line">
-            <span>Date estimée de préparation</span>
+            <span>{t("learner.dates.estimatedReady")}</span>
             <strong>
               {predictedReadinessDate
-                ? formatDateFr(predictedReadinessDate)
-                : "Pas encore assez de données"}
+                ? formatDate(predictedReadinessDate, locale)
+                : t("learner.cockpit.notEnoughData")}
             </strong>
           </div>
 

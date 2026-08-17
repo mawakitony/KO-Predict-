@@ -3,16 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { AdminStudentRow } from "@/lib/admin/types";
-import {
-  formatDateShortFr,
-  formatPercent,
-  formatScore,
-  riskLabel,
-  riskToneClasses,
-} from "@/lib/dashboard/format";
+import { formatPercent, formatScore, riskToneClasses } from "@/lib/dashboard/format";
 import { AccountStatusBadge, AdminAvatar } from "@/components/admin/AdminUi";
 import { IconBan, IconCheck, IconEye } from "@/components/admin/AdminIcons";
 import { AdminRowAction, AdminRowActions } from "@/components/admin/AdminRowActions";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { formatDateShort } from "@/lib/i18n/format-date";
+import { accountStatusKey, riskKey } from "@/lib/i18n/labels";
 
 interface StudentsTableProps {
   rows: AdminStudentRow[];
@@ -27,6 +24,7 @@ export function StudentsTable({
 }: StudentsTableProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { t, locale } = useLanguage();
 
   async function toggleAccess(
     studentId: string,
@@ -34,7 +32,7 @@ export function StudentsTable({
   ) {
     if (kind === "disable") {
       const ok = window.confirm(
-        "Voulez-vous vraiment désactiver l'accès KO Predict™ de cet apprenant ?\nSes données seront conservées.",
+        t("admin.learners.disableConfirm"),
       );
       if (!ok) return;
     }
@@ -52,13 +50,13 @@ export function StudentsTable({
       });
       const json = await res.json();
       if (!json.ok) {
-        setError(json.error ?? "Action échouée.");
+        setError(json.error ?? t("common.actionFailed"));
       } else {
         onChanged?.();
         window.location.reload();
       }
     } catch {
-      setError("Erreur réseau.");
+      setError(t("common.networkError"));
     } finally {
       setBusyId(null);
     }
@@ -67,7 +65,7 @@ export function StudentsTable({
   if (rows.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-8 text-center text-sm text-slate-500 sm:p-10">
-        Aucun apprenant ne correspond à ces filtres.
+        {t("admin.learners.empty")}
       </div>
     );
   }
@@ -86,8 +84,8 @@ export function StudentsTable({
           const tone = riskToneClasses(row.prediction.riskLevel);
           const access = row.accountStatus ?? "ACTIVE";
           const targetLabel = row.student.targetExamDate
-            ? formatDateShortFr(row.student.targetExamDate)
-            : "Date non renseignée";
+            ? formatDateShort(row.student.targetExamDate, locale)
+            : t("admin.learners.dateMissingShort");
           return (
             <li key={row.student.studentId} className="ko-admin-student-card">
               <div className="flex items-start gap-3">
@@ -105,7 +103,7 @@ export function StudentsTable({
                 </div>
                 <span
                   className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${tone.badge}`}
-                  title={riskLabel(row.prediction.riskLevel)}
+                  title={t(riskKey(row.prediction.riskLevel))}
                 >
                   {row.prediction.riskLevel ?? "—"}
                 </span>
@@ -113,26 +111,26 @@ export function StudentsTable({
 
               <dl className="ko-admin-student-meta">
                 <div>
-                  <dt>Readiness</dt>
+                      <dt>{t("admin.learners.colReadiness")}</dt>
                   <dd>
                     {formatScore(row.prediction.readinessScore)}
                     {row.prediction.readinessScore != null ? " / 100" : ""}
                   </dd>
                 </div>
                 <div>
-                  <dt>Progression</dt>
+                  <dt>{t("admin.learners.colProgress")}</dt>
                   <dd>{formatPercent(row.prediction.progressPercent)}</dd>
                 </div>
                 <div>
-                  <dt>Date cible</dt>
+                  <dt>{t("admin.learners.colTargetDate")}</dt>
                   <dd>{targetLabel}</dd>
                 </div>
                 <div>
-                  <dt>Accès</dt>
+                  <dt>{t("admin.learners.colAccess")}</dt>
                   <dd>
                     <AccountStatusBadge
                       status={access}
-                      label={access === "DISABLED" ? "Désactivé" : "Actif"}
+                      label={t(accountStatusKey(access))}
                     />
                   </dd>
                 </div>
@@ -141,13 +139,13 @@ export function StudentsTable({
               <AdminRowActions>
                 <AdminRowAction
                   href={`/admin/students/${row.student.studentId}`}
-                  label="Voir"
+                  label={t("status.view")}
                   tone="primary"
                   icon={<IconEye className="ko-icon-sm" />}
                 />
                 {canManageStudents && access === "ACTIVE" ? (
                   <AdminRowAction
-                    label="Désactiver"
+                    label={t("common.disable")}
                     tone="danger"
                     disabled={busyId === row.student.studentId}
                     onClick={() =>
@@ -159,7 +157,7 @@ export function StudentsTable({
                 {canManageStudents && access === "DISABLED" ? (
                   <AdminRowAction
                     labeled
-                    label="Réactiver"
+                    label={t("common.reactivate")}
                     tone="success"
                     disabled={busyId === row.student.studentId}
                     onClick={() =>
@@ -179,18 +177,30 @@ export function StudentsTable({
         <table className="min-w-full text-left text-sm">
           <thead>
             <tr className="border-b border-slate-100 text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">
-              <th className="px-2 py-3 font-semibold sm:px-3">Apprenant</th>
-              <th className="px-2 py-3 font-semibold sm:px-3">Certification</th>
-              <th className="px-2 py-3 font-semibold sm:px-3">Readiness</th>
+              <th className="px-2 py-3 font-semibold sm:px-3">
+                {t("admin.learners.colLearner")}
+              </th>
+              <th className="px-2 py-3 font-semibold sm:px-3">
+                {t("admin.learners.colCertification")}
+              </th>
+              <th className="px-2 py-3 font-semibold sm:px-3">
+                {t("admin.learners.colReadiness")}
+              </th>
               <th className="hidden px-3 py-3 font-semibold lg:table-cell">
-                Progression
+                {t("admin.learners.colProgress")}
               </th>
               <th className="hidden px-3 py-3 font-semibold xl:table-cell">
-                Date cible
+                {t("admin.learners.colTargetDate")}
               </th>
-              <th className="px-2 py-3 font-semibold sm:px-3">Risque</th>
-              <th className="px-2 py-3 font-semibold sm:px-3">Accès</th>
-              <th className="px-2 py-3 text-right font-semibold sm:px-3">Action</th>
+              <th className="px-2 py-3 font-semibold sm:px-3">
+                {t("admin.learners.colRisk")}
+              </th>
+              <th className="px-2 py-3 font-semibold sm:px-3">
+                {t("admin.learners.colAccess")}
+              </th>
+              <th className="px-2 py-3 text-right font-semibold sm:px-3">
+                {t("admin.learners.colAction")}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -198,8 +208,8 @@ export function StudentsTable({
               const tone = riskToneClasses(row.prediction.riskLevel);
               const access = row.accountStatus ?? "ACTIVE";
               const targetLabel = row.student.targetExamDate
-                ? formatDateShortFr(row.student.targetExamDate)
-                : "Date d'examen non renseignée";
+                ? formatDateShort(row.student.targetExamDate, locale)
+                : t("admin.learners.dateMissing");
               return (
                 <tr
                   key={row.student.studentId}
@@ -232,7 +242,7 @@ export function StudentsTable({
                   <td className="px-2 py-3.5 sm:px-3">
                     <span
                       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${tone.badge}`}
-                      title={riskLabel(row.prediction.riskLevel)}
+                      title={t(riskKey(row.prediction.riskLevel))}
                     >
                       {row.prediction.riskLevel ?? "—"}
                     </span>
@@ -240,7 +250,7 @@ export function StudentsTable({
                   <td className="px-2 py-3.5 sm:px-3">
                     <AccountStatusBadge
                       status={access}
-                      label={access === "DISABLED" ? "Désactivé" : "Actif"}
+                      label={t(accountStatusKey(access))}
                     />
                   </td>
                   <td className="px-2 py-3.5 sm:px-3">
@@ -248,13 +258,13 @@ export function StudentsTable({
                       <AdminRowActions>
                         <AdminRowAction
                           href={`/admin/students/${row.student.studentId}`}
-                          label="Voir"
+                          label={t("status.view")}
                           tone="primary"
                           icon={<IconEye className="ko-icon-sm" />}
                         />
                         {canManageStudents && access === "ACTIVE" ? (
                           <AdminRowAction
-                            label="Désactiver"
+                            label={t("common.disable")}
                             tone="danger"
                             disabled={busyId === row.student.studentId}
                             onClick={() =>
@@ -266,7 +276,7 @@ export function StudentsTable({
                         {canManageStudents && access === "DISABLED" ? (
                           <AdminRowAction
                             labeled
-                            label="Réactiver"
+                            label={t("common.reactivate")}
                             tone="success"
                             disabled={busyId === row.student.studentId}
                             onClick={() =>

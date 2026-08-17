@@ -12,6 +12,8 @@ import type {
   WorkPlanType,
 } from "@/lib/planning/work-plan/types";
 import type { PersistedWorkPlan } from "@/lib/planning/work-plan/memory-store";
+import type { MessageKey } from "@/lib/i18n/translate";
+import { translate } from "@/lib/i18n/translate";
 import type { PaceStatus } from "@/types/prediction";
 import type { WeeklyPlanStatus } from "@/lib/planning/weekly-plan";
 
@@ -94,9 +96,25 @@ export type WorkPlanPaceTone = "up" | "down" | "neutral";
 
 /** Libellés rythme UI — une seule source pour KPI + courbe. */
 export interface WorkPlanPaceView {
+  valueKey: MessageKey;
+  detailKey: MessageKey;
   valueLabel: string;
   detailLabel: string;
   tone: WorkPlanPaceTone;
+}
+
+function paceCopy(
+  valueKey: MessageKey,
+  detailKey: MessageKey,
+  tone: WorkPlanPaceTone,
+): WorkPlanPaceView {
+  return {
+    valueKey,
+    detailKey,
+    valueLabel: translate("fr", valueKey),
+    detailLabel: translate("fr", detailKey),
+    tone,
+  };
 }
 
 /**
@@ -119,27 +137,27 @@ export function mapWorkPlanPaceView(input: {
   const { paceStatus, weeklyStatus, planType } = input;
 
   if (paceStatus === "AHEAD" || weeklyStatus === "AHEAD") {
-    return {
-      valueLabel: "En avance",
-      detailLabel: "En avance",
-      tone: "up",
-    };
+    return paceCopy(
+      "learner.planUi.paceAhead",
+      "learner.planUi.paceAhead",
+      "up",
+    );
   }
 
   if (paceStatus === "ON_TRACK" || weeklyStatus === "ON_TRACK") {
-    return {
-      valueLabel: "Sur le rythme",
-      detailLabel: "Sur le rythme",
-      tone: "up",
-    };
+    return paceCopy(
+      "learner.planUi.paceOnTrack",
+      "learner.planUi.paceOnTrack",
+      "up",
+    );
   }
 
   if (paceStatus === "NO_ACTIVITY" || weeklyStatus === "NO_ACTIVITY") {
-    return {
-      valueLabel: "Reprise",
-      detailLabel: "Reprise nécessaire",
-      tone: "down",
-    };
+    return paceCopy(
+      "learner.planUi.paceResume",
+      "learner.planUi.paceResumeDetail",
+      "down",
+    );
   }
 
   if (
@@ -149,11 +167,11 @@ export function mapWorkPlanPaceView(input: {
     weeklyStatus === "SLIGHTLY_BEHIND" ||
     planType === "CATCH_UP"
   ) {
-    return {
-      valueLabel: "Rattrapage",
-      detailLabel: "Rattrapage en cours",
-      tone: "down",
-    };
+    return paceCopy(
+      "learner.planUi.paceCatchUp",
+      "learner.planUi.paceCatchUpDetail",
+      "down",
+    );
   }
 
   if (
@@ -161,26 +179,26 @@ export function mapWorkPlanPaceView(input: {
     weeklyStatus === "INSUFFICIENT_DATA" ||
     paceStatus == null
   ) {
-    return {
-      valueLabel: "À préciser",
-      detailLabel: "Données insuffisantes",
-      tone: "neutral",
-    };
+    return paceCopy(
+      "learner.planUi.paceToClarify",
+      "learner.planUi.paceInsufficient",
+      "neutral",
+    );
   }
 
   if (planType === "CONSOLIDATION" || weeklyStatus === "COMPLETE") {
-    return {
-      valueLabel: "Sur le rythme",
-      detailLabel: "Sur le rythme",
-      tone: "up",
-    };
+    return paceCopy(
+      "learner.planUi.paceOnTrack",
+      "learner.planUi.paceOnTrack",
+      "up",
+    );
   }
 
-  return {
-    valueLabel: "—",
-    detailLabel: "Statut indisponible",
-    tone: "neutral",
-  };
+  return paceCopy(
+    "date.empty",
+    "learner.planUi.paceUnavailable",
+    "neutral",
+  );
 }
 
 export interface WorkPlanTaskProgressView {

@@ -17,11 +17,23 @@ import {
 } from "@/components/dashboard/LearnerHeaderIcons";
 import { LearnerAutoPopups } from "@/components/learner/LearnerAutoPopups";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { LanguageToggle } from "@/components/i18n/LanguageToggle";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { ClientInspectionDeterrent } from "@/components/security/ClientInspectionDeterrent";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { formatDate } from "@/lib/i18n/format-date";
+import { formatSyncRelative } from "@/lib/learning/format";
 import { resolveDisplayName } from "@/lib/profile/display";
 import type { EstimationPopupContent } from "@/lib/dashboard/estimation-popup";
+
+type LearnerHubPage =
+  | "dashboard"
+  | "learning"
+  | "plan"
+  | "messages"
+  | "profile"
+  | "unavailable";
 
 interface LearnerHubLayoutProps {
   email?: string | null;
@@ -31,6 +43,11 @@ interface LearnerHubLayoutProps {
   avatarUrl?: string | null;
   title: string;
   subtitle?: string;
+  page?: LearnerHubPage;
+  certification?: string | null;
+  examDate?: string | null;
+  recordedAt?: string | null;
+  collecting?: boolean;
   /** Ex. « École · Live » sous le sous-titre */
   statusBadge?: string;
   /** Titre de section sous le badge (ex. Dashboard) */
@@ -153,14 +170,15 @@ function LearnerHeaderTools({
   }, [pathname]);
 
   const hasUnread = unreadCount > 0;
+  const { t } = useLanguage();
 
   return (
     <div className="ko-dash-header-aside">
       <Link
         href="/learning"
         className="ko-dash-toolbar-btn is-3d"
-        aria-label="Rechercher une activité"
-        title="Rechercher"
+        aria-label={t("chrome.searchActivity")}
+        title={t("chrome.search")}
       >
         <Icon3dSearch />
       </Link>
@@ -169,10 +187,10 @@ function LearnerHeaderTools({
         className="ko-dash-toolbar-btn is-3d"
         aria-label={
           hasUnread
-            ? `Messages — ${unreadCount} rappel${unreadCount > 1 ? "s" : ""} non lu${unreadCount > 1 ? "s" : ""}`
-            : "Messages et rappels"
+            ? t("chrome.messagesUnread", { count: unreadCount })
+            : t("chrome.messagesAndReminders")
         }
-        title="Messages"
+        title={t("chrome.messages")}
       >
         <Icon3dBell />
         {hasUnread ? (
@@ -182,8 +200,8 @@ function LearnerHeaderTools({
       <Link
         href="/profile"
         className="ko-dash-profile-pill"
-        aria-label="Modifier mon profil"
-        title="Modifier mon profil"
+        aria-label={t("chrome.editProfile")}
+        title={t("chrome.editProfile")}
       >
         <UserAvatar
           displayName={displayName}
@@ -194,7 +212,7 @@ function LearnerHeaderTools({
           size="sm"
         />
         <span className="ko-dash-profile-meta">
-          <span className="ko-dash-profile-welcome">Bienvenue</span>
+          <span className="ko-dash-profile-welcome">{t("chrome.welcome")}</span>
           <span className="ko-dash-profile-name-row">
             <span className="ko-dash-profile-name truncate">{shownName}</span>
             <svg
@@ -233,6 +251,11 @@ export function LearnerHubLayout({
   avatarUrl,
   title,
   subtitle,
+  page,
+  certification,
+  examDate,
+  recordedAt,
+  collecting = false,
   statusBadge,
   sectionTitle,
   headerAction,
@@ -253,6 +276,39 @@ export function LearnerHubLayout({
     lastName,
     email,
   });
+  const { t, locale } = useLanguage();
+
+  let headingTitle = title;
+  let headingSubtitle = subtitle;
+  if (page === "dashboard") {
+    headingTitle = t("learner.dashboardTitle");
+    headingSubtitle = [
+      certification,
+      examDate
+        ? t("learner.examOn", { date: formatDate(examDate, locale) })
+        : null,
+      !collecting
+        ? formatDate(new Date().toISOString().slice(0, 10), locale)
+        : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  } else if (page === "unavailable") {
+    headingTitle = t("learner.dashboardUnavailable");
+    headingSubtitle = subtitle || t("learner.loadFail");
+  } else if (page === "profile") {
+    headingTitle = t("learner.profileTitle");
+    headingSubtitle = t("learner.profileSubtitle");
+  } else if (page === "learning") {
+    headingTitle = t("learner.learningTitle");
+    headingSubtitle = formatSyncRelative(recordedAt, locale);
+  } else if (page === "plan") {
+    headingTitle = t("learner.planTitle");
+    headingSubtitle = t("learner.planSubtitle");
+  } else if (page === "messages") {
+    headingTitle = t("learner.messagesTitle");
+    headingSubtitle = t("learner.messagesSubtitle");
+  }
 
   return (
     <div className="ko-dash-bg ko-dash-shell min-h-full flex-1">
@@ -264,25 +320,25 @@ export function LearnerHubLayout({
             <BrandMark href="/" size="sm" tone="dark" />
             <p className="mt-1 text-xs font-medium text-slate-400">
               {topBar
-                ? "Tableau de bord de l'école"
+                ? t("nav.schoolDashboard")
                 : showAdminLink
-                  ? "Espace équipe"
-                  : "Espace apprenant"}
+                  ? t("chrome.teamSpace")
+                  : t("chrome.learnerSpace")}
             </p>
           </div>
 
           <nav
             className="mt-6 flex-1 space-y-1 overflow-y-auto px-3"
             aria-label={
-              showAdminLink ? "Navigation équipe" : "Navigation apprenant"
+              showAdminLink ? t("chrome.teamNav") : t("chrome.learnerNav")
             }
           >
             <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-              Menu
+              {t("nav.menu")}
             </p>
             <NavItem
               href="/dashboard"
-              label="Tableau de bord"
+              label={t("nav.dashboard")}
               active={onDash}
               icon={<IconDashboard className="ko-icon" />}
             />
@@ -290,13 +346,13 @@ export function LearnerHubLayout({
               <>
                 <NavItem
                   href="/learning"
-                  label="Ma progression"
+                  label={t("nav.progress")}
                   active={onLearning}
                   icon={<IconBook className="ko-icon" />}
                 />
                 <NavItem
                   href="/plan"
-                  label="Mon plan"
+                  label={t("nav.plan")}
                   active={onPlan}
                   icon={<IconCalendar className="ko-icon" />}
                 />
@@ -304,18 +360,18 @@ export function LearnerHubLayout({
             ) : null}
             <NavItem
               href="/profile"
-              label="Mon profil"
+              label={t("nav.profile")}
               active={onProfile}
               icon={<IconUser className="ko-icon" />}
             />
             {showAdminLink ? (
               <>
                 <p className="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                  Équipe
+                  {t("nav.teamSection")}
                 </p>
                 <NavItem
                   href="/admin"
-                  label="Administration"
+                  label={t("nav.admin")}
                   active={onAdmin}
                   icon={<IconUsers className="ko-icon" />}
                 />
@@ -326,25 +382,28 @@ export function LearnerHubLayout({
           <div className="mt-auto shrink-0 space-y-3 px-3 pb-4 pt-3">
             <div>
               <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                Compte
+                {t("nav.account")}
               </p>
               <div className="mb-2 px-0.5">
-                <ThemeToggle />
+                <div className="ko-chrome-prefs">
+                  <LanguageToggle />
+                  <ThemeToggle />
+                </div>
               </div>
               <SignOutButton variant="nav" />
             </div>
             <div className="ko-dash-side-card relative z-[1] p-4">
               <p className="relative ko-display text-sm font-bold text-white">
-                Besoin d&apos;aide ?
+                {t("chrome.helpTitle")}
               </p>
               <p className="relative mt-1 text-xs leading-relaxed text-white/70">
-                Contactez WOLOYEM pour votre accès ou votre parcours.
+                {t("chrome.helpBody")}
               </p>
               <Link
                 href="/"
                 className="relative mt-3 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-teal-500 px-3 py-2 text-xs font-bold text-white shadow-[0_10px_20px_-12px_rgba(59,130,246,0.9)] transition hover:scale-[1.02]"
               >
-                Retour à l&apos;accueil
+                {t("chrome.backHome")}
               </Link>
             </div>
           </div>
@@ -352,7 +411,7 @@ export function LearnerHubLayout({
 
         <div className="ko-dash-main-offset flex min-w-0 flex-col px-0 pb-32 lg:pb-8">
           {topBar ? (
-            <section className="ko-school-head" aria-label="En-tête vue école">
+            <section className="ko-school-head" aria-label={t("chrome.schoolHead")}>
               <div className="ko-school-topbar">
                 <div className="ko-school-topbar-left">
                   <span className="ko-school-topbar-icon" aria-hidden>
@@ -361,12 +420,12 @@ export function LearnerHubLayout({
                   <div className="min-w-0">
                     {shownName ? (
                       <p className="ko-school-topbar-hello">
-                        Bonjour, {shownName}
+                        {t("chrome.hello", { name: shownName })}
                       </p>
                     ) : null}
-                    <h1 className="ko-school-topbar-title">{title}</h1>
-                    {subtitle ? (
-                      <p className="ko-school-topbar-sub">{subtitle}</p>
+                    <h1 className="ko-school-topbar-title">{headingTitle}</h1>
+                    {headingSubtitle ? (
+                      <p className="ko-school-topbar-sub">{headingSubtitle}</p>
                     ) : null}
                   </div>
                 </div>
@@ -402,11 +461,11 @@ export function LearnerHubLayout({
                     <BrandMark href="/" size="sm" tone="dark" />
                   </div>
                   {shownName ? (
-                    <p className="ko-dash-hello">Bonjour, {shownName}</p>
+                    <p className="ko-dash-hello">{t("chrome.hello", { name: shownName })}</p>
                   ) : null}
-                  <h1 className="ko-dash-title">{title}</h1>
-                  {subtitle ? (
-                    <p className="ko-dash-subtitle">{subtitle}</p>
+                  <h1 className="ko-dash-title">{headingTitle}</h1>
+                  {headingSubtitle ? (
+                    <p className="ko-dash-subtitle">{headingSubtitle}</p>
                   ) : null}
                   {statusBadge || sectionTitle ? (
                     <div className="ko-dash-school-meta">
@@ -447,15 +506,18 @@ export function LearnerHubLayout({
       <nav
         className="ko-mobile-nav"
         aria-label={
-          showAdminLink ? "Navigation mobile équipe" : "Navigation mobile apprenant"
+          showAdminLink ? t("chrome.teamNavMobile") : t("chrome.learnerNavMobile")
         }
       >
         <div className="ko-mobile-nav-theme">
-          <ThemeToggle />
+          <div className="ko-chrome-prefs">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
         </div>
         <MobileNavLink
           href="/dashboard"
-          label="Dashboard"
+          label={t("nav.dashboardShort")}
           active={onDash}
           icon={<IconDashboard className="ko-icon" />}
         />
@@ -463,13 +525,13 @@ export function LearnerHubLayout({
           <>
             <MobileNavLink
               href="/learning"
-              label="Progression"
+              label={t("nav.progressShort")}
               active={onLearning}
               icon={<IconBook className="ko-icon" />}
             />
             <MobileNavLink
               href="/plan"
-              label="Plan"
+              label={t("nav.planShort")}
               active={onPlan}
               icon={<IconCalendar className="ko-icon" />}
             />
@@ -477,14 +539,14 @@ export function LearnerHubLayout({
         ) : null}
         <MobileNavLink
           href="/profile"
-          label="Profil"
+          label={t("nav.profileShort")}
           active={onProfile}
           icon={<IconUser className="ko-icon" />}
         />
         {showAdminLink ? (
           <MobileNavLink
             href="/admin"
-            label="Admin"
+            label={t("nav.adminShort")}
             active={onAdmin}
             icon={<IconUsers className="ko-icon" />}
           />

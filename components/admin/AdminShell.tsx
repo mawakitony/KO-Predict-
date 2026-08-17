@@ -8,6 +8,7 @@ import { LearnWorldsRoster } from "@/components/admin/LearnWorldsRoster";
 import { IconDownload } from "@/components/admin/AdminIcons";
 import type { AdminStudentRow } from "@/lib/admin/types";
 import type { StaffPermissions } from "@/lib/auth/permissions";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type AdminTab = "learnworlds" | "kopredict";
 
@@ -33,6 +34,7 @@ export function AdminShell({
   dataSource,
   permissions,
 }: AdminShellProps) {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<AdminTab>(() =>
     resolveTab(searchParams.get("tab")),
@@ -50,22 +52,26 @@ export function AdminShell({
 
       <div className="ko-admin-panel-head">
         <p className="text-xs text-slate-400">
-          Source :{" "}
-          {tab === "learnworlds"
-            ? "LearnWorlds"
-            : dataSource === "database"
-              ? "Supabase"
-              : "démo"}
-          {permissions.canManageStudents ? " · gestion" : " · lecture seule"}
+          {t("admin.learners.sourceLine", {
+            source:
+              tab === "learnworlds"
+                ? t("admin.learners.sourceLw")
+                : dataSource === "database"
+                  ? t("admin.learners.sourceDb")
+                  : t("admin.learners.sourceDemo"),
+            mode: permissions.canManageStudents
+              ? t("common.management")
+              : t("common.readOnly"),
+          })}
         </p>
         <button
           type="button"
           className="ko-admin-toolbar-btn self-start sm:self-auto"
-          title="Export CSV bientôt disponible"
+          title={t("admin.learners.exportSoon")}
           disabled
         >
           <IconDownload className="ko-icon-sm" />
-          Exporter
+          {t("admin.learners.export")}
         </button>
       </div>
 

@@ -10,6 +10,7 @@ import {
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { IconBook, IconSpark } from "@/components/admin/AdminIcons";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type AdminTab = "learnworlds" | "kopredict";
 
@@ -61,6 +62,7 @@ export function AdminLearnersHeaderTabs() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { koCount } = useAdminLearnersChrome();
+  const { t } = useLanguage();
   const onAdminHome = pathname === "/admin";
   const onSchool = pathname === "/admin/ecole";
   const tab = onAdminHome
@@ -82,7 +84,7 @@ export function AdminLearnersHeaderTabs() {
   return (
     <div
       role="tablist"
-      aria-label="Source apprenants"
+      aria-label={t("chrome.sourceTabs")}
       className="ko-admin-source-tabs"
     >
       <button
@@ -94,8 +96,8 @@ export function AdminLearnersHeaderTabs() {
         className="ko-admin-source-tab"
       >
         <IconBook className="ko-admin-source-tab-icon" />
-        <span className="hidden sm:inline">Tous les apprenants</span>
-        <span className="sm:hidden">Tous</span>
+        <span className="hidden sm:inline">{t("nav.allLearners")}</span>
+        <span className="sm:hidden">{t("nav.allLearnersShort")}</span>
       </button>
       <button
         type="button"
