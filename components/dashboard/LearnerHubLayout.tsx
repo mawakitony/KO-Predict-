@@ -17,6 +17,7 @@ import {
 } from "@/components/dashboard/LearnerHeaderIcons";
 import { LearnerAutoPopups } from "@/components/learner/LearnerAutoPopups";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { resolveDisplayName } from "@/lib/profile/display";
 import type { EstimationPopupContent } from "@/lib/dashboard/estimation-popup";
@@ -325,6 +326,9 @@ export function LearnerHubLayout({
               <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
                 Compte
               </p>
+              <div className="mb-2 px-0.5">
+                <ThemeToggle />
+              </div>
               <SignOutButton variant="nav" />
             </div>
             <div className="ko-dash-side-card relative z-[1] p-4">
@@ -344,7 +348,7 @@ export function LearnerHubLayout({
           </div>
         </aside>
 
-        <div className="ko-dash-main-offset flex min-w-0 flex-col px-0 pb-24 lg:pb-8">
+        <div className="ko-dash-main-offset flex min-w-0 flex-col px-0 pb-32 lg:pb-8">
           {topBar ? (
             <section className="ko-school-head" aria-label="En-tête vue école">
               <div className="ko-school-topbar">
@@ -392,7 +396,7 @@ export function LearnerHubLayout({
             >
               <div className="ko-dash-header-inner">
                 <div className="min-w-0 flex-1">
-                  <div className="mb-2 flex items-center gap-2 lg:hidden">
+                  <div className="mb-1 flex items-center gap-2 lg:hidden">
                     <BrandMark href="/" size="sm" tone="dark" />
                   </div>
                   {shownName ? (
@@ -430,7 +434,7 @@ export function LearnerHubLayout({
             </header>
           )}
 
-          <main className="ko-dash-stagger min-w-0 space-y-3 px-3 pt-4 sm:space-y-4 sm:px-5 lg:px-6 lg:pt-5">
+          <main className="ko-dash-stagger min-w-0 space-y-3 px-3 pt-3 sm:space-y-4 sm:px-5 lg:px-6 lg:pt-4">
             {children}
           </main>
         </div>
@@ -444,6 +448,9 @@ export function LearnerHubLayout({
           showAdminLink ? "Navigation mobile équipe" : "Navigation mobile apprenant"
         }
       >
+        <div className="ko-mobile-nav-theme">
+          <ThemeToggle />
+        </div>
         <MobileNavLink
           href="/dashboard"
           label="Dashboard"

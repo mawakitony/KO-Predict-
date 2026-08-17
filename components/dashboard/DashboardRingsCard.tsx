@@ -12,20 +12,20 @@ export function DashboardRingsCard({
     {
       label: "Préparation",
       value: readiness,
-      color: "#2563eb",
-      track: "#e8eefc",
+      color: "var(--brand)",
+      track: "var(--brand-soft)",
     },
     {
       label: "Progression",
       value: progress,
-      color: "#60a5fa",
-      track: "#eef2ff",
+      color: "var(--info)",
+      track: "var(--info-soft)",
     },
     {
       label: "Probabilité",
       value: probability,
-      color: "#94a3b8",
-      track: "#f1f5f9",
+      color: "var(--text-secondary)",
+      track: "var(--surface-muted)",
     },
   ] as const;
 

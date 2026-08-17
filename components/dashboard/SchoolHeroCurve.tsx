@@ -285,7 +285,7 @@ export function SchoolHeroChart({
             <path
               d={path.line}
               fill="none"
-              stroke="#0d9488"
+              stroke="var(--accent)"
               strokeWidth="3.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -333,8 +333,8 @@ export function SchoolHeroChart({
                   cx={p.x}
                   cy={p.y}
                   r={isActive ? 7 : 5.5}
-                  fill="#fff"
-                  stroke="#0d9488"
+                  fill="var(--surface)"
+                  stroke="var(--accent)"
                   strokeWidth={isActive ? 3.25 : 2.75}
                   className="ko-curve-dot"
                   style={{ animationDelay: `${60 + i * 35}ms` }}

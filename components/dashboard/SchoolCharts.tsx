@@ -57,7 +57,7 @@ export function SchoolRiskDonut({
             <circle
               r={r}
               fill="none"
-              stroke="#e2e8f0"
+              stroke="var(--border)"
               strokeWidth={stroke}
               strokeDasharray={`${half} ${c}`}
               strokeLinecap="butt"

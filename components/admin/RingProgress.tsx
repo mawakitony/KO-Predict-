@@ -18,9 +18,9 @@ const TONE_STOPS: Record<
   RingTone,
   { from: string; to: string; glow: string }
 > = {
-  emerald: { from: "#047857", to: "#a3e635", glow: "rgba(16, 185, 129, 0.28)" },
-  amber: { from: "#ea580c", to: "#facc15", glow: "rgba(249, 115, 22, 0.28)" },
-  sky: { from: "#0369a1", to: "#38bdf8", glow: "rgba(14, 165, 233, 0.28)" },
+  emerald: { from: "var(--success)", to: "var(--accent)", glow: "color-mix(in srgb, var(--success) 28%, transparent)" },
+  amber: { from: "var(--warning)", to: "#facc15", glow: "color-mix(in srgb, var(--warning) 28%, transparent)" },
+  sky: { from: "var(--info)", to: "#38bdf8", glow: "color-mix(in srgb, var(--info) 28%, transparent)" },
 };
 
 /** Anneau style jauge (disque ombré + dégradé + option hachures). */
@@ -113,7 +113,7 @@ export function RingProgress({
             cy={size / 2}
             r={r}
             fill="none"
-            stroke="#e2e8f0"
+            stroke="var(--border)"
             strokeWidth={stroke}
           />
 

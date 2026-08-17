@@ -34,7 +34,7 @@ export function PaceActivityBars({
         <div key={day} className="flex flex-1 flex-col items-center gap-2">
           <div className="flex h-28 w-full items-end justify-center">
             <div
-              className="w-full max-w-[1.75rem] rounded-t-lg bg-[linear-gradient(180deg,#93c5fd_0%,#2563eb_100%)] transition-all"
+              className="ko-pace-bar w-full max-w-[1.75rem] rounded-t-lg transition-all"
               style={{ height: `${currentHeights[i]}%` }}
             />
           </div>

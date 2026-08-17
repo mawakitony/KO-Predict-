@@ -24,32 +24,32 @@ const METRICS: Array<{
     key: "readiness",
     label: "Préparation",
     unit: "pts",
-    color: "#2563eb",
-    soft: "#dbeafe",
+    color: "var(--brand)",
+    soft: "var(--brand-soft)",
     Icon: IconShield,
   },
   {
     key: "probability",
     label: "Probabilité",
     unit: "%",
-    color: "#0d9488",
-    soft: "#ccfbf1",
+    color: "var(--accent)",
+    soft: "var(--accent-soft)",
     Icon: IconTarget,
   },
   {
     key: "progress",
     label: "Progression",
     unit: "%",
-    color: "#38bdf8",
-    soft: "#e0f2fe",
+    color: "var(--info)",
+    soft: "var(--info-soft)",
     Icon: IconTrend,
   },
   {
     key: "pace",
     label: "Rythme",
     unit: "/sem.",
-    color: "#6366f1",
-    soft: "#e0e7ff",
+    color: "var(--violet)",
+    soft: "var(--violet-soft)",
     Icon: IconPulse,
   },
 ];
@@ -233,7 +233,7 @@ function RadarChart({
             dx="0"
             dy="4"
             stdDeviation="5"
-            floodColor="#94a3b8"
+            floodColor="var(--text-secondary)"
             floodOpacity="0.18"
           />
         </filter>
@@ -248,7 +248,7 @@ function RadarChart({
             dx="0"
             dy="0"
             stdDeviation="3.5"
-            floodColor="#2563eb"
+            floodColor="var(--brand)"
             floodOpacity="0.45"
           />
         </filter>
@@ -263,18 +263,18 @@ function RadarChart({
             dx="0"
             dy="0"
             stdDeviation="3.5"
-            floodColor="#0d9488"
+            floodColor="var(--accent)"
             floodOpacity="0.4"
           />
         </filter>
         <linearGradient id={`stroke-a-${gid}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#38bdf8" />
-          <stop offset="55%" stopColor="#2563eb" />
-          <stop offset="100%" stopColor="#1d4ed8" />
+          <stop offset="0%" stopColor="var(--info)" />
+          <stop offset="55%" stopColor="var(--brand)" />
+          <stop offset="100%" stopColor="var(--brand-hover)" />
         </linearGradient>
         <linearGradient id={`stroke-t-${gid}`} x1="1" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#2dd4bf" />
-          <stop offset="100%" stopColor="#0f766e" />
+          <stop offset="0%" stopColor="var(--accent)" />
+          <stop offset="100%" stopColor="var(--accent-hover)" />
         </linearGradient>
       </defs>
 
@@ -285,11 +285,11 @@ function RadarChart({
           cx={cx}
           cy={cy}
           r={radius * scale}
-          fill="#ffffff"
+          fill="var(--surface)"
           filter={`url(#soft-ring-${gid})`}
         />
       ))}
-      <circle cx={cx} cy={cy} r={radius * 0.18} fill="#ffffff" />
+      <circle cx={cx} cy={cy} r={radius * 0.18} fill="var(--surface)" />
 
       {labels.map((_, i) => {
         const p = axisEnd(i);
@@ -300,7 +300,7 @@ function RadarChart({
             y1={cy}
             x2={p.x}
             y2={p.y}
-            stroke="#cbd5e1"
+            stroke="var(--border)"
             strokeWidth="1"
             strokeOpacity="0.7"
           />
@@ -336,8 +336,8 @@ function RadarChart({
           cx={p.x}
           cy={p.y}
           r="4.2"
-          fill="#fff"
-          stroke="#2563eb"
+          fill="var(--surface)"
+          stroke="var(--brand)"
           strokeWidth="2.2"
           opacity={actualOpacity}
         />
@@ -353,7 +353,7 @@ function RadarChart({
             <text
               textAnchor="middle"
               y="-6"
-              fill="#64748b"
+              fill="var(--text-secondary)"
               fontSize="11"
               fontWeight="600"
               fontFamily="var(--font-outfit), system-ui, sans-serif"
@@ -363,7 +363,7 @@ function RadarChart({
             <text
               textAnchor="middle"
               y="10"
-              fill="#0f172a"
+              fill="var(--text-primary)"
               fontSize="12.5"
               fontWeight="800"
               fontFamily="var(--font-outfit), system-ui, sans-serif"
@@ -413,7 +413,7 @@ function Sparkline({
         strokeLinejoin="round"
       />
       {last ? (
-        <circle cx={last.x} cy={last.y} r="2.6" fill="#fff" stroke={color} strokeWidth="1.8" />
+        <circle cx={last.x} cy={last.y} r="2.6" fill="var(--surface)" stroke={color} strokeWidth="1.8" />
       ) : null}
     </svg>
   );
@@ -558,7 +558,7 @@ export function LearnerStatRings({
                 <span
                   className="ko-analysis-icon"
                   style={{
-                    background: `linear-gradient(145deg, ${row.soft}, #fff)`,
+                    background: `linear-gradient(145deg, ${row.soft}, var(--surface))`,
                     boxShadow: `inset 0 0 0 1px ${row.color}22`,
                   }}
                 >
@@ -621,11 +621,11 @@ export function LearnerStatRings({
           </div>
           <div className="ko-analysis-legend">
             <span className={mode === "actuel" ? "is-on" : ""}>
-              <i className="bg-[#2563eb]" />
+              <i className="bg-[var(--brand)]" />
               Actuel
             </span>
             <span className={mode === "objectif" ? "is-on" : ""}>
-              <i className="bg-[#0d9488]" />
+              <i className="bg-[var(--accent)]" />
               Objectif
             </span>
           </div>

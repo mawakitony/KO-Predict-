@@ -141,11 +141,11 @@ export function SchoolOverviewBoard({
         : "—";
 
   const riskSegments = [
-    { key: "GREEN", label: "GREEN", count: overview.riskCounts.GREEN, color: "#10b981" },
-    { key: "AMBER", label: "AMBER", count: overview.riskCounts.AMBER, color: "#f59e0b" },
-    { key: "RED", label: "RED", count: overview.riskCounts.RED, color: "#ef4444" },
-    { key: "CRITICAL", label: "CRITICAL", count: overview.riskCounts.CRITICAL, color: "#7f1d1d" },
-    { key: "NONE", label: "Non évalué", count: overview.riskCounts.NONE, color: "#94a3b8" },
+    { key: "GREEN", label: "GREEN", count: overview.riskCounts.GREEN, color: "var(--success)" },
+    { key: "AMBER", label: "AMBER", count: overview.riskCounts.AMBER, color: "var(--warning)" },
+    { key: "RED", label: "RED", count: overview.riskCounts.RED, color: "var(--danger)" },
+    { key: "CRITICAL", label: "CRITICAL", count: overview.riskCounts.CRITICAL, color: "#fb7185" },
+    { key: "NONE", label: "Non évalué", count: overview.riskCounts.NONE, color: "var(--text-secondary)" },
   ];
 
   const progressPoints = overview.progressProfile.map((p) => ({

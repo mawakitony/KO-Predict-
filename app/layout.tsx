@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit, Source_Sans_3 } from "next/font/google";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme/storage";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -42,10 +44,16 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
+      suppressHydrationWarning
       className={`${outfit.variable} ${sourceSans.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }}
+        />
+      </head>
       <body className="ko-app-body min-h-full flex flex-col font-sans">
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

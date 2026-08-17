@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
   --background: #eef3f6;
   --foreground: #0f172a;
   --muted: #64748b;
@@ -26,6 +27,53 @@
   --shadow-panel: 0 18px 50px -28px rgba(11, 31, 42, 0.45);
   --radius-panel: 1.25rem;
   --radius-control: 0.65rem;
+  --text-primary: var(--foreground);
+  --text-secondary: var(--muted);
+  --brand: var(--admin-blue);
+  --brand-hover: var(--admin-blue-hover);
+  --brand-soft: var(--admin-blue-soft);
+  --surface-elevated: var(--surface-raised);
+  --surface-muted: #f1f5f9;
+  --sidebar: #ffffff;
+  --success: #059669;
+  --warning: #d97706;
+  --violet: #7c3aed;
+  --violet-soft: #ede9fe;
+  --info: #38bdf8;
+  --info-soft: #e0f2fe;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0b1524;
+  --foreground: #e8eef7;
+  --muted: #9aadc4;
+  --accent: #2dd4bf;
+  --accent-hover: #5eead4;
+  --accent-soft: #134e4a;
+  --surface: #111c2e;
+  --surface-raised: #17263c;
+  --surface-elevated: #17263c;
+  --surface-muted: #1a283c;
+  --sidebar: #0e1a2c;
+  --border: #24344c;
+  --border-strong: #31465f;
+  --admin-blue: #3b82f6;
+  --admin-blue-hover: #60a5fa;
+  --admin-blue-soft: #163152;
+  --admin-blue-ring: #1e4a7a;
+  --dash-primary: #3b82f6;
+  --dash-primary-soft: #163152;
+  --dash-bg: #0b1524;
+  --danger: #f87171;
+  --danger-soft: #3f1d2a;
+  --shadow-panel: 0 12px 28px -22px rgba(2, 8, 20, 0.55);
+  --success: #34d399;
+  --warning: #fbbf24;
+  --violet: #a78bfa;
+  --violet-soft: #2e2450;
+  --info: #7dd3fc;
+  --info-soft: #163152;
 }
 
 @theme inline {
@@ -68,13 +116,28 @@
     display: flex;
     align-items: stretch;
     gap: 0.25rem;
+    flex-wrap: wrap;
     border-radius: 1.35rem;
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
     padding: 0.35rem;
     box-shadow: 0 18px 40px -20px rgba(15, 23, 42, 0.4);
     backdrop-filter: blur(12px);
   }
+}
+
+.ko-mobile-nav-theme {
+  flex: 1 0 100%;
+  padding: 0.1rem 0.25rem 0.3rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.15rem;
+}
+
+.ko-mobile-nav-theme .ko-theme-toggle {
+  min-height: 2.15rem;
+  padding: 0.3rem 0.45rem;
+  border: 0;
+  background: transparent;
 }
 
 @keyframes ko-fade-up {
@@ -402,11 +465,11 @@ body {
 .ko-profile-hero {
   position: relative;
   border-radius: 1.6rem;
-  border: 1px solid rgba(191, 219, 254, 0.65);
+  border: 1px solid var(--border);
   background:
-    radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.12), transparent 42%),
-    radial-gradient(circle at 0% 100%, rgba(13, 148, 136, 0.1), transparent 40%),
-    linear-gradient(145deg, #eff6ff 0%, #f0fdfa 52%, #ffffff 100%);
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--brand) 12%, transparent), transparent 42%),
+    radial-gradient(circle at 0% 100%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 40%),
+    linear-gradient(145deg, var(--brand-soft) 0%, var(--accent-soft) 52%, var(--surface) 100%);
   padding: 1.15rem 1.2rem 1.25rem;
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.9) inset,
@@ -432,12 +495,12 @@ body {
   align-items: center;
   gap: 0.35rem;
   border-radius: 9999px;
-  border: 1px solid rgba(226, 232, 240, 0.95);
-  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
   padding: 0.45rem 0.9rem;
   font-size: 0.82rem;
   font-weight: 700;
-  color: #475569;
+  color: var(--text-secondary);
   box-shadow: 0 8px 18px -16px rgba(15, 23, 42, 0.35);
   transition:
     color 160ms ease,
@@ -446,7 +509,7 @@ body {
 }
 
 .ko-profile-back:hover {
-  color: #1d4ed8;
+  color: var(--brand-hover);
   border-color: #bfdbfe;
   transform: translateY(-1px);
 }
@@ -456,7 +519,7 @@ body {
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #2563eb;
+  color: var(--brand);
 }
 
 .ko-profile-title {
@@ -464,7 +527,7 @@ body {
   font-size: clamp(1.7rem, 4vw, 2.15rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #0f172a;
+  color: var(--text-primary);
   line-height: 1.15;
 }
 
@@ -473,17 +536,17 @@ body {
   max-width: 32rem;
   font-size: 0.92rem;
   line-height: 1.5;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .ko-profile-identity {
   position: relative;
   overflow: hidden;
   border-radius: 1.55rem;
-  border: 1px solid rgba(191, 219, 254, 0.7);
+  border: 1px solid var(--border);
   background:
-    radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.08), transparent 45%),
-    #fff;
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--brand) 8%, transparent), transparent 45%),
+    var(--surface);
   padding: 1.25rem 1.15rem 1.3rem;
   box-shadow: 0 18px 40px -28px rgba(15, 23, 42, 0.28);
 }
@@ -577,7 +640,7 @@ body {
   font-size: clamp(1.35rem, 3.5vw, 1.75rem);
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: var(--text-primary);
   line-height: 1.2;
 }
 
@@ -585,8 +648,8 @@ body {
   display: inline-flex;
   margin-top: 0.45rem;
   border-radius: 9999px;
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.12), rgba(13, 148, 136, 0.12));
-  color: #1d4ed8;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--brand) 12%, transparent), color-mix(in srgb, var(--accent) 12%, transparent));
+  color: var(--brand-hover);
   padding: 0.28rem 0.75rem;
   font-size: 0.72rem;
   font-weight: 800;
@@ -617,10 +680,10 @@ body {
 .ko-profile-card {
   position: relative;
   border-radius: 1.55rem;
-  border: 1px solid #e8eef5;
+  border: 1px solid var(--border);
   background:
-    radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.05), transparent 40%),
-    #fff;
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--brand) 8%, transparent), transparent 40%),
+    var(--surface);
   padding: 1.25rem 1.15rem 1.3rem;
   box-shadow: 0 18px 40px -28px rgba(15, 23, 42, 0.28);
 }
@@ -634,7 +697,7 @@ body {
 .ko-profile-card-head {
   margin-bottom: 1.15rem;
   padding-bottom: 0.95rem;
-  border-bottom: 1px solid #eef2f7;
+  border-bottom: 1px solid var(--border);
 }
 
 .ko-profile-section-kicker {
@@ -642,7 +705,7 @@ body {
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #0d9488;
+  color: var(--accent);
 }
 
 .ko-profile-section-title {
@@ -650,14 +713,14 @@ body {
   font-size: 1.2rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .ko-profile-section-lead {
   margin-top: 0.35rem;
   font-size: 0.86rem;
   line-height: 1.45;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .ko-profile-form {
@@ -684,7 +747,7 @@ body {
   gap: 0.75rem;
   margin-top: 0.35rem;
   padding-top: 1rem;
-  border-top: 1px solid #eef2f7;
+  border-top: 1px solid var(--border);
 }
 
 .ko-profile-field {
@@ -698,17 +761,17 @@ body {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .ko-profile-field input {
   border-radius: 0.95rem;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-muted);
   padding: 0.8rem 0.95rem;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   outline: none;
   transition:
     border-color 160ms ease,
@@ -717,21 +780,21 @@ body {
 }
 
 .ko-profile-field input:focus {
-  border-color: #93c5fd;
-  background: #fff;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  border-color: var(--admin-blue-ring);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 18%, transparent);
 }
 
 .ko-profile-field.is-locked input {
-  color: #94a3b8;
+  color: var(--text-secondary);
   cursor: not-allowed;
-  background: #f1f5f9;
+  background: var(--surface-muted);
 }
 
 .ko-profile-field em {
   font-size: 0.75rem;
   font-style: normal;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .ko-profile-btn {
@@ -739,12 +802,12 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  border: 1px solid #dbe3ee;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   padding: 0.65rem 1.1rem;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #334155;
+  color: var(--text-primary);
   transition:
     transform 160ms ease,
     background 160ms ease,
@@ -753,8 +816,8 @@ body {
 }
 
 .ko-profile-btn:hover:not(:disabled) {
-  border-color: #bfdbfe;
-  background: #eff6ff;
+  border-color: var(--admin-blue-ring);
+  background: var(--brand-soft);
   transform: translateY(-1px);
 }
 
@@ -765,7 +828,7 @@ body {
 
 .ko-profile-btn.is-ghost {
   background: transparent;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .ko-profile-btn.is-primary {
@@ -1138,6 +1201,7 @@ body {
 }
 
 .ko-landing-bg {
+  color-scheme: light;
   background:
     radial-gradient(ellipse 70% 55% at 8% 20%, #ffe8dc 0%, transparent 58%),
     radial-gradient(ellipse 55% 50% at 92% 15%, #e4e9ff 0%, transparent 55%),
@@ -1345,7 +1409,7 @@ body {
   width: 100%;
   border-radius: var(--radius-control);
   border: 1px solid var(--border-strong);
-  background: #fff;
+  background: var(--surface);
   padding: 0.7rem 0.9rem;
   color: var(--foreground);
   outline: none;
@@ -1483,6 +1547,16 @@ body {
   background: var(--admin-blue-hover);
 }
 
+html[data-theme="dark"] .ko-btn-blue {
+  background: #2563eb;
+  color: #fff;
+}
+
+html[data-theme="dark"] .ko-btn-blue:hover {
+  background: #1d4ed8;
+  color: #fff;
+}
+
 .ko-btn-blue:active {
   transform: translateY(1px);
 }
@@ -1517,11 +1591,11 @@ body {
   gap: 0.35rem;
   border-radius: 0.65rem;
   border: 1px solid var(--border);
-  background: #fff;
+  background: var(--surface);
   padding: 0.4rem 0.7rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-primary);
   transition:
     background-color 140ms ease,
     border-color 140ms ease;
@@ -1790,6 +1864,176 @@ body {
 .ko-admin-menu-item[data-active="true"] {
   background: var(--admin-blue-soft);
   color: var(--admin-blue);
+}
+
+.ko-admin-row-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+.ko-admin-row-actions:empty {
+  display: none;
+}
+
+.ko-interv-metric {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.7rem 0.8rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.ko-interv-metric-icon {
+  display: inline-flex;
+  height: 2.45rem;
+  width: 2.45rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.85rem;
+}
+
+.ko-interv-metric-icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.ko-interv-metric-icon[data-tone="blue"] {
+  background: var(--brand-soft);
+  color: var(--brand);
+  box-shadow: inset 0 0 0 1px var(--admin-blue-ring);
+}
+
+.ko-interv-metric-icon[data-tone="teal"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent-soft);
+}
+
+.ko-interv-metric-icon[data-tone="amber"] {
+  background: color-mix(in srgb, var(--warning) 16%, var(--surface));
+  color: var(--warning);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warning) 35%, var(--border));
+}
+
+.ko-interv-metric-icon[data-tone="slate"] {
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.ko-interv-chip-icon {
+  display: inline-flex;
+  height: 1.35rem;
+  width: 1.35rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4rem;
+}
+
+.ko-interv-chip-icon svg {
+  width: 0.82rem;
+  height: 0.82rem;
+}
+
+.ko-admin-icon-action,
+.ko-admin-text-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 0.7rem;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.84rem;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.ko-admin-icon-action {
+  width: 2.5rem;
+  padding: 0;
+}
+
+.ko-admin-icon-action svg,
+.ko-admin-text-action svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.ko-admin-text-action {
+  padding: 0 0.8rem;
+}
+
+.ko-admin-icon-action:hover,
+.ko-admin-text-action:hover {
+  background: #fff;
+  color: var(--admin-blue-hover);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.ko-admin-icon-action[data-tone="primary"],
+.ko-admin-text-action[data-tone="primary"] {
+  background: #fff;
+  color: var(--admin-blue);
+}
+
+.ko-admin-icon-action[data-tone="success"],
+.ko-admin-text-action[data-tone="success"] {
+  background: var(--admin-blue);
+  color: #fff;
+}
+
+.ko-admin-icon-action[data-tone="success"]:hover,
+.ko-admin-text-action[data-tone="success"]:hover {
+  background: var(--admin-blue-hover);
+  color: #fff;
+  box-shadow: 0 8px 20px -12px rgba(37, 99, 235, 0.8);
+}
+
+.ko-admin-icon-action[data-tone="danger"]:hover,
+.ko-admin-text-action[data-tone="danger"]:hover {
+  background: #fff1f2;
+  color: #e11d48;
+  box-shadow: none;
+}
+
+.ko-admin-icon-action[data-tone="violet"],
+.ko-admin-text-action[data-tone="violet"] {
+  color: #7c3aed;
+}
+
+.ko-admin-icon-action[data-tone="violet"]:hover,
+.ko-admin-text-action[data-tone="violet"]:hover {
+  background: #f5f3ff;
+  color: #6d28d9;
+  box-shadow: none;
+}
+
+.ko-admin-icon-action:disabled,
+.ko-admin-text-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  box-shadow: none;
 }
 
 /* Habitudes d'apprentissage */
@@ -2242,9 +2486,9 @@ body {
   flex-direction: column;
   padding: 1.3rem 1.2rem 1.25rem;
   background:
-    radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.05), transparent 42%),
-    radial-gradient(circle at 0% 100%, rgba(13, 148, 136, 0.04), transparent 40%),
-    #fff;
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--brand) 8%, transparent), transparent 42%),
+    radial-gradient(circle at 0% 100%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 40%),
+    var(--surface);
 }
 
 @media (min-width: 640px) {
@@ -2266,8 +2510,8 @@ body {
   gap: 0.18rem;
   padding: 0.22rem;
   border-radius: 9999px;
-  background: #f1f5f9;
-  border: 1px solid #e8eef5;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
 }
 
 .ko-analysis-toggle button {
@@ -2275,7 +2519,7 @@ body {
   padding: 0.42rem 0.95rem;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--text-secondary);
   transition:
     background 180ms ease,
     color 180ms ease,
@@ -2284,7 +2528,7 @@ body {
 }
 
 .ko-analysis-toggle button:hover {
-  color: #334155;
+  color: var(--text-primary);
 }
 
 .ko-analysis-toggle button.is-active {
@@ -2322,8 +2566,8 @@ body {
   align-items: center;
   gap: 0.8rem;
   border-radius: 1.2rem;
-  border: 1px solid #eef2f7;
-  background: linear-gradient(180deg, #fcfdff 0%, #fff 100%);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface-elevated) 0%, var(--surface) 100%);
   padding: 0.82rem 0.9rem;
   animation: ko-analysis-in 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
   transition:
@@ -2369,7 +2613,7 @@ body {
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .ko-analysis-value {
@@ -2379,14 +2623,14 @@ body {
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .ko-analysis-unit {
   margin-left: 0.2rem;
   font-size: 0.82rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .ko-analysis-delta {
@@ -2473,7 +2717,7 @@ body {
   margin-top: 0.15rem;
   font-size: 0.74rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .ko-analysis-legend span {
@@ -2796,8 +3040,8 @@ body {
   grid-template-columns: auto 1fr;
   gap: 0.85rem;
   border-radius: 1.25rem;
-  border: 1px solid #e8eef7;
-  background: linear-gradient(180deg, #fbfcfe 0%, #fff 100%);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface-muted) 0%, var(--surface) 100%);
   padding: 0.95rem 1rem;
   opacity: 0;
   animation: ko-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -3272,10 +3516,40 @@ body {
   position: relative;
   overflow: visible;
   background:
-    radial-gradient(ellipse 50% 40% at 0% 0%, rgba(37, 99, 235, 0.08), transparent 55%),
-    radial-gradient(ellipse 40% 35% at 100% 10%, rgba(13, 148, 136, 0.07), transparent 50%),
-    radial-gradient(ellipse 45% 40% at 80% 100%, rgba(56, 189, 248, 0.06), transparent 55%),
-    #f3f4f9;
+    radial-gradient(ellipse 50% 40% at 0% 0%, color-mix(in srgb, var(--brand) 12%, transparent), transparent 55%),
+    radial-gradient(ellipse 40% 35% at 100% 10%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 50%),
+    radial-gradient(ellipse 45% 40% at 80% 100%, color-mix(in srgb, var(--info) 9%, transparent), transparent 55%),
+    var(--background);
+}
+
+.ko-dash-shell {
+  font-size: 1.02rem;
+}
+
+.ko-dash-shell .text-\[10px\] {
+  font-size: 0.75rem;
+}
+
+.ko-dash-shell .text-\[11px\] {
+  font-size: 0.8125rem;
+}
+
+.ko-dash-shell .text-xs {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.ko-dash-shell .text-sm {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.ko-dash-shell .text-base {
+  font-size: 1.125rem;
+}
+
+.ko-dash-shell .text-lg {
+  font-size: 1.25rem;
 }
 
 .ko-dash-aurora {
@@ -3296,10 +3570,10 @@ body {
 .ko-dash-sidebar {
   overflow: hidden;
   border-radius: 1.85rem;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: color-mix(in srgb, var(--sidebar) 96%, transparent);
+  border: 1px solid var(--border);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 0 color-mix(in srgb, var(--surface) 90%, transparent) inset,
     0 22px 48px -28px rgba(15, 23, 42, 0.32);
   backdrop-filter: blur(14px);
   animation: ko-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -3323,7 +3597,7 @@ body {
     flex-direction: column;
     border-radius: 0;
     border: none;
-    border-right: 1px solid rgba(226, 232, 240, 0.95);
+    border-right: 1px solid var(--border);
     box-shadow: 4px 0 24px -20px rgba(37, 99, 235, 0.35);
   }
 
@@ -3337,10 +3611,10 @@ body {
   position: relative;
   overflow: hidden;
   border-radius: 1.6rem;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(226, 232, 240, 0.75);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  border: 1px solid var(--border);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 1px 0 color-mix(in srgb, var(--surface-elevated) 85%, transparent) inset,
     0 20px 44px -28px rgba(15, 23, 42, 0.3);
   transition:
     transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -3392,8 +3666,8 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  border-bottom: 1px solid rgba(191, 219, 254, 0.85);
-  background: rgba(238, 244, 255, 0.96);
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
   padding: 0.85rem 1rem;
   backdrop-filter: blur(12px);
 }
@@ -3406,7 +3680,7 @@ body {
 
 @media (min-width: 1024px) {
   .ko-school-topbar {
-    border: 1px solid rgba(191, 219, 254, 0.8);
+    border: 1px solid var(--border);
     border-radius: 1rem;
   }
 }
@@ -3496,8 +3770,8 @@ body {
   position: sticky;
   top: 0;
   z-index: 20;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
-  background: rgba(255, 255, 255, 0.86);
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
   backdrop-filter: blur(14px);
   animation: ko-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -3506,19 +3780,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 0.85rem 1.05rem;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
 }
 
 @media (min-width: 640px) {
   .ko-dash-header-inner {
-    padding: 1.15rem 1.25rem 1.25rem;
+    padding: 0.7rem 1.15rem;
   }
 }
 
 @media (min-width: 1024px) {
   .ko-dash-header-inner {
-    padding: 1.25rem 1.5rem 1.35rem;
+    padding: 0.75rem 1.35rem;
   }
 }
 
@@ -3527,8 +3801,8 @@ body {
 }
 
 .ko-dash-hello {
-  margin-bottom: 0.4rem;
-  font-size: 0.68rem;
+  margin-bottom: 0.12rem;
+  font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -3537,24 +3811,24 @@ body {
 
 .ko-dash-title {
   font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
-  font-size: clamp(1.45rem, 2.8vw, 1.95rem);
+  font-size: clamp(1.35rem, 2.4vw, 1.7rem);
   font-weight: 800;
   letter-spacing: -0.035em;
-  color: #0f172a;
-  line-height: 1.1;
+  color: var(--text-primary);
+  line-height: 1.15;
 }
 
 .ko-dash-subtitle {
-  margin-top: 0.35rem;
-  max-width: 36rem;
-  font-size: 0.9rem;
+  margin-top: 0.15rem;
+  max-width: 40rem;
+  font-size: 0.92rem;
   font-weight: 500;
-  color: #64748b;
-  line-height: 1.45;
+  color: var(--text-secondary);
+  line-height: 1.3;
 }
 
 .ko-dash-school-meta {
-  margin-top: 0.85rem;
+  margin-top: 0.4rem;
 }
 
 .ko-dash-status {
@@ -3566,7 +3840,7 @@ body {
   background: rgba(13, 148, 136, 0.08);
   border: 1px solid rgba(13, 148, 136, 0.14);
   padding: 0.3rem 0.7rem;
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -3607,7 +3881,7 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  color: #334155;
+  color: var(--text-primary);
   transition:
     background-color 160ms ease,
     color 160ms ease,
@@ -3615,8 +3889,8 @@ body {
 }
 
 .ko-dash-toolbar-btn.is-3d {
-  border: 1px solid #e8eef5;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-muted) 100%);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.9) inset,
     0 10px 18px -14px rgba(15, 23, 42, 0.4);
@@ -3681,7 +3955,7 @@ body {
 }
 
 .ko-dash-profile-welcome {
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 500;
   color: #94a3b8;
   letter-spacing: 0.01em;
@@ -3695,7 +3969,7 @@ body {
 }
 
 .ko-dash-profile-name {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #1d4ed8;
   letter-spacing: -0.015em;
@@ -4138,7 +4412,7 @@ body {
 }
 
 .ko-dash-kpi-label {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #94a3b8;
 }
@@ -4152,23 +4426,23 @@ body {
   align-items: center;
   border-radius: 9999px;
   padding: 0.22rem 0.6rem;
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
 .ko-dash-badge-up {
-  background: #dcfce7;
-  color: #16a34a;
+  background: color-mix(in srgb, var(--success) 18%, var(--surface));
+  color: var(--success);
 }
 
 .ko-dash-badge-warn {
-  background: #ffedd5;
-  color: #ea580c;
+  background: color-mix(in srgb, var(--warning) 18%, var(--surface));
+  color: var(--warning);
 }
 
 .ko-dash-badge-down {
-  background: #fee2e2;
-  color: #dc2626;
+  background: color-mix(in srgb, var(--danger) 16%, var(--surface));
+  color: var(--danger);
 }
 
 .ko-dash-badge-on-primary {
@@ -4198,8 +4472,8 @@ body {
   position: relative;
   overflow: hidden;
   border-radius: 1.85rem;
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: color-mix(in srgb, var(--surface) 97%, transparent);
+  border: 1px solid var(--border);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.9) inset,
     0 28px 60px -34px rgba(15, 23, 42, 0.34);
@@ -6411,8 +6685,8 @@ body {
 
 .ko-inv-card {
   border-radius: 1.45rem;
-  border: 1px solid #e2e8f0;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   padding: 1.2rem 1.15rem 1.25rem;
   box-shadow: 0 16px 34px -26px rgba(15, 23, 42, 0.28);
   animation: ko-fade-up 0.55s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -6431,7 +6705,7 @@ body {
   font-size: 1.12rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .ko-inv-chip {
@@ -7161,18 +7435,18 @@ body {
 }
 
 .ko-curve-grid {
-  stroke: #e2e8f0;
+  stroke: var(--border);
   stroke-width: 1;
   stroke-dasharray: 2 6;
 }
 
 .ko-curve-baseline {
-  stroke: #cbd5e1;
+  stroke: var(--border-strong);
   stroke-width: 1.25;
 }
 
 .ko-curve-yaxis {
-  fill: #64748b;
+  fill: var(--text-secondary);
   font-size: 12px;
   font-weight: 600;
   font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
@@ -7912,7 +8186,7 @@ body {
 }
 
 .ko-plan-curve-grid {
-  stroke: #e2e8f0;
+  stroke: var(--border);
   stroke-width: 1;
   stroke-dasharray: 2 6;
 }
@@ -7920,7 +8194,7 @@ body {
 .ko-plan-curve-yaxis,
 .ko-plan-curve-xaxis,
 .ko-plan-curve-point-label {
-  fill: #64748b;
+  fill: var(--text-secondary);
   font-size: 12px;
   font-weight: 600;
   font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
@@ -7934,7 +8208,7 @@ body {
 
 .ko-plan-curve-xaxis.is-active,
 .ko-plan-curve-point-label.is-active {
-  fill: #0f766e;
+  fill: var(--accent);
   font-weight: 800;
 }
 
@@ -8416,7 +8690,7 @@ body {
 }
 
 .ko-learn-kicker {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -8426,7 +8700,7 @@ body {
 .ko-learn-hero-title {
   margin-top: 0.45rem;
   font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
-  font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+  font-size: clamp(1.5rem, 2.8vw, 2rem);
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.2;
@@ -8436,7 +8710,7 @@ body {
 .ko-learn-hero-sub {
   margin-top: 0.45rem;
   max-width: 40rem;
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.5;
   color: #64748b;
 }
@@ -8969,14 +9243,14 @@ body {
   grid-template-columns: auto minmax(0, 1fr);
   gap: 0.9rem;
   border-radius: 1.1rem;
-  border: 1px solid #e8eef5;
-  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-muted) 100%);
   padding: 1rem 1.1rem;
   box-shadow: 0 12px 28px -22px rgba(15, 23, 42, 0.4);
 }
 
 .ko-msg-card.is-unread {
-  border-color: #bfdbfe;
+  border-color: var(--admin-blue-ring);
   box-shadow: 0 14px 30px -20px rgba(37, 99, 235, 0.45);
 }
 
@@ -8987,8 +9261,8 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 0.95rem;
-  border: 1px solid #e8eef5;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .ko-msg-card-icon .ko-header-3d {
@@ -9008,7 +9282,7 @@ body {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .ko-msg-pill {
@@ -9025,14 +9299,14 @@ body {
   margin-top: 0.35rem;
   font-size: 1rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .ko-msg-body {
   margin-top: 0.35rem;
   font-size: 0.9rem;
   line-height: 1.5;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .ko-msg-link {
@@ -9042,17 +9316,17 @@ body {
   margin-top: 0.75rem;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #2563eb;
+  color: var(--brand);
 }
 
 .ko-msg-link:hover {
-  color: #1d4ed8;
+  color: var(--brand-hover);
 }
 
 .ko-msg-empty {
   border-radius: 1.15rem;
-  border: 1px dashed #e2e8f0;
-  background: #fff;
+  border: 1px dashed var(--border);
+  background: var(--surface);
   padding: 2.2rem 1.4rem;
   text-align: center;
   box-shadow: 0 12px 28px -22px rgba(15, 23, 42, 0.35);
@@ -9062,7 +9336,7 @@ body {
   margin-top: 0.85rem;
   font-size: 1.15rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .ko-msg-empty p {
@@ -9070,7 +9344,7 @@ body {
   max-width: 28rem;
   font-size: 0.9rem;
   line-height: 1.5;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 
@@ -9102,12 +9376,12 @@ body {
   align-items: center;
   gap: 0.8rem;
   border-radius: 1.35rem;
-  border: 1px solid #e8eef5;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   padding: 1.9rem 1.6rem 1.5rem;
   text-align: center;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 1px 0 color-mix(in srgb, var(--surface-elevated) 95%, transparent) inset,
     0 32px 64px -28px rgba(15, 23, 42, 0.5);
   animation: ko-est-pop-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -9155,7 +9429,7 @@ body {
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.3;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .ko-est-pop-body {
@@ -9163,7 +9437,7 @@ body {
   max-width: 18.5rem;
   font-size: 0.88rem;
   line-height: 1.55;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .ko-est-pop-reasons {
@@ -9266,12 +9540,12 @@ body {
   align-items: center;
   gap: 0.8rem;
   border-radius: 1.35rem;
-  border: 1px solid #e8eef5;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   padding: 1.9rem 1.6rem 1.5rem;
   text-align: center;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 1px 0 color-mix(in srgb, var(--surface-elevated) 95%, transparent) inset,
     0 32px 64px -28px rgba(15, 23, 42, 0.5);
   animation: ko-est-pop-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -9287,7 +9561,7 @@ body {
   border: 0;
   border-radius: 9999px;
   background: transparent;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;
@@ -9308,7 +9582,7 @@ body {
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.3;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .ko-guide-pop-body {
@@ -9316,7 +9590,7 @@ body {
   max-width: 18.5rem;
   font-size: 0.88rem;
   line-height: 1.55;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .ko-guide-pop-primary {
@@ -9835,7 +10109,47 @@ body {
 
 /* ===== Admin responsive shell ===== */
 .ko-admin-shell {
-  background: linear-gradient(180deg, #eef4ff 0%, #f3f5f7 40%, #f3f5f7 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brand-soft) 55%, var(--background)) 0%,
+    var(--background) 40%,
+    var(--background) 100%
+  );
+  font-size: 1.02rem;
+}
+
+.ko-admin-shell .text-\[10px\] {
+  font-size: 0.75rem;
+}
+
+.ko-admin-shell .text-\[11px\] {
+  font-size: 0.8125rem;
+}
+
+.ko-admin-shell .text-xs {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.ko-admin-shell .text-sm {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.ko-admin-shell .text-base {
+  font-size: 1.125rem;
+}
+
+.ko-admin-shell .text-lg {
+  font-size: 1.25rem;
+}
+
+.ko-admin-shell table {
+  font-size: 1rem;
+}
+
+.ko-admin-shell th {
+  font-size: 0.78rem;
 }
 
 .ko-admin-sidebar {
@@ -9847,8 +10161,8 @@ body {
   flex-shrink: 0;
   flex-direction: column;
   align-self: start;
-  border-right: 1px solid rgba(226, 232, 240, 0.9);
-  background: #fff;
+  border-right: 1px solid var(--border);
+  background: var(--sidebar);
   padding: 1.35rem 1rem;
   box-shadow: 4px 0 24px -20px rgba(37, 99, 235, 0.35);
 }
@@ -9861,8 +10175,8 @@ body {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.65rem 0.75rem;
-  border-bottom: 1px solid rgba(219, 234, 254, 0.85);
-  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
   padding: 0.7rem 0.85rem;
   backdrop-filter: blur(12px);
 }
@@ -9917,12 +10231,12 @@ body {
 .ko-admin-main {
   min-width: 0;
   flex: 1;
-  padding: 0.75rem 0.85rem 5.75rem;
+  padding: 0.75rem 0.85rem 7.5rem;
 }
 
 @media (min-width: 640px) {
   .ko-admin-main {
-    padding: 1rem 1rem 5.75rem;
+    padding: 1rem 1rem 7.5rem;
   }
 }
 
@@ -9946,13 +10260,28 @@ body {
     display: flex;
     align-items: stretch;
     gap: 0.15rem;
+    flex-wrap: wrap;
     border-radius: 1.25rem;
-    border: 1px solid rgba(226, 232, 240, 0.95);
-    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 97%, transparent);
     padding: 0.3rem;
     box-shadow: 0 18px 40px -18px rgba(15, 23, 42, 0.42);
     backdrop-filter: blur(14px);
   }
+}
+
+.ko-admin-mobile-nav-theme {
+  flex: 1 0 100%;
+  padding: 0.05rem 0.2rem 0.25rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.1rem;
+}
+
+.ko-admin-mobile-nav-theme .ko-theme-toggle {
+  min-height: 2.1rem;
+  padding: 0.28rem 0.4rem;
+  border: 0;
+  background: transparent;
 }
 
 .ko-admin-bottom-link {
@@ -9965,13 +10294,13 @@ body {
   border-radius: 1rem;
   padding: 0.45rem 0.2rem;
   text-decoration: none;
-  color: #64748b;
+  color: var(--text-secondary);
   transition: background-color 140ms ease, color 140ms ease;
 }
 
 .ko-admin-bottom-link.is-active {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--brand-soft);
+  color: var(--brand-hover);
 }
 
 .ko-admin-bottom-icon {
@@ -9984,7 +10313,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.01em;
 }
@@ -9992,8 +10321,8 @@ body {
 .ko-admin-panel {
   overflow: hidden;
   border-radius: 1.15rem;
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   box-shadow: 0 16px 48px -28px rgba(15, 23, 42, 0.28);
 }
 
@@ -10007,7 +10336,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border);
   padding: 0.85rem 0.95rem;
 }
 
@@ -10134,3 +10463,285 @@ body {
     min-width: 0;
   }
 }
+
+/* ===== Theme toggle + shell dark remaps (Admin / Apprenant only) ===== */
+.ko-theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1.2;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ko-theme-toggle:hover {
+  border-color: var(--admin-blue-ring);
+  background: var(--brand-soft);
+}
+
+.ko-theme-toggle:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.ko-theme-toggle-label {
+  min-width: 0;
+}
+
+.ko-theme-switch {
+  position: relative;
+  width: 2.5rem;
+  height: 1.4rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #94a3b8;
+  transition: background-color 160ms ease;
+}
+
+html[data-theme="dark"] .ko-theme-switch {
+  background: var(--brand);
+}
+
+.ko-theme-switch-thumb {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.28);
+  transition: transform 160ms ease;
+}
+
+html[data-theme="dark"] .ko-theme-switch-thumb {
+  transform: translateX(1.1rem);
+}
+
+.ko-theme-toggle.is-compact {
+  width: auto;
+  min-height: 2.35rem;
+  padding: 0.35rem 0.6rem;
+  gap: 0.5rem;
+}
+
+.ko-pace-bar {
+  background: linear-gradient(180deg, var(--admin-blue-ring) 0%, var(--brand) 100%);
+}
+
+html[data-theme="dark"] .ko-admin-shell,
+html[data-theme="dark"] .ko-dash-shell {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .ko-admin-shell .bg-white,
+html[data-theme="dark"] .ko-dash-shell .bg-white,
+html[data-theme="dark"] .ko-admin-shell .bg-white\/80,
+html[data-theme="dark"] .ko-dash-shell .bg-white\/80,
+html[data-theme="dark"] .ko-admin-shell .bg-white\/90,
+html[data-theme="dark"] .ko-dash-shell .bg-white\/90 {
+  background-color: var(--surface);
+}
+
+html[data-theme="dark"] .ko-admin-shell .bg-white\/60,
+html[data-theme="dark"] .ko-dash-shell .bg-white\/60 {
+  background-color: color-mix(in srgb, var(--surface-elevated) 60%, transparent);
+}
+
+html[data-theme="dark"] .ko-admin-shell .bg-slate-50,
+html[data-theme="dark"] .ko-dash-shell .bg-slate-50,
+html[data-theme="dark"] .ko-admin-shell .bg-slate-100,
+html[data-theme="dark"] .ko-dash-shell .bg-slate-100,
+html[data-theme="dark"] .ko-admin-shell .hover\:bg-slate-50:hover,
+html[data-theme="dark"] .ko-dash-shell .hover\:bg-slate-50:hover,
+html[data-theme="dark"] .ko-admin-shell .hover\:bg-slate-100:hover,
+html[data-theme="dark"] .ko-dash-shell .hover\:bg-slate-100:hover {
+  background-color: var(--surface-muted);
+}
+
+html[data-theme="dark"] .ko-admin-shell .text-slate-900,
+html[data-theme="dark"] .ko-dash-shell .text-slate-900,
+html[data-theme="dark"] .ko-admin-shell .text-slate-800,
+html[data-theme="dark"] .ko-dash-shell .text-slate-800,
+html[data-theme="dark"] .ko-admin-shell .text-slate-700,
+html[data-theme="dark"] .ko-dash-shell .text-slate-700 {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .ko-admin-shell .text-slate-600,
+html[data-theme="dark"] .ko-dash-shell .text-slate-600,
+html[data-theme="dark"] .ko-admin-shell .text-slate-500,
+html[data-theme="dark"] .ko-dash-shell .text-slate-500,
+html[data-theme="dark"] .ko-admin-shell .text-slate-400,
+html[data-theme="dark"] .ko-dash-shell .text-slate-400 {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .ko-admin-shell .border-slate-100,
+html[data-theme="dark"] .ko-dash-shell .border-slate-100,
+html[data-theme="dark"] .ko-admin-shell .border-slate-200,
+html[data-theme="dark"] .ko-dash-shell .border-slate-200,
+html[data-theme="dark"] .ko-admin-shell .border-slate-300,
+html[data-theme="dark"] .ko-dash-shell .border-slate-300,
+html[data-theme="dark"] .ko-admin-shell .border-blue-100,
+html[data-theme="dark"] .ko-dash-shell .border-blue-100,
+html[data-theme="dark"] .ko-admin-shell .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html[data-theme="dark"] .ko-dash-shell .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html[data-theme="dark"] .ko-admin-shell .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+html[data-theme="dark"] .ko-dash-shell .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] .ko-admin-shell .ring-blue-200,
+html[data-theme="dark"] .ko-dash-shell .ring-blue-200,
+html[data-theme="dark"] .ko-admin-shell .hover\:ring-blue-200:hover,
+html[data-theme="dark"] .ko-dash-shell .hover\:ring-blue-200:hover {
+  --tw-ring-color: var(--admin-blue-ring);
+}
+
+html[data-theme="dark"] .ko-admin-shell .placeholder\:text-slate-400::placeholder,
+html[data-theme="dark"] .ko-dash-shell .placeholder\:text-slate-400::placeholder {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .ko-admin-shell .fill-slate-400,
+html[data-theme="dark"] .ko-dash-shell .fill-slate-400,
+html[data-theme="dark"] .ko-admin-shell .fill-slate-500,
+html[data-theme="dark"] .ko-dash-shell .fill-slate-500 {
+  fill: var(--text-secondary);
+}
+
+html[data-theme="dark"] .ko-admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+html[data-theme="dark"] .ko-dash-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+html[data-theme="dark"] .ko-admin-shell select,
+html[data-theme="dark"] .ko-dash-shell select,
+html[data-theme="dark"] .ko-admin-shell textarea,
+html[data-theme="dark"] .ko-dash-shell textarea {
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+html[data-theme="dark"] .ko-admin-shell table thead,
+html[data-theme="dark"] .ko-dash-shell table thead {
+  background-color: var(--surface-muted);
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .ko-admin-table-scroll::after {
+  border-top-color: var(--border);
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+}
+
+html[data-theme="dark"] .ko-admin-shell .hover\:bg-white\/60:hover,
+html[data-theme="dark"] .ko-dash-shell .hover\:bg-white\/60:hover {
+  background-color: color-mix(in srgb, var(--surface-elevated) 60%, transparent);
+}
+
+html[data-theme="dark"] .ko-admin-shell .bg-blue-50,
+html[data-theme="dark"] .ko-dash-shell .bg-blue-50,
+html[data-theme="dark"] .ko-admin-shell .bg-blue-50\/40,
+html[data-theme="dark"] .ko-dash-shell .bg-blue-50\/40,
+html[data-theme="dark"] .ko-admin-shell .hover\:bg-blue-50:hover,
+html[data-theme="dark"] .ko-dash-shell .hover\:bg-blue-50:hover,
+html[data-theme="dark"] .ko-admin-shell .hover\:bg-blue-50\/40:hover,
+html[data-theme="dark"] .ko-dash-shell .hover\:bg-blue-50\/40:hover {
+  background-color: var(--brand-soft);
+}
+
+html[data-theme="dark"] .ko-admin-shell .text-blue-600,
+html[data-theme="dark"] .ko-dash-shell .text-blue-600,
+html[data-theme="dark"] .ko-admin-shell .text-blue-700,
+html[data-theme="dark"] .ko-dash-shell .text-blue-700,
+html[data-theme="dark"] .ko-admin-shell .text-blue-800,
+html[data-theme="dark"] .ko-dash-shell .text-blue-800,
+html[data-theme="dark"] .ko-admin-shell .text-blue-900,
+html[data-theme="dark"] .ko-dash-shell .text-blue-900 {
+  color: var(--brand-hover);
+}
+
+html[data-theme="dark"] .ko-admin-shell .border-slate-200\/90,
+html[data-theme="dark"] .ko-dash-shell .border-slate-200\/90,
+html[data-theme="dark"] .ko-admin-shell .border-slate-200\/80,
+html[data-theme="dark"] .ko-dash-shell .border-slate-200\/80,
+html[data-theme="dark"] .ko-admin-shell .border-blue-200\/80,
+html[data-theme="dark"] .ko-dash-shell .border-blue-200\/80 {
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] .ko-admin-shell .ring-slate-200,
+html[data-theme="dark"] .ko-dash-shell .ring-slate-200,
+html[data-theme="dark"] .ko-admin-shell .ring-slate-200\/80,
+html[data-theme="dark"] .ko-dash-shell .ring-slate-200\/80,
+html[data-theme="dark"] .ko-admin-shell .ring-blue-100,
+html[data-theme="dark"] .ko-dash-shell .ring-blue-100,
+html[data-theme="dark"] .ko-admin-shell .ring-blue-100\/80,
+html[data-theme="dark"] .ko-dash-shell .ring-blue-100\/80 {
+  --tw-ring-color: var(--border);
+}
+
+html[data-theme="dark"] .ko-admin-shell .from-white,
+html[data-theme="dark"] .ko-dash-shell .from-white {
+  --tw-gradient-from: var(--surface);
+  --tw-gradient-to: color-mix(in srgb, var(--surface) 0%, transparent);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+html[data-theme="dark"] .ko-admin-shell .via-white,
+html[data-theme="dark"] .ko-dash-shell .via-white {
+  --tw-gradient-via: var(--surface);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to);
+}
+
+html[data-theme="dark"] .ko-admin-shell .from-slate-50,
+html[data-theme="dark"] .ko-dash-shell .from-slate-50 {
+  --tw-gradient-from: var(--surface-muted);
+  --tw-gradient-to: color-mix(in srgb, var(--surface-muted) 0%, transparent);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+html[data-theme="dark"] .ko-admin-shell .to-slate-50,
+html[data-theme="dark"] .ko-dash-shell .to-slate-50,
+html[data-theme="dark"] .ko-admin-shell .to-slate-50\/80,
+html[data-theme="dark"] .ko-dash-shell .to-slate-50\/80 {
+  --tw-gradient-to: var(--surface-muted);
+}
+
+html[data-theme="dark"] .ko-admin-shell .to-blue-50\/40,
+html[data-theme="dark"] .ko-dash-shell .to-blue-50\/40 {
+  --tw-gradient-to: var(--brand-soft);
+}
+
+html[data-theme="dark"] .ko-admin-shell .hover\:bg-rose-50:hover,
+html[data-theme="dark"] .ko-dash-shell .hover\:bg-rose-50:hover {
+  background-color: color-mix(in srgb, var(--danger) 16%, var(--surface));
+}
+
+html[data-theme="dark"] .ko-admin-shell .hover\:text-rose-700:hover,
+html[data-theme="dark"] .ko-dash-shell .hover\:text-rose-700:hover {
+  color: #fb7185;
+}
+
+html[data-theme="dark"] .ko-admin-shell .bg-\[var\(--admin-blue\)\] {
+  background-color: #2563eb;
+}
+
+/* Auth / landing: identité sombre inchangée (hors shells). */
+html[data-theme="dark"] .ko-auth-bg,
+html[data-theme="dark"] .ko-hero-bg,
+html[data-theme="light"] .ko-auth-bg,
+html[data-theme="light"] .ko-hero-bg {
+  color-scheme: dark;
+}
+

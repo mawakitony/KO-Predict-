@@ -17,6 +17,7 @@ import {
   useAdminLearnersChrome,
 } from "@/components/admin/AdminLearnersHeaderTabs";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { resolveDisplayName } from "@/lib/profile/display";
 
@@ -272,6 +273,9 @@ function AdminBottomNav({
 
   return (
     <nav className="ko-admin-mobile-nav" aria-label="Navigation admin mobile">
+      <div className="ko-admin-mobile-nav-theme">
+        <ThemeToggle />
+      </div>
       <AdminBottomNavLink
         href="/admin"
         label="Apprenants"
@@ -359,31 +363,34 @@ export function AdminHubLayout({
               </Suspense>
             </nav>
 
-            <div className="mt-auto rounded-2xl border border-blue-100 bg-[var(--admin-blue-soft)] p-3">
-              <Link
-                href="/profile"
-                className="flex items-center gap-3 rounded-xl transition hover:bg-white/60"
-                aria-label="Modifier mon profil"
-              >
-                <UserAvatar
-                  displayName={displayName}
-                  firstName={firstName}
-                  lastName={lastName}
-                  email={email}
-                  imageUrl={avatarUrl}
-                  size="sm"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-slate-800">
-                    {shownName}
-                  </p>
-                  <p className="truncate text-xs text-[var(--admin-blue)]">
-                    {email ? "Modifier le profil" : "En ligne"}
-                  </p>
+            <div className="mt-auto space-y-3">
+              <ThemeToggle />
+              <div className="rounded-2xl border border-blue-100 bg-[var(--admin-blue-soft)] p-3">
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-3 rounded-xl transition hover:bg-white/60"
+                  aria-label="Modifier mon profil"
+                >
+                  <UserAvatar
+                    displayName={displayName}
+                    firstName={firstName}
+                    lastName={lastName}
+                    email={email}
+                    imageUrl={avatarUrl}
+                    size="sm"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-slate-800">
+                      {shownName}
+                    </p>
+                    <p className="truncate text-xs text-[var(--admin-blue)]">
+                      {email ? "Modifier le profil" : "En ligne"}
+                    </p>
+                  </div>
+                </Link>
+                <div className="mt-3">
+                  <SignOutButton variant="dark" />
                 </div>
-              </Link>
-              <div className="mt-3">
-                <SignOutButton variant="dark" />
               </div>
             </div>
           </aside>

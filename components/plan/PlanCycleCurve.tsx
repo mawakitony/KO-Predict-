@@ -238,9 +238,9 @@ export function PlanCycleCurve({
         >
           <defs>
             <linearGradient id="ko-plan-area" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.28" />
-              <stop offset="70%" stopColor="#14b8a6" stopOpacity="0.06" />
-              <stop offset="100%" stopColor="#14b8a6" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.28" />
+              <stop offset="70%" stopColor="var(--accent)" stopOpacity="0.06" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
             </linearGradient>
           </defs>
 
@@ -270,7 +270,7 @@ export function PlanCycleCurve({
             <path
               d={pacePath}
               fill="none"
-              stroke="#94a3b8"
+              stroke="var(--text-secondary)"
               strokeWidth="2"
               strokeDasharray="5 6"
               strokeLinecap="round"
@@ -282,7 +282,7 @@ export function PlanCycleCurve({
             <path
               d={path.line}
               fill="none"
-              stroke="#0d9488"
+              stroke="var(--accent)"
               strokeWidth="3.25"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -325,8 +325,8 @@ export function PlanCycleCurve({
                   cx={p.x}
                   cy={p.y}
                   r={isActive || meta?.isCurrent ? 7 : 5.25}
-                  fill="#fff"
-                  stroke={meta?.isCurrent ? "#0f766e" : "#0d9488"}
+                  fill="var(--surface)"
+                  stroke={meta?.isCurrent ? "var(--accent-hover)" : "var(--accent)"}
                   strokeWidth={isActive || meta?.isCurrent ? 3.1 : 2.5}
                   className="ko-plan-curve-dot"
                   style={{ animationDelay: `${50 + i * 40}ms` }}

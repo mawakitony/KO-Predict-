@@ -60,7 +60,7 @@ export function ReadinessHistoryChart({ history }: ReadinessHistoryChartProps) {
                 x2={width - padding.right}
                 y1={y}
                 y2={y}
-                stroke="#e2e8f0"
+                stroke="var(--border)"
                 strokeWidth="1"
               />
               <text
@@ -76,7 +76,7 @@ export function ReadinessHistoryChart({ history }: ReadinessHistoryChartProps) {
           );
         })}
 
-        <path d={line} fill="none" stroke="#2563eb" strokeWidth="2.5" />
+        <path d={line} fill="none" stroke="var(--brand)" strokeWidth="2.5" />
 
         {points.map((p, i) => (
           <g key={p.id}>
@@ -84,7 +84,7 @@ export function ReadinessHistoryChart({ history }: ReadinessHistoryChartProps) {
               cx={padding.left + xs[i]}
               cy={padding.top + ys[i]}
               r="4.5"
-              fill="#1d4ed8"
+              fill="var(--brand-hover)"
             />
             <text
               x={padding.left + xs[i]}
