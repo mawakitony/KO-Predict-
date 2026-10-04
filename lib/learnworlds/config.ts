@@ -56,9 +56,24 @@ export function getLearnWorldsConfig(): LearnWorldsConfig {
   };
 }
 
+/**
+ * Interrupteur dur : rompt tout lien API LearnWorlds
+ * (sync, webhooks, roster live, activation LW), même si des clés
+ * existent encore dans l'environnement.
+ */
+export function isLearnWorldsDisabled(): boolean {
+  const raw = (process.env.LEARNWORLDS_DISABLED ?? "").trim().toLowerCase();
+  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
+}
+
 export function assertLearnWorldsConfigured(
   config: LearnWorldsConfig = getLearnWorldsConfig(),
 ): LearnWorldsConfig {
+  if (isLearnWorldsDisabled()) {
+    throw new LearnWorldsConfigError(
+      "LearnWorlds est déconnecté (LEARNWORLDS_DISABLED).",
+    );
+  }
   if (!config.apiUrl) {
     throw new LearnWorldsConfigError(
       "LEARNWORLDS_API_URL manquant (URL de l'école LearnWorlds).",
@@ -76,6 +91,9 @@ export function assertLearnWorldsConfigured(
 }
 
 export function isLearnWorldsConfigured(): boolean {
+  if (isLearnWorldsDisabled()) {
+    return false;
+  }
   try {
     assertLearnWorldsConfigured();
     return true;

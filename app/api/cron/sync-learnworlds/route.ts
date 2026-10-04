@@ -28,19 +28,23 @@ async function handle(request: Request) {
     );
   }
 
+  if (!isLearnWorldsConfigured()) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "LearnWorlds déconnecté ou non configuré.",
+        skipped: true,
+      },
+      { status: 503 },
+    );
+  }
+
   if (!isSupabaseAdminConfigured()) {
     return NextResponse.json(
       {
         ok: false,
         error: "SUPABASE_SERVICE_ROLE_KEY manquant — requis pour la sync.",
       },
-      { status: 503 },
-    );
-  }
-
-  if (!isLearnWorldsConfigured()) {
-    return NextResponse.json(
-      { ok: false, error: "LearnWorlds non configuré." },
       { status: 503 },
     );
   }

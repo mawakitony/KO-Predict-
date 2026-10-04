@@ -14,6 +14,7 @@ export {
   getLearnWorldsConfig,
   assertLearnWorldsConfigured,
   isLearnWorldsConfigured,
+  isLearnWorldsDisabled,
 } from "@/lib/learnworlds/config";
 export {
   LearnWorldsClient,

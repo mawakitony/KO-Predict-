@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { getLearnWorldsConfig } from "@/lib/learnworlds/config";
+import {
+  getLearnWorldsConfig,
+  isLearnWorldsDisabled,
+} from "@/lib/learnworlds/config";
 import { processLearnWorldsWebhook } from "@/lib/learnworlds/webhooks/handler";
 import { verifyLearnWorldsWebhookSignature } from "@/lib/learnworlds/webhooks/signature";
 import { isSupabaseAdminConfigured } from "@/lib/supabase/env";
@@ -27,6 +30,16 @@ function readSignatureHeader(request: Request): string | null {
  * Idempotence : sha256(raw body) dans webhook_events.delivery_key
  */
 export async function POST(request: Request) {
+  if (isLearnWorldsDisabled()) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "LearnWorlds est déconnecté (LEARNWORLDS_DISABLED).",
+      },
+      { status: 503 },
+    );
+  }
+
   const config = getLearnWorldsConfig();
   const secret = config.webhookSecret;
 
